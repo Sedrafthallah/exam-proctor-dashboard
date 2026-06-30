@@ -11,7 +11,6 @@ import {
   HistoryOutlined,
 } from "@ant-design/icons";
 
-// 👤 ADMIN
 export const adminItems = [
   {
     key: "/dashboard",
