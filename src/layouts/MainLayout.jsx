@@ -1,30 +1,33 @@
+import { useState } from "react";
 import { Layout, theme } from "antd";
-import { useLanguage } from "../i18n";
+
+import Sidebar from "../MyComponents/sidebar/Sidebar";
+import Navbar from "../MyComponents/navbar/Navbar";
 
 const { Content } = Layout;
-const { useToken } = theme;
 
 export default function MainLayout({ children, isDark, setIsDark }) {
-  const { dir } = useLanguage();
-  const { token } = useToken();
+  const { token } = theme.useToken();
+
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
     <Layout
       style={{
         minHeight: "100vh",
+        background: token.colorBgBase,
       }}
-      dir={dir}
     >
-      {/* <Headers isDark={isDark} setIsDark={setIsDark}  /> */}
+      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
 
       <Layout>
-        {/* <SideBar /> */}
+        <Navbar isDark={isDark} setIsDark={setIsDark} />
 
         <Content
           style={{
             padding: 24,
-            background: token.colorBgLayout,
-            minHeight: "calc(100vh - 64px)",
+            background: token.colorBgBase,
+            overflow: "auto",
           }}
         >
           {children}

@@ -10,11 +10,11 @@ export function LanguageProvider({ children }) {
     document.documentElement.lang = locale;
     document.documentElement.dir = locale === "ar" ? "rtl" : "ltr";
   }, [locale]);
-
+  const dir = locale === "ar" ? "rtl" : "ltr";
   const t = (key) => translations[locale][key] || key;
 
   return (
-    <LanguageContext.Provider value={{ locale, setLocale, t }}>
+    <LanguageContext.Provider value={{ locale, setLocale, dir, t }}>
       {children}
     </LanguageContext.Provider>
   );
