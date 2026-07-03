@@ -9,8 +9,12 @@ import {
   SettingOutlined,
   UserOutlined,
   HistoryOutlined,
+  FormOutlined,
 } from "@ant-design/icons";
 
+// Permission codes follow the Admin Permission Set (P-01..P-08) in the
+// Engineering Analysis spec. An array means the item is visible if the
+// Admin holds ANY one of the listed permissions.
 export const adminItems = [
   {
     key: "/dashboard",
@@ -21,58 +25,64 @@ export const adminItems = [
     key: "/sessions",
     label: "Sessions",
     icon: <BookOutlined />,
-    permission: "P05",
+    permission: "P03", // Session: Manage
   },
   {
     key: "/students",
     label: "Students",
     icon: <TeamOutlined />,
-    permission: "P03",
+    permission: "P05", // Students: Register
   },
   {
     key: "/question-banks",
     label: "Question Banks",
     icon: <FileTextOutlined />,
-    permission: "P01",
+    permission: ["P01", "P02"], // Question Bank: Author / View All
   },
   {
     key: "/monitoring",
     label: "Live Monitoring",
     icon: <EyeOutlined />,
-    permission: "P04",
+    permission: "P04", // Session: Live Proctor
   },
   {
     key: "/alerts",
     label: "Alerts",
     icon: <AlertOutlined />,
-    permission: "P04",
+    permission: "P04", // Session: Live Proctor
+  },
+  {
+    key: "/grading",
+    label: "Grading",
+    icon: <FormOutlined />,
+    permission: "P06", // Grading: Manual Grade
   },
   {
     key: "/reports",
     label: "Reports",
     icon: <BarChartOutlined />,
-    permission: "P07",
+    permission: ["P07", "P08"], // Reports: Export / View Violations
   },
 ];
 
+// Users Management, System Settings and Audit Logs are Super Admin-only
+// capabilities (role R-01) rather than granted permissions, so they carry
+// no `permission` flag — the Sidebar only renders this list for that role.
 export const superAdminItems = [
   ...adminItems,
   {
     key: "/users",
     label: "Users Management",
     icon: <UserOutlined />,
-    permission: "P08",
   },
   {
     key: "/settings",
     label: "System Settings",
     icon: <SettingOutlined />,
-    permission: "P08",
   },
   {
     key: "/logs",
     label: "Audit Logs",
     icon: <HistoryOutlined />,
-    permission: "P08",
   },
 ];

@@ -1,4 +1,4 @@
-import { Layout, Input, Avatar, Space, Switch, theme } from "antd";
+import { Layout, Input, Avatar, Space, Switch, Dropdown, theme } from "antd";
 
 import {
   SearchOutlined,
@@ -6,14 +6,64 @@ import {
   UserOutlined,
   MoonOutlined,
   SunOutlined,
+  LogoutOutlined,
+  DownOutlined,
 } from "@ant-design/icons";
+import useAuthStore from "../../store/useAuthStore";
+import { useLanguage } from "../../i18n";
 import MyButtonSecondary from "../../MyComponents/myButton/MyButtonSecondary";
 import MyText from "../../MyComponents/myText/MyText";
 const { Header } = Layout;
 const { useToken } = theme;
 
-export default function Navbar({ isDark, setIsDark, locale, setLocale }) {
+const ROLE_LABELS = {
+  SUPER_ADMIN: "Super Admin",
+  ADMIN: "Admin",
+};
+
+export default function Navbar({ isDark, setIsDark }) {
   const { token } = useToken();
+  const { locale, setLocale } = useLanguage();
+
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
+
+  const roleLabel = ROLE_LABELS[user?.role] || user?.role;
+
+  const userMenuItems = [
+    {
+      key: "profile-info",
+      label: (
+        <div style={{ padding: "2px 4px", maxWidth: 200 }}>
+          <div
+            style={{ fontWeight: 600, fontSize: 13, color: token.colorText }}
+          >
+            {user?.name || "Guest"}
+          </div>
+          <div
+            style={{
+              fontSize: 11.5,
+              color: token.colorTextTertiary,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {user?.email}
+          </div>
+        </div>
+      ),
+      disabled: true,
+    },
+    { type: "divider" },
+    {
+      key: "logout",
+      icon: <LogoutOutlined />,
+      label: "Logout",
+      danger: true,
+      onClick: () => logout(),
+    },
+  ];
 
   return (
     <Header
@@ -26,25 +76,40 @@ export default function Navbar({ isDark, setIsDark, locale, setLocale }) {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
+        gap: 16,
+        position: "sticky",
+        insetBlockStart: 0,
+        zIndex: 10,
       }}
     >
       <Input
         placeholder="Search..."
-        prefix={<SearchOutlined />}
+        allowClear
+        prefix={<SearchOutlined style={{ color: token.colorTextTertiary }} />}
         style={{
-          width: 340,
-          height: 42,
+          flex: "0 1 360px",
+          minWidth: 160,
+          height: 40,
           borderRadius: 10,
-          background: token.colorBgElevated,
-          borderColor: token.colorBorder,
+          background: token.colorFillSecondary,
+          borderColor: "transparent",
         }}
       />
 
-      <Space size={20}>
-        <Space size={8}>
+      <Space size={20} style={{ flexShrink: 0 }}>
+        <Space
+          size={9}
+          style={{
+            background: token.colorFillSecondary,
+            padding: "7px 14px",
+            borderRadius: 999,
+            height: 40,
+          }}
+        >
           <SunOutlined
             style={{
-              color: isDark ? token.colorTextSecondary : token.colorPrimary,
+              color: isDark ? token.colorTextTertiary : token.colorPrimary,
+              fontSize: 15,
             }}
           />
 
@@ -52,7 +117,8 @@ export default function Navbar({ isDark, setIsDark, locale, setLocale }) {
 
           <MoonOutlined
             style={{
-              color: isDark ? token.colorPrimary : token.colorTextSecondary,
+              color: isDark ? token.colorPrimary : token.colorTextTertiary,
+              fontSize: 15,
             }}
           />
         </Space>
@@ -84,41 +150,65 @@ export default function Navbar({ isDark, setIsDark, locale, setLocale }) {
 
         <BellOutlined
           style={{
-            fontSize: 20,
-            color: token.colorText,
+            fontSize: 19,
+            color: token.colorTextSecondary,
             cursor: "pointer",
           }}
         />
 
-        <Space size={12}>
-          <Avatar size={42} icon={<UserOutlined />} />
-
-          <div
+        <Dropdown
+          menu={{ items: userMenuItems }}
+          trigger={["click"]}
+          placement="bottomRight"
+        >
+          <Space
+            size={10}
             style={{
-              display: "flex",
-              flexDirection: "column",
-              lineHeight: 1.2,
+              cursor: "pointer",
+              padding: "4px 8px 4px 4px",
+              borderRadius: 10,
             }}
           >
-            <MyText
+            <Avatar
+              size={38}
+              icon={<UserOutlined />}
               style={{
-                fontWeight: 600,
-                color: token.colorText,
+                background: `linear-gradient(135deg, #6D4AFF, ${token.colorPrimary})`,
               }}
-            >
-              Sedra Fathallah
-            </MyText>
+            />
 
-            <MyText
+            <div
               style={{
-                fontSize: 12,
-                color: token.colorTextSecondary,
+                display: "flex",
+                flexDirection: "column",
+                lineHeight: 1.2,
               }}
             >
-              Super Admin
-            </MyText>
-          </div>
-        </Space>
+              <MyText
+                style={{
+                  fontWeight: 600,
+                  color: token.colorText,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {user?.name || "Guest"}
+              </MyText>
+
+              <MyText
+                style={{
+                  fontSize: 12,
+                  color: token.colorTextSecondary,
+                }}
+              >
+                {roleLabel}
+              </MyText>
+            </div>
+
+            <DownOutlined
+              style={{ fontSize: 10, color: token.colorTextTertiary }}
+            />
+          </Space>
+        </Dropdown>
       </Space>
     </Header>
   );

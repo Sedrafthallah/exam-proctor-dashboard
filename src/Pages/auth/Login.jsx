@@ -8,10 +8,10 @@ import { useLanguage } from "../../i18n";
 import MyCard from "../../MyComponents/myCard/MyCard";
 import MyButtonPrimary from "../../MyComponents/myButton/MyButtonPrimary";
 
-import MyTitle from "../../MyComponents/myTitle/MyTitle";
+import MyTitle from "../../MyComponents/MyTitle/MyTitle";
 import MyText from "../../MyComponents/myText/MyText";
 import MyLink from "../../MyComponents/myLink/MyLink";
-import MyForm from "../../MyComponents/myform/MyForm";
+import MyForm from "../../MyComponents/myForm/MyForm";
 
 export default function Login() {
   const navigate = useNavigate();

@@ -18,7 +18,11 @@ export default function MainLayout({ children, isDark, setIsDark }) {
         background: token.colorBgBase,
       }}
     >
-      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+      <Sidebar
+        collapsed={collapsed}
+        setCollapsed={setCollapsed}
+        isDark={isDark}
+      />
 
       <Layout>
         <Navbar isDark={isDark} setIsDark={setIsDark} />

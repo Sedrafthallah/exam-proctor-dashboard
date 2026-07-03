@@ -1,27 +1,27 @@
 const darkToken = {
-  colorPrimary: "#3B82F6",
-  colorPrimaryHover: "#60A5FA",
-  colorPrimaryActive: "#2563EB",
+  colorPrimary: "#3B62E8",
+  colorPrimaryHover: "#2F55D4",
+  colorPrimaryActive: "#2645B0",
 
   colorSuccess: "#22C55E",
   colorWarning: "#F59E0B",
   colorError: "#EF4444",
-  colorInfo: "#38BDF8",
+  colorInfo: "#3B82F6",
 
-  colorBgBase: "#020617", // page background
-  colorBgLayout: "#020617",
-  colorBgContainer: "#0F172A", // navbar/sidebar
-  colorBgElevated: "#1E293B", // cards
-  colorFillSecondary: "#1E293B",
-  colorFillTertiary: "#334155",
+  colorBgBase: "#0D0F16", // page background
+  colorBgLayout: "#0D0F16",
+  colorBgContainer: "#161925", // navbar/sidebar
+  colorBgElevated: "#1E2130", // cards
+  colorFillSecondary: "#1E2130",
+  colorFillTertiary: "#2A2E3F",
 
-  colorText: "#F8FAFC",
-  colorTextSecondary: "#94A3B8",
-  colorTextTertiary: "#64748B",
+  colorText: "#E9EBF2",
+  colorTextSecondary: "#99A0B5",
+  colorTextTertiary: "#6A7186",
 
-  colorBorder: "#334155",
-  colorBorderSecondary: "#475569",
-  colorSplit: "#334155",
+  colorBorder: "#2A2E3F",
+  colorBorderSecondary: "#23283A",
+  colorSplit: "#23283A",
 
   borderRadius: 12,
   controlHeight: 40,

@@ -1,31 +1,31 @@
 const lightToken = {
-  colorPrimary: "#2563EB",
-  colorPrimaryHover: "#1D4ED8",
-  colorPrimaryActive: "#1E40AF",
+  colorPrimary: "#2F55D4",
+  colorPrimaryHover: "#2645B0",
+  colorPrimaryActive: "#1E3894",
 
-  colorSuccess: "#22C55E",
-  colorWarning: "#F59E0B",
-  colorError: "#EF4444",
-  colorInfo: "#38BDF8",
+  colorSuccess: "#15A34A",
+  colorWarning: "#D97706",
+  colorError: "#DC2626",
+  colorInfo: "#0E7490",
 
-  colorBgBase: "#F8FAFC", // page background
-  colorBgLayout: "#F8FAFC", // layout background
+  colorBgBase: "#F5F6FA", // page background
+  colorBgLayout: "#F5F6FA", // layout background
   colorBgContainer: "#FFFFFF", // cards/sidebar/navbar
   colorBgElevated: "#FFFFFF",
-  colorFillSecondary: "#F1F5F9",
-  colorFillTertiary: "#E2E8F0",
+  colorFillSecondary: "#EEF0F6",
+  colorFillTertiary: "#E2E5EF",
 
-  colorText: "#0F172A",
-  colorTextSecondary: "#64748B",
-  colorTextTertiary: "#94A3B8",
+  colorText: "#171A24",
+  colorTextSecondary: "#565D73",
+  colorTextTertiary: "#8A90A6",
 
-  colorBorder: "#E2E8F0",
-  colorBorderSecondary: "#F1F5F9",
-  colorSplit: "#E2E8F0",
+  colorBorder: "#E2E5EF",
+  colorBorderSecondary: "#EEF0F6",
+  colorSplit: "#E2E5EF",
 
   borderRadius: 12,
   controlHeight: 40,
 
-  boxShadow: "0 2px 8px rgba(15, 23, 42, 0.05)",
+  boxShadow: "0 2px 8px rgba(23, 26, 36, 0.05)",
 };
 export default lightToken;

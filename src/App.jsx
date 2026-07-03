@@ -18,12 +18,34 @@ function ThemedApp() {
     );
   }, [isDark]);
 
+  const currentToken = isDark ? darkToken : lightToken;
+
   return (
     <ConfigProvider
       direction={dir}
       theme={{
         algorithm: isDark ? antTheme.darkAlgorithm : antTheme.defaultAlgorithm,
-        token: isDark ? darkToken : lightToken,
+        token: currentToken,
+        components: {
+          Layout: {
+            siderBg: currentToken.colorBgContainer,
+            headerBg: currentToken.colorBgContainer,
+            triggerBg: currentToken.colorFillSecondary,
+            triggerColor: currentToken.colorPrimary,
+          },
+          Menu: {
+            itemBorderRadius: 10,
+            itemMarginInline: 12,
+            itemMarginBlock: 4,
+            itemHeight: 44,
+            iconSize: 18,
+            itemSelectedBg: currentToken.colorPrimary,
+            itemSelectedColor: "#FFFFFF",
+            itemHoverBg: currentToken.colorFillSecondary,
+            itemHoverColor: currentToken.colorPrimary,
+            itemColor: currentToken.colorTextSecondary,
+          },
+        },
       }}
     >
       <BrowserRouter>
