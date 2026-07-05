@@ -1,23 +1,25 @@
 import { create } from "zustand";
 
-const MOCK_USERS = [
+const ALL_PERMISSIONS_GRANTED = {
+  P01: true,
+  P02: true,
+  P03: true,
+  P04: true,
+  P05: true,
+  P06: true,
+  P07: true,
+  P08: true,
+};
+
+const INITIAL_USERS = [
   {
     id: "SA-001",
     name: "Sedra Fathallah",
     email: "sidra@university.edu",
     password: "admin123",
     role: "SUPER_ADMIN",
-
-    permissions: {
-      P01: true,
-      P02: true,
-      P03: true,
-      P04: true,
-      P05: true,
-      P06: true,
-      P07: true,
-      P08: true,
-    },
+    jobTitle: "Super Admin",
+    permissions: ALL_PERMISSIONS_GRANTED,
   },
   {
     id: "AD-002",
@@ -25,6 +27,7 @@ const MOCK_USERS = [
     email: "manar@university.edu",
     password: "admin123",
     role: "ADMIN",
+    jobTitle: "Admin",
 
     permissions: {
       P01: false,
@@ -36,6 +39,42 @@ const MOCK_USERS = [
       P07: true,
       P08: true,
     },
+  },
+  {
+    id: "AD-003",
+    name: "Prof. Maher Saleh",
+    email: "maher.saleh@vu.edu",
+    password: "admin123",
+    role: "ADMIN",
+    jobTitle: "Session Coordinator",
+    permissions: { P01: false, P02: false, P03: true, P04: true, P05: false, P06: false, P07: false, P08: true },
+  },
+  {
+    id: "AD-004",
+    name: "Dr. Lina Abbas",
+    email: "lina.abbas@vu.edu",
+    password: "admin123",
+    role: "ADMIN",
+    jobTitle: "Question Author",
+    permissions: { P01: true, P02: false, P03: false, P04: false, P05: false, P06: false, P07: false, P08: false },
+  },
+  {
+    id: "AD-005",
+    name: "Fadi Nasser",
+    email: "fadi.nasser@vu.edu",
+    password: "admin123",
+    role: "ADMIN",
+    jobTitle: "Proctor + Grader",
+    permissions: { P01: false, P02: false, P03: false, P04: true, P05: false, P06: true, P07: false, P08: true },
+  },
+  {
+    id: "AD-006",
+    name: "Yara Tannous",
+    email: "yara.tannous@vu.edu",
+    password: "admin123",
+    role: "ADMIN",
+    jobTitle: "Registrar",
+    permissions: { P01: false, P02: false, P03: false, P04: false, P05: true, P06: false, P07: true, P08: false },
   },
 ];
 
@@ -55,6 +94,11 @@ const useAuthStore = create((set, get) => ({
   user: storedUser ? JSON.parse(storedUser) : null,
   */
 
+  // All registered admin accounts (super admin + admins). This is what both
+  // the Login page authenticates against and the Users Management page displays,
+  // so an account created from Users Management can log in right away.
+  users: INITIAL_USERS,
+
   loading: false,
   error: null,
 
@@ -66,8 +110,8 @@ const useAuthStore = create((set, get) => ({
 
     await new Promise((r) => setTimeout(r, 500));
 
-    const found = MOCK_USERS.find(
-      (u) => u.email === email && u.password === password,
+    const found = get().users.find(
+      (u) => u.email.toLowerCase() === email.trim().toLowerCase() && u.password === password,
     );
 
     if (!found) {
@@ -79,7 +123,8 @@ const useAuthStore = create((set, get) => ({
       return false;
     }
 
-    const { password: _, ...safeUser } = found;
+    const safeUser = { ...found };
+    delete safeUser.password;
 
     /*
     عند تفعيل التخزين لاحقاً:
@@ -108,6 +153,51 @@ const useAuthStore = create((set, get) => ({
       user: null,
       error: null,
     });
+  },
+
+  // Creates a real login account for a new admin (Users Management > New Admin).
+  // Returns { success, error } so the caller can surface a duplicate-email error inline.
+  registerAdmin: ({ name, email, password, permissions }) => {
+    const normalizedEmail = email.trim().toLowerCase();
+    const emailTaken = get().users.some((u) => u.email.toLowerCase() === normalizedEmail);
+
+    if (emailTaken) {
+      return { success: false, error: "An account with this email already exists" };
+    }
+
+    const newUser = {
+      id: `AD-${Date.now()}`,
+      name,
+      email: email.trim(),
+      password,
+      role: "ADMIN",
+      jobTitle: "Admin",
+      permissions: {
+        P01: false,
+        P02: false,
+        P03: false,
+        P04: false,
+        P05: false,
+        P06: false,
+        P07: false,
+        P08: false,
+        ...permissions,
+      },
+    };
+
+    set((state) => ({ users: [...state.users, newUser] }));
+
+    return { success: true, user: newUser };
+  },
+
+  toggleUserPermission: (userId, permissionKey) => {
+    set((state) => ({
+      users: state.users.map((u) =>
+        u.id === userId
+          ? { ...u, permissions: { ...u.permissions, [permissionKey]: !u.permissions[permissionKey] } }
+          : u,
+      ),
+    }));
   },
 
   hasPermission: (permission) => {
