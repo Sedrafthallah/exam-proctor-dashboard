@@ -4,26 +4,7 @@ import { LuChartNoAxesCombined } from "react-icons/lu";
 import { ClockCircleOutlined } from "@ant-design/icons";
 import MyCard from "../../MyComponents/myCard/MyCard";
 import MyText from "../../MyComponents/myText/MyText";
-
-const STATUS_CONFIG = {
-  DRAFT: { color: "default", label: "Draft" },
-  SCHEDULED: { color: "blue", label: "Scheduled" },
-  LOCKED: { color: "warning", label: "Locked" },
-  ACTIVE: { color: "success", label: "Active" },
-  GRACE: { color: "magenta", label: "Grace Period" },
-  CLOSED: { color: "error", label: "Closed" },
-  ARCHIVED: { color: "purple", label: "Archived" },
-};
-
-const getStatusConfig = (status) => {
-  const normalizedStatus = status ? status.trim().toUpperCase() : "";
-  return (
-    STATUS_CONFIG[normalizedStatus] ?? {
-      color: "default",
-      label: status || "Unknown",
-    }
-  );
-};
+import { getStatusConfig } from "../../utils/sessionUtils";
 
 const DynamicTimer = ({ initialSeconds }) => {
   const [timeLeft, setTimeLeft] = useState(initialSeconds);

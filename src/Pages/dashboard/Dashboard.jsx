@@ -6,7 +6,7 @@ import MyText from "../../MyComponents/myText/MyText";
 
 import { WarningFilled } from "@ant-design/icons";
 import { MdOutlineSensors, MdGroups, MdManageAccounts } from "react-icons/md";
-import { FiInbox, FiCheckCircle } from "react-icons/fi";
+import { FiInbox } from "react-icons/fi";
 import { AiFillThunderbolt } from "react-icons/ai";
 
 import SessionsOverview from "../../MyComponents/dashboardTable/SessionsOverview";
@@ -66,16 +66,6 @@ const dashboardCards = [
     color: "rgb(217,119,6)",
     bg: "rgba(217,119,6,0.15)",
   },
-  {
-    key: "uptime",
-    title: "Uptime (30d)",
-    value: "99.7%",
-    subText: " 1.2",
-    subTextColor: "#22c55e",
-    icon: <FiCheckCircle />,
-    color: "#22C55E",
-    bg: "rgba(34,197,94,0.15)",
-  },
 ];
 
 export default function DashboardCards() {
@@ -85,7 +75,12 @@ export default function DashboardCards() {
     <>
       <MyRow gutter={[16, 16]}>
         {dashboardCards.map((item) => (
-          <MyCol key={item.key} xs={24} sm={12} md={8} lg={4}>
+          <MyCol
+            key={item.key}
+            xs={24}
+            sm={12}
+            md={{ flex: "1 1 200px" }}
+          >
             <MyCard
               styles={{ body: { padding: 0 } }}
               style={{

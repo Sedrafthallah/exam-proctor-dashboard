@@ -1,45 +1,44 @@
-import { theme, Tooltip, Flex, Avatar } from "antd";
+import { theme, Tooltip, Flex, Avatar, Switch, Popconfirm, Tag, Button } from "antd";
 import {
   AppstoreOutlined,
   CheckOutlined,
   LockOutlined,
+  DeleteOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
 import MyCard from "../myCard/MyCard";
 import MyText from "../myText/MyText";
 import MyTable from "../mytable/MyTable";
 import { PERMISSIONS, getInitials } from "./adminsData";
 
-function PermissionCell({ active, onToggle, token }) {
+function PermissionCell({ active, token }) {
   return (
     <Flex justify="center">
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-pressed={active}
+      <Flex
+        justify="center"
+        align="center"
         style={{
           width: 26,
           height: 26,
-          padding: 0,
           borderRadius: 6,
-          border: "none",
-          cursor: "pointer",
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
           fontSize: 13,
           fontWeight: 600,
           background: active ? token.colorSuccess : token.colorFillTertiary,
           color: active ? "#fff" : token.colorTextQuaternary,
-          transition: "background 0.15s ease",
         }}
       >
         {active ? <CheckOutlined style={{ fontSize: 12 }} /> : "–"}
-      </button>
+      </Flex>
     </Flex>
   );
 }
 
-export default function PermissionMatrix({ admins, onTogglePermission }) {
+export default function PermissionMatrix({
+  admins,
+  onToggleStatus,
+  onDeleteAdmin,
+  onEditAdmin,
+}) {
   const { token } = theme.useToken();
 
   const columns = [
@@ -48,7 +47,7 @@ export default function PermissionMatrix({ admins, onTogglePermission }) {
       dataIndex: "name",
       key: "name",
       fixed: "left",
-      width: 220,
+      width: 240,
       render: (_, admin) => (
         <Flex align="center" gap={10}>
           <Avatar
@@ -62,9 +61,16 @@ export default function PermissionMatrix({ admins, onTogglePermission }) {
             {getInitials(admin.name)}
           </Avatar>
           <Flex vertical>
-            <MyText strong style={{ fontSize: 13.5 }}>
-              {admin.name}
-            </MyText>
+            <Flex align="center" gap={6}>
+              <MyText strong style={{ fontSize: 13.5 }}>
+                {admin.name}
+              </MyText>
+              {admin.disabled && (
+                <Tag color="default" style={{ margin: 0, fontSize: 10, lineHeight: "16px", padding: "0 6px" }}>
+                  Disabled
+                </Tag>
+              )}
+            </Flex>
             <MyText type="secondary" style={{ fontSize: 12 }}>
               {admin.jobTitle}
             </MyText>
@@ -103,14 +109,61 @@ export default function PermissionMatrix({ admins, onTogglePermission }) {
             </Flex>
           </Tooltip>
         ) : (
-          <PermissionCell
-            active={!!admin.permissions[perm.key]}
-            onToggle={() => onTogglePermission(admin.id, perm.key)}
-            token={token}
-          />
+          <PermissionCell active={!!admin.permissions[perm.key]} token={token} />
         );
       },
     })),
+    {
+      title: "Actions",
+      key: "actions",
+      fixed: "right",
+      width: 160,
+      render: (_, admin) => {
+        if (admin.role === "SUPER_ADMIN") {
+          return (
+            <Tooltip title="Edit account">
+              <Button
+                type="text"
+                size="small"
+                icon={<EditOutlined />}
+                onClick={() => onEditAdmin(admin.id)}
+              />
+            </Tooltip>
+          );
+        }
+
+        return (
+          <Flex align="center" gap={10}>
+            <Tooltip title="Edit account">
+              <Button
+                type="text"
+                size="small"
+                icon={<EditOutlined />}
+                onClick={() => onEditAdmin(admin.id)}
+              />
+            </Tooltip>
+
+            <Tooltip title={admin.disabled ? "Enable account" : "Disable account"}>
+              <Switch
+                size="small"
+                checked={!admin.disabled}
+                onChange={() => onToggleStatus(admin.id)}
+              />
+            </Tooltip>
+
+            <Popconfirm
+              title="Delete this admin account?"
+              description="This permanently removes their login and permissions."
+              okText="Delete"
+              okButtonProps={{ danger: true }}
+              onConfirm={() => onDeleteAdmin(admin.id)}
+            >
+              <Button type="text" danger size="small" icon={<DeleteOutlined />} />
+            </Popconfirm>
+          </Flex>
+        );
+      },
+    },
   ];
 
   return (
@@ -136,6 +189,9 @@ export default function PermissionMatrix({ admins, onTogglePermission }) {
         dataSource={admins}
         rowKey="id"
         pagination={false}
+        onRow={(admin) => ({
+          style: admin.disabled ? { opacity: 0.6 } : undefined,
+        })}
       />
     </MyCard>
   );
