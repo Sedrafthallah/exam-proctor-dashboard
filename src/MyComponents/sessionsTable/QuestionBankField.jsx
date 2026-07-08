@@ -14,7 +14,7 @@ export default function QuestionBankField({ form, disabled }) {
 
   const bankOptions = questionBanks.map((bank) => ({
     value: bank.code,
-    label: `${bank.code} — ${bank.title} (${bank.questionCount} Qs)`,
+    label: `${bank.code} — ${bank.title} (${bank.questions.length} Qs)`,
   }));
 
   const handleUpload = async (file) => {
@@ -27,10 +27,19 @@ export default function QuestionBankField({ form, disabled }) {
         return false;
       }
 
-      const bank = createBankFromCsv(questions, {
-        title: file.name.replace(/\.csv$/i, ""),
-        courseCode: form.getFieldValue("courseCode"),
-      });
+      const bank = createBankFromCsv(
+        questions.map((q) => ({
+          type: q.type,
+          text: q.question,
+          options: q.options,
+          correctAnswer: q.correctAnswer || null,
+          marks: q.marks,
+        })),
+        {
+          title: file.name.replace(/\.csv$/i, ""),
+          courseCode: form.getFieldValue("courseCode"),
+        },
+      );
 
       form.setFieldValue("questionBank", bank.code);
       message.success(`Created "${bank.code}" with ${questions.length} questions.`);
@@ -85,7 +94,7 @@ export default function QuestionBankField({ form, disabled }) {
               return (
                 <MyText type="secondary" style={{ fontSize: 12 }}>
                   {bank
-                    ? `Using "${bank.code}" — ${bank.questionCount} questions.`
+                    ? `Using "${bank.code}" — ${bank.questions.length} questions.`
                     : "Creates a new question bank from the file."}
                 </MyText>
               );

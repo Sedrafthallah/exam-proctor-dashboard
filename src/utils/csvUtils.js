@@ -84,6 +84,7 @@ export function parseStudentsCSV(text) {
 }
 
 const QUESTION_HEADER_ALIASES = {
+  id: ["id", "questionid", "question id"],
   question: ["question", "questiontext", "question text", "text", "prompt"],
   type: ["type", "questiontype", "question type"],
   optionA: ["optiona", "option a", "choicea", "choice a", "a"],
@@ -91,11 +92,12 @@ const QUESTION_HEADER_ALIASES = {
   optionC: ["optionc", "option c", "choicec", "choice c", "c"],
   optionD: ["optiond", "option d", "choiced", "choice d", "d"],
   correctAnswer: ["correctanswer", "correct answer", "answer", "correct"],
+  marks: ["marks", "mark", "points", "score"],
 };
 
-// Parses a question bank CSV into records: { question, type, options[],
-// correctAnswer }. Expects a "question" column plus optional type,
-// option A-D and correct answer columns (any order/casing).
+// Parses a question bank CSV into records: { id, question, type, options[],
+// correctAnswer, marks }. Expects a "question" column plus optional id, type,
+// option A-D, correct answer and marks columns (any order/casing).
 export function parseQuestionsCSV(text) {
   const rows = parseCsvRows(text);
   if (rows.length === 0) return [];
@@ -103,9 +105,11 @@ export function parseQuestionsCSV(text) {
   return mapRowsToRecords(rows, QUESTION_HEADER_ALIASES)
     .filter((record) => record.question)
     .map((record) => ({
+      id: record.id || null,
       question: record.question,
-      type: (record.type || "MCQ").toUpperCase(),
+      type: (record.type || "MCQ_SINGLE").toUpperCase(),
       options: [record.optionA, record.optionB, record.optionC, record.optionD].filter(Boolean),
       correctAnswer: record.correctAnswer || "",
+      marks: Number(record.marks) || 1,
     }));
 }
