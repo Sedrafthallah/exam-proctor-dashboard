@@ -6,7 +6,6 @@ const ALL_PERMISSIONS_GRANTED = {
   P03: true,
   P04: true,
   P05: true,
-  P06: true,
   P07: true,
   P08: true,
 };
@@ -37,7 +36,6 @@ const INITIAL_USERS = [
       P03: true,
       P04: true,
       P05: false,
-      P06: false,
       P07: true,
       P08: true,
     },
@@ -50,7 +48,7 @@ const INITIAL_USERS = [
     role: "ADMIN",
     jobTitle: "Session Coordinator",
     disabled: false,
-    permissions: { P01: false, P02: false, P03: true, P04: true, P05: false, P06: false, P07: false, P08: true },
+    permissions: { P01: false, P02: false, P03: true, P04: true, P05: false, P07: false, P08: true },
   },
   {
     id: "AD-004",
@@ -60,7 +58,7 @@ const INITIAL_USERS = [
     role: "ADMIN",
     jobTitle: "Question Author",
     disabled: false,
-    permissions: { P01: true, P02: false, P03: false, P04: false, P05: false, P06: false, P07: false, P08: false },
+    permissions: { P01: true, P02: false, P03: false, P04: false, P05: false, P07: false, P08: false },
   },
   {
     id: "AD-005",
@@ -68,9 +66,9 @@ const INITIAL_USERS = [
     email: "fadi.nasser@vu.edu",
     password: "admin123",
     role: "ADMIN",
-    jobTitle: "Proctor + Grader",
+    jobTitle: "Proctor",
     disabled: false,
-    permissions: { P01: false, P02: false, P03: false, P04: true, P05: false, P06: true, P07: false, P08: true },
+    permissions: { P01: false, P02: false, P03: false, P04: true, P05: false, P07: false, P08: true },
   },
   {
     id: "AD-006",
@@ -80,7 +78,7 @@ const INITIAL_USERS = [
     role: "ADMIN",
     jobTitle: "Registrar",
     disabled: false,
-    permissions: { P01: false, P02: false, P03: false, P04: false, P05: true, P06: false, P07: true, P08: false },
+    permissions: { P01: false, P02: false, P03: false, P04: false, P05: true, P07: true, P08: false },
   },
 ];
 
@@ -194,7 +192,6 @@ const useAuthStore = create((set, get) => ({
         P03: false,
         P04: false,
         P05: false,
-        P06: false,
         P07: false,
         P08: false,
         ...permissions,

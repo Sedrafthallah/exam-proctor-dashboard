@@ -36,17 +36,18 @@ export const PERMISSIONS = [
   },
 
   {
-    code: "P-06",
-    key: "P06",
-    title: "Reports: Export",
-    description:
-      "Export grading reports and signed incident/audit logs (CSV/JSON).",
-  },
-  {
     code: "P-07",
     key: "P07",
-    title: "Reports: View Violations",
-    description: "Read-only access to the violation and incident log.",
+    title: "Reports: Export",
+    description:
+      "Export session data packages and signed incident/audit logs (CSV/JSON).",
+  },
+  {
+    code: "P-08",
+    key: "P08",
+    title: "Reports: View",
+    description:
+      "Read-only access to the Reports page — response viewer and violations, no export.",
   },
 ];
 
