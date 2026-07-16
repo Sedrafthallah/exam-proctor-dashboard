@@ -115,6 +115,44 @@ export const INITIAL_SESSIONS = [
     published: true,
     archived: true, // ← ARCHIVED
   },
+  {
+    id: "sess-007",
+    sessionTitle: "MTH120 Final Exam",
+    courseCode: "MTH120",
+    scheduledStartUTC: "2025-05-20T09:00:00Z", // ماضي بكثير → CLOSED
+    duration: 60,
+    gracePeriod: 5,
+    loginWindow: 15,
+    questionBank: "QB-2025-MTH120",
+    proctor: "Manar Aljarkas",
+    enrolledStudents: 64,
+    questionRandomisation: true,
+    optionShuffle: true,
+    audioMonitoring: true,
+    gazeThreshold: 3,
+    faceAlertSensitivity: "Medium",
+    published: true,
+    archived: false,
+  },
+  {
+    id: "sess-008",
+    sessionTitle: "PHY210 Midterm",
+    courseCode: "PHY210",
+    scheduledStartUTC: "2025-04-02T10:00:00Z", // ماضي بكثير → CLOSED
+    duration: 75,
+    gracePeriod: 5,
+    loginWindow: 15,
+    questionBank: "QB-2025-PHY210",
+    proctor: "Inas Alqadiri",
+    enrolledStudents: 87,
+    questionRandomisation: true,
+    optionShuffle: false,
+    audioMonitoring: true,
+    gazeThreshold: 4,
+    faceAlertSensitivity: "High",
+    published: true,
+    archived: false,
+  },
 ];
 
 const useSessionStore = create((set) => ({

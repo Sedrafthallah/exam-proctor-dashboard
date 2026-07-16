@@ -27,8 +27,6 @@ const ACTION_ICONS = {
   QUESTIONS_AUTHORED: FormOutlined,
 };
 
-// antd color keywords (blue/purple/red/green/orange) don't all map to a
-// semantic theme token — purple falls back to a fixed accent.
 function resolveColor(colorName, token) {
   switch (colorName) {
     case "red":
@@ -93,9 +91,14 @@ export default function AuditLogFeed({ logs }) {
       <Flex
         align="center"
         gap={10}
-        style={{ padding: "16px 20px", borderBottom: `1px solid ${token.colorBorderSecondary}` }}
+        style={{
+          padding: "16px 20px",
+          borderBottom: `1px solid ${token.colorBorderSecondary}`,
+        }}
       >
-        <SafetyCertificateFilled style={{ fontSize: 20, color: token.colorPrimary }} />
+        <SafetyCertificateFilled
+          style={{ fontSize: 20, color: token.colorPrimary }}
+        />
         <Flex vertical gap={0}>
           <MyText strong style={{ fontSize: 13.5 }}>
             Signed Chain · SHA-256
@@ -131,7 +134,10 @@ export default function AuditLogFeed({ logs }) {
               </MyText>
             </Flex>
 
-            <MyText type="secondary" style={{ fontSize: 12, whiteSpace: "nowrap" }}>
+            <MyText
+              type="secondary"
+              style={{ fontSize: 12, whiteSpace: "nowrap" }}
+            >
               {formatRelativeTime(log.timestamp)}
             </MyText>
           </Flex>

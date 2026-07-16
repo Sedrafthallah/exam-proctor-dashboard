@@ -9,7 +9,6 @@ import {
   SettingOutlined,
   UserOutlined,
   HistoryOutlined,
-  FormOutlined,
 } from "@ant-design/icons";
 
 // Permission codes follow the Admin Permission Set (P-01..P-08) in the
@@ -50,12 +49,6 @@ export const adminItems = [
     label: "Alerts",
     icon: <AlertOutlined />,
     permission: "P04", // Session: Live Proctor
-  },
-  {
-    key: "/grading",
-    label: "Grading",
-    icon: <FormOutlined />,
-    permission: "P06", // Grading: Manual Grade
   },
   {
     key: "/reports",

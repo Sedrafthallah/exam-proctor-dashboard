@@ -34,22 +34,17 @@ export const PERMISSIONS = [
     description:
       "Register students, upload roster CSVs, attach ID photographs.",
   },
+
   {
     code: "P-06",
     key: "P06",
-    title: "Grading: Manual Grade",
-    description: "Review and assign marks to Short Answer and Essay responses.",
-  },
-  {
-    code: "P-07",
-    key: "P07",
     title: "Reports: Export",
     description:
       "Export grading reports and signed incident/audit logs (CSV/JSON).",
   },
   {
-    code: "P-08",
-    key: "P08",
+    code: "P-07",
+    key: "P07",
     title: "Reports: View Violations",
     description: "Read-only access to the violation and incident log.",
   },

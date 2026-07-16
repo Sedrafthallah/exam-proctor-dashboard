@@ -12,7 +12,6 @@ import Students from "../Pages/students/Students";
 import QuestionBanks from "../Pages/questionBanks/QuestionBanks";
 import Monitoring from "../Pages/monitoring/Monitoring";
 import Alerts from "../Pages/alerts/Alerts";
-import Grading from "../Pages/grading/Grading";
 import Reports from "../Pages/reports/Reports";
 import Users from "../Pages/users/Users";
 import Settings from "../Pages/settings/Settings";
@@ -28,7 +27,6 @@ const PRIVATE_PAGES = [
   { path: "/question-banks", element: <QuestionBanks /> },
   { path: "/monitoring", element: <Monitoring /> },
   { path: "/alerts", element: <Alerts /> },
-  { path: "/grading", element: <Grading /> },
   { path: "/reports", element: <Reports /> },
   { path: "/users", element: <Users /> },
   { path: "/settings", element: <Settings /> },
