@@ -1,14 +1,5 @@
 import { theme, Flex, Badge, Avatar, Popconfirm } from "antd";
-import {
-  EyeInvisibleOutlined,
-  UserDeleteOutlined,
-  TeamOutlined,
-  SwapOutlined,
-  SoundOutlined,
-  CheckOutlined,
-  NotificationOutlined,
-  ArrowUpOutlined,
-} from "@ant-design/icons";
+import { CheckOutlined, NotificationOutlined, ArrowUpOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import MyCard from "../myCard/MyCard";
@@ -17,52 +8,9 @@ import MyTable from "../mytable/MyTable";
 import MyButtonPrimary from "../myButton/MyButtonPrimary";
 import MyButtonSecondary from "../myButton/MyButtonSecondary";
 import { getInitials } from "../usersTable/adminsData";
+import { ALERT_TYPE_CONFIG, ALERT_STATUS_CONFIG } from "../../utils/alertUtils";
 
 dayjs.extend(relativeTime);
-
-const ALERT_TYPE_CONFIG = {
-  GAZE_DEVIATION: {
-    label: "Gaze Deviation",
-    description: "Eyes off-screen beyond threshold",
-    color: "#eab308",
-    icon: <EyeInvisibleOutlined />,
-    severity: "WARNING",
-  },
-  FACE_ABSENCE: {
-    label: "Face Absence",
-    description: "No face detected in camera frame",
-    color: "#ef4444",
-    icon: <UserDeleteOutlined />,
-    severity: "CRITICAL",
-  },
-  MULTIPLE_FACES: {
-    label: "Multiple Faces",
-    description: "More than one face detected",
-    color: "#ef4444",
-    icon: <TeamOutlined />,
-    severity: "CRITICAL",
-  },
-  APP_SWITCH: {
-    label: "App Switch",
-    description: "Switched to another application or window",
-    color: "#f97316",
-    icon: <SwapOutlined />,
-    severity: "WARNING",
-  },
-  AUDIO_THRESHOLD: {
-    label: "Audio Threshold",
-    description: "Ambient audio exceeded the allowed threshold",
-    color: "#3b82f6",
-    icon: <SoundOutlined />,
-    severity: "WARNING",
-  },
-};
-
-const STATUS_CONFIG = {
-  OPEN: { status: "processing", color: "blue", label: "Open" },
-  RESOLVED: { status: "success", color: "green", label: "Resolved" },
-  ESCALATED: { status: "error", color: "red", label: "Escalated" },
-};
 
 export default function AlertsTable({ alerts, canAct, onDismiss, onWarn, onEscalate }) {
   const { token } = theme.useToken();
@@ -136,7 +84,7 @@ export default function AlertsTable({ alerts, canAct, onDismiss, onWarn, onEscal
       key: "status",
       width: 110,
       render: (status) => {
-        const { status: badgeStatus, label } = STATUS_CONFIG[status] ?? STATUS_CONFIG.OPEN;
+        const { status: badgeStatus, label } = ALERT_STATUS_CONFIG[status] ?? ALERT_STATUS_CONFIG.OPEN;
         return <Badge status={badgeStatus} text={<MyText style={{ fontSize: 12.5 }}>{label}</MyText>} />;
       },
     },

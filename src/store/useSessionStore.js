@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import dayjs from "dayjs";
 
 export const INITIAL_SESSIONS = [
   {
@@ -24,7 +25,7 @@ export const INITIAL_SESSIONS = [
     id: "sess-002",
     sessionTitle: "DB202 Midterm",
     courseCode: "DB202",
-    scheduledStartUTC: "2026-07-05T18:30:00Z", // ماضي قريب → ACTIVE أو GRACE
+    scheduledStartUTC: dayjs().subtract(20, "minute").toISOString(), // ماضي قريب → ACTIVE أو GRACE
     duration: 60,
     gracePeriod: 5,
     loginWindow: 15,
