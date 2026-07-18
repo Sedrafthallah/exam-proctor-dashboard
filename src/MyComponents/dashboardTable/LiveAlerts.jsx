@@ -1,44 +1,12 @@
 import { theme, Badge, List, Avatar, Flex } from "antd";
 import { BellOutlined } from "@ant-design/icons";
-import {
-  BsPeopleFill,
-  BsWindowX,
-  BsWifiOff,
-  BsEyeSlashFill,
-} from "react-icons/bs";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
 import MyCard from "../../MyComponents/myCard/MyCard";
 import MyText from "../../MyComponents/myText/MyText";
+import { ALERT_TYPE_CONFIG } from "../../utils/alertUtils";
 
-const ALERT_CONFIG = {
-  MULTIPLE_FACES: {
-    color: "#ef4444",
-    bg: "rgba(239, 68, 68, 0.08)",
-    border: "rgba(239, 68, 68, 0.15)",
-    icon: <BsPeopleFill size={16} />,
-    label: "Multiple Faces",
-  },
-  APP_SWITCH: {
-    color: "#f97316",
-    bg: "rgba(249, 115, 22, 0.08)",
-    border: "rgba(249, 115, 22, 0.15)",
-    icon: <BsWindowX size={15} />,
-    label: "App Switch",
-  },
-  CONNECTIVITY_LOST: {
-    color: "#eab308",
-    bg: "rgba(234, 179, 8, 0.08)",
-    border: "rgba(234, 179, 8, 0.15)",
-    icon: <BsWifiOff size={16} />,
-    label: "Connectivity Lost",
-  },
-  GAZE_DEVIATION: {
-    color: "#a855f7",
-    bg: "rgba(168, 85, 247, 0.08)",
-    border: "rgba(168, 85, 247, 0.15)",
-    icon: <BsEyeSlashFill size={16} />,
-    label: "Gaze Deviation",
-  },
-};
+dayjs.extend(relativeTime);
 
 const DEFAULT_ALERT_CONFIG = {
   color: "#6b7280",
@@ -48,44 +16,13 @@ const DEFAULT_ALERT_CONFIG = {
 };
 
 const getAlertConfig = (type) => {
-  const normalizedType = type ? type.toUpperCase() : "";
-  const config = ALERT_CONFIG[normalizedType];
-  return config ?? { ...DEFAULT_ALERT_CONFIG, label: type || "Unknown" };
+  const config = ALERT_TYPE_CONFIG[type];
+  if (!config) return { ...DEFAULT_ALERT_CONFIG, label: type || "Unknown" };
+  return { ...config, bg: `${config.color}14`, border: `${config.color}26` };
 };
 
-const staticAlerts = [
-  {
-    id: "1",
-    type: "MULTIPLE_FACES",
-    studentName: "Layla Mansour",
-    studentId: "S-20211847",
-    time: "00:12",
-  },
-  {
-    id: "2",
-    type: "APP_SWITCH",
-    studentName: "Layla Mansour",
-    studentId: "S-20211847",
-    time: "00:40",
-  },
-  {
-    id: "3",
-    type: "CONNECTIVITY_LOST",
-    studentName: "Karim Nasir",
-    studentId: "S-20211285",
-    time: "01:30",
-  },
-  {
-    id: "4",
-    type: "GAZE_DEVIATION",
-    studentName: "Omar Khalil",
-    studentId: "S-20210934",
-    time: "02:15",
-  },
-];
-
 // Swap `alerts` for a WebSocket/polling feed once the live-alerts API is ready.
-export default function LiveAlerts({ alerts = staticAlerts }) {
+export default function LiveAlerts({ alerts = [] }) {
   const { token } = theme.useToken();
 
   return (
@@ -178,7 +115,7 @@ export default function LiveAlerts({ alerts = staticAlerts }) {
                     fontWeight: 500,
                   }}
                 >
-                  {alert.time}
+                  {dayjs(alert.timestamp).fromNow()}
                 </MyText>
               </Flex>
             </List.Item>
