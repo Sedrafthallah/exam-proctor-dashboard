@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Layout, Input, Avatar, Space, Switch, Dropdown, theme } from "antd";
 
 import {
@@ -6,6 +7,7 @@ import {
   UserOutlined,
   MoonOutlined,
   SunOutlined,
+  LockOutlined,
   LogoutOutlined,
   DownOutlined,
 } from "@ant-design/icons";
@@ -13,6 +15,7 @@ import useAuthStore from "../../store/useAuthStore";
 import { useLanguage } from "../../i18n";
 import MyButtonSecondary from "../../MyComponents/myButton/MyButtonSecondary";
 import MyText from "../../MyComponents/myText/MyText";
+import ChangePasswordModal from "./ChangePasswordModal";
 const { Header } = Layout;
 const { useToken } = theme;
 
@@ -24,6 +27,7 @@ const ROLE_LABELS = {
 export default function Navbar({ isDark, setIsDark }) {
   const { token } = useToken();
   const { locale, setLocale } = useLanguage();
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
@@ -51,9 +55,24 @@ export default function Navbar({ isDark, setIsDark }) {
           >
             {user?.email}
           </div>
+          <div
+            style={{
+              fontSize: 11.5,
+              color: token.colorTextTertiary,
+            }}
+          >
+            {roleLabel}
+          </div>
         </div>
       ),
       disabled: true,
+    },
+    { type: "divider" },
+    {
+      key: "change-password",
+      icon: <LockOutlined />,
+      label: "Change Password",
+      onClick: () => setIsPasswordModalOpen(true),
     },
     { type: "divider" },
     {
@@ -210,6 +229,11 @@ export default function Navbar({ isDark, setIsDark }) {
           </Space>
         </Dropdown>
       </Space>
+
+      <ChangePasswordModal
+        open={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+      />
     </Header>
   );
 }

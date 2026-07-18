@@ -48,7 +48,7 @@ export const adminItems = [
     key: "/alerts",
     label: "Alerts",
     icon: <AlertOutlined />,
-    permission: "P04", // Session: Live Proctor
+    permission: ["P04", "P08"], // Session: Live Proctor / Reports: View (read-only)
   },
   {
     key: "/reports",
