@@ -14,15 +14,29 @@ import SessionsOverview from "../../MyComponents/dashboardTable/SessionsOverview
 import LiveAlerts from "../../MyComponents/dashboardTable/LiveAlerts";
 import ExamActivityChart from "../../MyComponents/dashboardTable/ExamActivityCharts";
 import RecentAuditActivity from "../../MyComponents/dashboardTable/RecentAuditActivity";
+import AdminWelcome from "../../MyComponents/dashboardTable/AdminWelcome";
 
 import useSessionStore from "../../store/useSessionStore";
 import useStudentStore from "../../store/useStudentStore";
 import useAlertsStore from "../../store/useAlertsStore";
 import useQuestionBankStore from "../../store/useQuestionBankStore";
+import useAuthStore from "../../store/useAuthStore";
 import { getSessionStatus } from "../../utils/sessionUtils";
 import { getBankStatus } from "../../utils/questionBankUtils";
 
-export default function DashboardCards() {
+export default function Dashboard() {
+  const user = useAuthStore((state) => state.user);
+  const hasPermission = useAuthStore((state) => state.hasPermission);
+  const isSuperAdmin = user?.role === "SUPER_ADMIN";
+
+  if (!isSuperAdmin) {
+    return <AdminWelcome user={user} hasPermission={hasPermission} />;
+  }
+
+  return <SuperAdminDashboard />;
+}
+
+function SuperAdminDashboard() {
   const { token } = theme.useToken();
 
   const sessions = useSessionStore((state) => state.sessions);
