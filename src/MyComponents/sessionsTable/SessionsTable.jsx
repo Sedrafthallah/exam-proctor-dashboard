@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { theme, Flex, Tag, Button, Popconfirm, message } from "antd";
 import { CalendarOutlined, DeleteOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -7,6 +8,7 @@ import MyText from "../myText/MyText";
 import MyTable from "../mytable/MyTable";
 import EditSessionModal from "./EditSessionModal";
 import ExtendTimeModal from "./ExtendTimeModal";
+import EditRosterModal from "./EditRosterModal";
 import useSessionStore from "../../store/useSessionStore";
 import useAuthStore from "../../store/useAuthStore";
 import { getSessionStatus, getStatusConfig } from "../../utils/sessionUtils";
@@ -50,10 +52,10 @@ function SessionActions({
     return (
       <Flex gap={8} wrap="wrap">
         <Button size="small" onClick={() => onOpenSession(session)}>
-          Edit
+          View
         </Button>
         <Button size="small" onClick={() => onEditRoster(session)}>
-          Edit roster
+          Edit Roster
         </Button>
       </Flex>
     );
@@ -135,8 +137,10 @@ function SessionActions({
 
 export default function SessionsTable({ sessions }) {
   const { token } = theme.useToken();
+  const navigate = useNavigate();
   const [openSession, setOpenSession] = useState(null);
   const [extendingSession, setExtendingSession] = useState(null);
+  const [rosterSession, setRosterSession] = useState(null);
 
   const currentUser = useAuthStore((state) => state.user);
   const updateSession = useSessionStore((state) => state.updateSession);
@@ -179,6 +183,12 @@ export default function SessionsTable({ sessions }) {
   const handleTerminate = (session) => {
     terminateSession(session.id);
     message.success(`"${session.sessionTitle}" was terminated.`);
+  };
+
+  const handleSaveRoster = (sessionId, updates) => {
+    updateSession(sessionId, updates);
+    setRosterSession(null);
+    message.success("Roster updated successfully.");
   };
 
   const columns = [
@@ -273,10 +283,8 @@ export default function SessionsTable({ sessions }) {
           onDelete={handleDelete}
           onOverride={handleOverride}
           onTerminate={handleTerminate}
-          onEditRoster={(s) =>
-            message.info(`Editing roster for "${s.sessionTitle}" — coming soon.`)
-          }
-          onExport={(s) => message.info(`Exporting "${s.sessionTitle}" — coming soon.`)}
+          onEditRoster={(s) => setRosterSession(s)}
+          onExport={(s) => navigate(`/reports?sessionId=${s.id}`)}
         />
       ),
     },
@@ -319,6 +327,13 @@ export default function SessionsTable({ sessions }) {
         session={extendingSession}
         onClose={() => setExtendingSession(null)}
         onExtend={handleExtend}
+      />
+
+      <EditRosterModal
+        open={!!rosterSession}
+        session={rosterSession}
+        onClose={() => setRosterSession(null)}
+        onSave={handleSaveRoster}
       />
     </MyCard>
   );

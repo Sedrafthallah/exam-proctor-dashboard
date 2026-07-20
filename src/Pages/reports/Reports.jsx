@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { theme, Flex, Select, Tooltip, message } from "antd";
 import {
   FileZipOutlined,
@@ -42,6 +43,16 @@ export default function Reports() {
   const [selectedSessionId, setSelectedSessionId] = useState(
     reportableSessions[0]?.id ?? null,
   );
+
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const sessionId = searchParams.get("sessionId");
+    if (sessionId) {
+      const found = reportableSessions.find((s) => s.id === sessionId);
+      if (found) setSelectedSessionId(found.id);
+    }
+  }, [searchParams, reportableSessions]);
 
   const selectedSession = reportableSessions.find((s) => s.id === selectedSessionId) ?? null;
   const responses = useSessionResponses(selectedSession?.id);
