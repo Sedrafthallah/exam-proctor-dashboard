@@ -55,9 +55,14 @@ export default function ChangePasswordModal({ open, onClose }) {
         <MyForm.Item
           name="currentPassword"
           label="Current Password"
-          rules={[{ required: true, message: "Please enter your current password" }]}
+          rules={[
+            { required: true, message: "Please enter your current password" },
+          ]}
         >
-          <Input.Password placeholder="Enter current password" autoComplete="current-password" />
+          <Input.Password
+            placeholder="Enter current password"
+            autoComplete="current-password"
+          />
         </MyForm.Item>
 
         <MyForm.Item
@@ -68,7 +73,10 @@ export default function ChangePasswordModal({ open, onClose }) {
             { min: 8, message: "Password must be at least 8 characters" },
           ]}
         >
-          <Input.Password placeholder="Enter new password" autoComplete="new-password" />
+          <Input.Password
+            placeholder="Enter new password"
+            autoComplete="new-password"
+          />
         </MyForm.Item>
 
         <MyForm.Item
@@ -87,14 +95,21 @@ export default function ChangePasswordModal({ open, onClose }) {
             }),
           ]}
         >
-          <Input.Password placeholder="Re-enter new password" autoComplete="new-password" />
+          <Input.Password
+            placeholder="Re-enter new password"
+            autoComplete="new-password"
+          />
         </MyForm.Item>
 
         <Flex justify="end" gap={10} style={{ marginTop: 8 }}>
           <MyButtonSecondary onClick={handleCancel} disabled={saving}>
             Cancel
           </MyButtonSecondary>
-          <MyButtonPrimary htmlType="submit" icon={<LockOutlined />} loading={saving}>
+          <MyButtonPrimary
+            htmlType="submit"
+            icon={<LockOutlined />}
+            loading={saving}
+          >
             Save
           </MyButtonPrimary>
         </Flex>

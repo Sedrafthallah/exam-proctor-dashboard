@@ -11,7 +11,7 @@ import {
   HistoryOutlined,
 } from "@ant-design/icons";
 
-// Permission codes follow the Admin Permission Set (P-01..P-08) in the
+// Permission codes follow the Admin Permission Set (P-01..P-07) in the
 // Engineering Analysis spec. An array means the item is visible if the
 // Admin holds ANY one of the listed permissions.
 export const adminItems = [
@@ -48,13 +48,13 @@ export const adminItems = [
     key: "/alerts",
     label: "Alerts",
     icon: <AlertOutlined />,
-    permission: ["P04", "P08"], // Session: Live Proctor / Reports: View (read-only)
+    permission: ["P04", "P07"], // Session: Live Proctor / Reports: View Violations (read-only)
   },
   {
     key: "/reports",
     label: "Reports",
     icon: <BarChartOutlined />,
-    permission: ["P07", "P08"], // Reports: Export / View Violations
+    permission: ["P06", "P07"], // Reports: Export / View Violations
   },
 ];
 

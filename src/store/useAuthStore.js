@@ -6,8 +6,8 @@ const ALL_PERMISSIONS_GRANTED = {
   P03: true,
   P04: true,
   P05: true,
+  P06: true,
   P07: true,
-  P08: true,
 };
 
 const INITIAL_USERS = [
@@ -36,8 +36,8 @@ const INITIAL_USERS = [
       P03: true,
       P04: true,
       P05: false,
+      P06: true,
       P07: true,
-      P08: true,
     },
   },
   {
@@ -48,7 +48,7 @@ const INITIAL_USERS = [
     role: "ADMIN",
     jobTitle: "Session Coordinator",
     disabled: false,
-    permissions: { P01: false, P02: false, P03: true, P04: true, P05: false, P07: false, P08: true },
+    permissions: { P01: false, P02: false, P03: true, P04: true, P05: false, P06: false, P07: true },
   },
   {
     id: "AD-004",
@@ -58,7 +58,7 @@ const INITIAL_USERS = [
     role: "ADMIN",
     jobTitle: "Question Author",
     disabled: false,
-    permissions: { P01: true, P02: false, P03: false, P04: false, P05: false, P07: false, P08: false },
+    permissions: { P01: true, P02: false, P03: false, P04: false, P05: false, P06: false, P07: false },
   },
   {
     id: "AD-005",
@@ -68,7 +68,7 @@ const INITIAL_USERS = [
     role: "ADMIN",
     jobTitle: "Proctor",
     disabled: false,
-    permissions: { P01: false, P02: false, P03: false, P04: true, P05: false, P07: false, P08: true },
+    permissions: { P01: false, P02: false, P03: false, P04: true, P05: false, P06: false, P07: true },
   },
   {
     id: "AD-006",
@@ -78,7 +78,7 @@ const INITIAL_USERS = [
     role: "ADMIN",
     jobTitle: "Registrar",
     disabled: false,
-    permissions: { P01: false, P02: false, P03: false, P04: false, P05: true, P07: true, P08: false },
+    permissions: { P01: false, P02: false, P03: false, P04: false, P05: true, P06: true, P07: false },
   },
 ];
 
@@ -92,6 +92,9 @@ const storedUser = localStorage.getItem("user");
 const useAuthStore = create((set, get) => ({
   // الوضع الحالي أثناء تطوير الـ UI
   user: null,
+  isAuthenticated: false,
+  accessToken: null,
+  refreshToken: null,
 
   /*
   عند تفعيل التخزين لاحقاً:
@@ -149,6 +152,7 @@ const useAuthStore = create((set, get) => ({
 
     set({
       user: safeUser,
+      isAuthenticated: true,
       loading: false,
       error: null,
     });
@@ -156,14 +160,27 @@ const useAuthStore = create((set, get) => ({
     return true;
   },
 
-  logout: () => {
+  logout: async () => {
     /*
     عند تفعيل التخزين لاحقاً:
     localStorage.removeItem("user");
+
+    const { refreshToken } = get();
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${get().accessToken}`,
+      },
+      body: JSON.stringify({ refreshToken }),
+    });
     */
 
     set({
       user: null,
+      isAuthenticated: false,
+      accessToken: null,
+      refreshToken: null,
       error: null,
     });
   },
@@ -192,8 +209,8 @@ const useAuthStore = create((set, get) => ({
         P03: false,
         P04: false,
         P05: false,
+        P06: false,
         P07: false,
-        P08: false,
         ...permissions,
       },
     };

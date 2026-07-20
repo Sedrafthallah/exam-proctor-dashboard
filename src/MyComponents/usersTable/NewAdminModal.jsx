@@ -19,7 +19,7 @@ export default function NewAdminModal({ open, onClose, onCreate }) {
 
   const handleFinish = (values) => {
     const permissions = Object.fromEntries(
-      (values.permissions || []).map((key) => [key, true])
+      (values.permissions || []).map((key) => [key, true]),
     );
 
     const result = onCreate({
@@ -56,7 +56,9 @@ export default function NewAdminModal({ open, onClose, onCreate }) {
         <MyForm.Item
           name="name"
           label="Full Name"
-          rules={[{ required: true, message: "Please enter the admin's full name" }]}
+          rules={[
+            { required: true, message: "Please enter the admin's full name" },
+          ]}
         >
           <Input placeholder="e.g. Dr. Rania Odeh" />
         </MyForm.Item>

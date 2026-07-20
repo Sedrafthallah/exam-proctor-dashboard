@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Layout, Input, Avatar, Space, Switch, Dropdown, theme } from "antd";
+import { useNavigate } from "react-router-dom";
+import { Layout, Input, Avatar, Space, Switch, Dropdown, App, theme } from "antd";
 
 import {
   SearchOutlined,
@@ -27,6 +28,8 @@ const ROLE_LABELS = {
 export default function Navbar({ isDark, setIsDark }) {
   const { token } = useToken();
   const { locale, setLocale } = useLanguage();
+  const navigate = useNavigate();
+  const { modal } = App.useApp();
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   const user = useAuthStore((state) => state.user);
@@ -80,7 +83,19 @@ export default function Navbar({ isDark, setIsDark }) {
       icon: <LogoutOutlined />,
       label: "Logout",
       danger: true,
-      onClick: () => logout(),
+      onClick: () => {
+        modal.confirm({
+          title: "Confirm Logout",
+          content: "Are you sure you want to log out?",
+          okText: "Logout",
+          okType: "danger",
+          cancelText: "Cancel",
+          onOk: async () => {
+            await logout();
+            navigate("/login");
+          },
+        });
+      },
     },
   ];
 

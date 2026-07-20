@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { BrowserRouter } from "react-router-dom";
-import { ConfigProvider, theme as antTheme } from "antd";
+import { ConfigProvider, App as AntApp, theme as antTheme } from "antd";
 import { LanguageProvider, useLanguage } from "./i18n";
 import AppRoutes from "./Routes/AppRoutes";
 import lightToken from "./token/lightToken";
@@ -48,9 +48,11 @@ function ThemedApp() {
         },
       }}
     >
-      <BrowserRouter>
-        <AppRoutes isDark={isDark} setIsDark={setIsDark} />
-      </BrowserRouter>
+      <AntApp>
+        <BrowserRouter>
+          <AppRoutes isDark={isDark} setIsDark={setIsDark} />
+        </BrowserRouter>
+      </AntApp>
     </ConfigProvider>
   );
 }

@@ -8,7 +8,7 @@ import MyCol from "../myCol/MyCol";
 const PERMISSION_DETAILS = {
   P01: {
     label: "Question Bank: Author",
-    description: "Create, edit and import questions into question banks.",
+    description: "Import questions via CSV and manage question banks.",
     icon: "📝",
   },
   P02: {
@@ -17,27 +17,27 @@ const PERMISSION_DETAILS = {
     icon: "👁",
   },
   P03: {
-    label: "Session Management",
+    label: "Session: Manage",
     description: "Create, configure, publish exam sessions and manage rosters.",
     icon: "📅",
   },
   P04: {
-    label: "Live Proctoring",
+    label: "Session: Live Proctor",
     description: "Monitor active sessions, issue warnings and terminate students.",
     icon: "🎥",
   },
   P05: {
-    label: "Student Registration",
+    label: "Students: Register",
     description: "Register students, upload rosters and manage ID photos.",
     icon: "👥",
   },
-  P07: {
-    label: "Reports & Export",
-    description: "Export grading packages and signed audit logs.",
+  P06: {
+    label: "Reports: Export",
+    description: "Export grading packages and signed audit logs in CSV and JSON.",
     icon: "📊",
   },
-  P08: {
-    label: "View Violations",
+  P07: {
+    label: "Reports: View Violations",
     description: "Read-only access to violation and incident logs.",
     icon: "🚨",
   },

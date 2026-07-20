@@ -107,7 +107,7 @@ function SessionActions({
   }
 
   if (status === "CLOSED") {
-    const canExport = isSuperAdmin || hasPermission("P07");
+    const canExport = isSuperAdmin || hasPermission("P06");
 
     if (!canExport) {
       return (

@@ -33,7 +33,7 @@ export default function Reports() {
 
   const isSuperAdmin = currentUser?.role === "SUPER_ADMIN";
   const hasPermission = (perm) => isSuperAdmin || currentUser?.permissions?.[perm] === true;
-  const canExport = isSuperAdmin || hasPermission("P07");
+  const canExport = isSuperAdmin || hasPermission("P06");
 
   const reportableSessions = sessions.filter((session) =>
     ["CLOSED", "ARCHIVED"].includes(getSessionStatus(session)),
@@ -157,7 +157,7 @@ export default function Reports() {
                   </Flex>
                 </Flex>
                 <Flex gap={10} style={{ marginTop: 18 }}>
-                  <Tooltip title={!canExport ? "Requires export permission (P-07)." : ""}>
+                  <Tooltip title={!canExport ? "Requires export permission (P-06)." : ""}>
                     <MyButtonPrimary
                       icon={<FileZipOutlined />}
                       disabled={!canExport}
@@ -166,7 +166,7 @@ export default function Reports() {
                       CSV ZIP
                     </MyButtonPrimary>
                   </Tooltip>
-                  <Tooltip title={!canExport ? "Requires export permission (P-07)." : ""}>
+                  <Tooltip title={!canExport ? "Requires export permission (P-06)." : ""}>
                     <MyButtonSecondary
                       icon={<CodeOutlined />}
                       disabled={!canExport}
@@ -209,12 +209,12 @@ export default function Reports() {
                     </MyText>
                     <MyText type="secondary" style={{ fontSize: 13 }}>
                       Cryptographically signed incident log for disciplinary use, kept
-                      separate from grading. Requires export permission (P-07).
+                      separate from grading. Requires export permission (P-06).
                     </MyText>
                   </Flex>
                 </Flex>
                 <Flex gap={10} style={{ marginTop: 18 }}>
-                  <Tooltip title={!canExport ? "Requires export permission (P-07)." : ""}>
+                  <Tooltip title={!canExport ? "Requires export permission (P-06)." : ""}>
                     <MyButtonPrimary
                       icon={<DownloadOutlined />}
                       disabled={!canExport}
