@@ -62,6 +62,21 @@ function SessionActions({
   }
 
   if (status === "LOCKED") {
+    // After override — show edit options
+    if (session.emergencyOverride) {
+      return (
+        <Flex gap={8} wrap="wrap">
+          <Button size="small" onClick={() => onEditRoster(session)}>
+            Edit Roster
+          </Button>
+          <Button size="small" onClick={() => onOpenSession(session)}>
+            View
+          </Button>
+        </Flex>
+      );
+    }
+
+    // Normal LOCKED — Super Admin can trigger override
     return (
       <Flex gap={8} wrap="wrap">
         {isSuperAdmin && (

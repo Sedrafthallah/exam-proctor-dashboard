@@ -33,7 +33,8 @@ export default function Reports() {
   const currentUser = useAuthStore((state) => state.user);
 
   const isSuperAdmin = currentUser?.role === "SUPER_ADMIN";
-  const hasPermission = (perm) => isSuperAdmin || currentUser?.permissions?.[perm] === true;
+  const hasPermission = (perm) =>
+    isSuperAdmin || currentUser?.permissions?.[perm] === true;
   const canExport = isSuperAdmin || hasPermission("P06");
 
   const reportableSessions = sessions.filter((session) =>
@@ -52,9 +53,10 @@ export default function Reports() {
       const found = reportableSessions.find((s) => s.id === sessionId);
       if (found) setSelectedSessionId(found.id);
     }
-  }, [searchParams, reportableSessions]);
+  }, [searchParams]);
 
-  const selectedSession = reportableSessions.find((s) => s.id === selectedSessionId) ?? null;
+  const selectedSession =
+    reportableSessions.find((s) => s.id === selectedSessionId) ?? null;
   const responses = useSessionResponses(selectedSession?.id);
   const status = selectedSession ? getSessionStatus(selectedSession) : null;
   const statusConfig = status ? getStatusConfig(status) : null;
@@ -155,20 +157,26 @@ export default function Reports() {
                       flexShrink: 0,
                     }}
                   >
-                    <FileZipOutlined style={{ fontSize: 18, color: token.colorPrimary }} />
+                    <FileZipOutlined
+                      style={{ fontSize: 18, color: token.colorPrimary }}
+                    />
                   </Flex>
                   <Flex vertical gap={4}>
                     <MyText strong style={{ fontSize: 14.5 }}>
                       Grading-Ready Package
                     </MyText>
                     <MyText type="secondary" style={{ fontSize: 13 }}>
-                      Session metadata, question manifest, auto-scored results and score
-                      summary with SHA-256 manifest.
+                      Session metadata, question manifest, auto-scored results
+                      and score summary with SHA-256 manifest.
                     </MyText>
                   </Flex>
                 </Flex>
                 <Flex gap={10} style={{ marginTop: 18 }}>
-                  <Tooltip title={!canExport ? "Requires export permission (P-06)." : ""}>
+                  <Tooltip
+                    title={
+                      !canExport ? "Requires export permission (P-06)." : ""
+                    }
+                  >
                     <MyButtonPrimary
                       icon={<FileZipOutlined />}
                       disabled={!canExport}
@@ -177,7 +185,11 @@ export default function Reports() {
                       CSV ZIP
                     </MyButtonPrimary>
                   </Tooltip>
-                  <Tooltip title={!canExport ? "Requires export permission (P-06)." : ""}>
+                  <Tooltip
+                    title={
+                      !canExport ? "Requires export permission (P-06)." : ""
+                    }
+                  >
                     <MyButtonSecondary
                       icon={<CodeOutlined />}
                       disabled={!canExport}
@@ -212,20 +224,27 @@ export default function Reports() {
                       flexShrink: 0,
                     }}
                   >
-                    <SafetyCertificateOutlined style={{ fontSize: 18, color: token.colorError }} />
+                    <SafetyCertificateOutlined
+                      style={{ fontSize: 18, color: token.colorError }}
+                    />
                   </Flex>
                   <Flex vertical gap={4}>
                     <MyText strong style={{ fontSize: 14.5 }}>
                       Signed Audit Log
                     </MyText>
                     <MyText type="secondary" style={{ fontSize: 13 }}>
-                      Cryptographically signed incident log for disciplinary use, kept
-                      separate from grading. Requires export permission (P-06).
+                      Cryptographically signed incident log for disciplinary
+                      use, kept separate from grading. Requires export
+                      permission (P-06).
                     </MyText>
                   </Flex>
                 </Flex>
                 <Flex gap={10} style={{ marginTop: 18 }}>
-                  <Tooltip title={!canExport ? "Requires export permission (P-06)." : ""}>
+                  <Tooltip
+                    title={
+                      !canExport ? "Requires export permission (P-06)." : ""
+                    }
+                  >
                     <MyButtonPrimary
                       icon={<DownloadOutlined />}
                       disabled={!canExport}

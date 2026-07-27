@@ -45,7 +45,7 @@ export function getSessionStatus(session) {
   if (now >= lockTime) {
     // A Super Admin emergency override drops the session back to SCHEDULED
     // rules (proctor/roster editable) during the T-24h lock window.
-    return session.emergencyOverride ? "SCHEDULED" : "LOCKED";
+    return "LOCKED";
   }
   if (session.published) return "SCHEDULED";
   return "DRAFT";

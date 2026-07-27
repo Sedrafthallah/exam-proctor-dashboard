@@ -44,7 +44,7 @@ export const INITIAL_SESSIONS = [
     id: "sess-003",
     sessionTitle: "NET410 Quiz 3",
     courseCode: "NET410",
-    scheduledStartUTC: "2026-07-06T14:00:00Z", // بعد 24 ساعة → LOCKED
+    scheduledStartUTC: dayjs().add(12, "hour").toISOString(), // ضمن نافذة T-24h → LOCKED
     duration: 45,
     gracePeriod: 5,
     loginWindow: 10,
