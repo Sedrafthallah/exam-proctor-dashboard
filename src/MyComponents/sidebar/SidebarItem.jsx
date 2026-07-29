@@ -9,6 +9,7 @@ import {
   SettingOutlined,
   UserOutlined,
   HistoryOutlined,
+  SafetyCertificateOutlined,
 } from "@ant-design/icons";
 
 // Permission codes follow the Admin Permission Set (P-01..P-07) in the
@@ -67,6 +68,11 @@ export const superAdminItems = [
     key: "/users",
     label: "Users Management",
     icon: <UserOutlined />,
+  },
+  {
+    key: "/roles",
+    label: "Roles & Permissions",
+    icon: <SafetyCertificateOutlined />,
   },
   {
     key: "/settings",

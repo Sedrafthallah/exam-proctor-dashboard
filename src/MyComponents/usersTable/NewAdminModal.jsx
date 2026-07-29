@@ -1,16 +1,16 @@
-import { Input, Checkbox, Flex } from "antd";
+import { Input, Select, Flex, Tag } from "antd";
 import { UserAddOutlined } from "@ant-design/icons";
 import MyModal from "../myModal/MyModal";
 import MyForm from "../myForm/MyForm";
-import MyRow from "../myRow/MyRow";
-import MyCol from "../myCol/MyCol";
 import MyButtonPrimary from "../myButton/MyButtonPrimary";
 import MyButtonSecondary from "../myButton/MyButtonSecondary";
 import MyText from "../myText/MyText";
-import { PERMISSIONS } from "./adminsData";
+import useRolesStore from "../../store/useRolesStore";
 
 export default function NewAdminModal({ open, onClose, onCreate }) {
   const [form] = MyForm.useForm();
+  const roles = useRolesStore((state) => state.roles);
+  const assignableRoles = roles.filter((role) => !role.isFixed);
 
   const handleCancel = () => {
     form.resetFields();
@@ -18,15 +18,14 @@ export default function NewAdminModal({ open, onClose, onCreate }) {
   };
 
   const handleFinish = (values) => {
-    const permissions = Object.fromEntries(
-      (values.permissions || []).map((key) => [key, true]),
-    );
+    const role = assignableRoles.find((r) => r.id === values.role);
 
     const result = onCreate({
       name: values.name,
       email: values.email,
       password: values.password,
-      permissions,
+      role: values.role,
+      permissions: role?.permissions || {},
     });
 
     if (result?.success) {
@@ -85,23 +84,50 @@ export default function NewAdminModal({ open, onClose, onCreate }) {
           <Input.Password placeholder="Set a temporary password" />
         </MyForm.Item>
 
-        <MyForm.Item name="permissions" label="Permissions" initialValue={[]}>
-          <Checkbox.Group style={{ width: "100%" }}>
-            <MyRow gutter={[8, 10]}>
-              {PERMISSIONS.map((perm) => (
-                <MyCol key={perm.key} xs={24} sm={12}>
-                  <Checkbox value={perm.key}>
-                    <MyText style={{ fontSize: 12.5 }}>
-                      <MyText strong style={{ fontSize: 12.5 }}>
-                        {perm.code}
-                      </MyText>{" "}
-                      — {perm.title}
+        <MyForm.Item
+          name="role"
+          label="Role"
+          initialValue={assignableRoles[0]?.id}
+          rules={[{ required: true, message: "Please select a role" }]}
+        >
+          <Select
+            options={assignableRoles.map((role) => ({
+              value: role.id,
+              label: role.name,
+            }))}
+          />
+        </MyForm.Item>
+
+        <MyForm.Item shouldUpdate noStyle>
+          {() => {
+            const role = assignableRoles.find(
+              (r) => r.id === form.getFieldValue("role"),
+            );
+            const granted = Object.entries(role?.permissions || {})
+              .filter(([, value]) => value)
+              .map(([key]) => key);
+
+            return (
+              <Flex vertical gap={6} style={{ marginBottom: 16 }}>
+                <MyText type="secondary" style={{ fontSize: 12.5 }}>
+                  This role includes:
+                </MyText>
+                <Flex gap={6} wrap="wrap">
+                  {granted.length ? (
+                    granted.map((key) => (
+                      <Tag key={key} style={{ margin: 0 }}>
+                        {key}
+                      </Tag>
+                    ))
+                  ) : (
+                    <MyText type="secondary" style={{ fontSize: 12.5 }}>
+                      No permissions
                     </MyText>
-                  </Checkbox>
-                </MyCol>
-              ))}
-            </MyRow>
-          </Checkbox.Group>
+                  )}
+                </Flex>
+              </Flex>
+            );
+          }}
         </MyForm.Item>
 
         <Flex justify="end" gap={10} style={{ marginTop: 8 }}>

@@ -78,6 +78,20 @@ export default function PermissionMatrix({
         </Flex>
       ),
     },
+    {
+      title: "Role",
+      dataIndex: "role",
+      key: "role",
+      render: (role) => {
+        const config = {
+          SUPER_ADMIN: { color: "purple", label: "Super Admin" },
+          ADMIN: { color: "blue", label: "Admin" },
+          PROCTOR: { color: "green", label: "Proctor" },
+        };
+        const { color, label } = config[role] ?? { color: "default", label: role };
+        return <Tag color={color}>{label}</Tag>;
+      },
+    },
     ...PERMISSIONS.map((perm) => ({
       title: (
         <Tooltip title={perm.title}>

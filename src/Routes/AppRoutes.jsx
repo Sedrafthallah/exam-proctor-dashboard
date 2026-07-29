@@ -14,6 +14,7 @@ import Monitoring from "../Pages/monitoring/Monitoring";
 import Alerts from "../Pages/alerts/Alerts";
 import Reports from "../Pages/reports/Reports";
 import Users from "../Pages/users/Users";
+import Roles from "../Pages/roles/Roles";
 import Settings from "../Pages/settings/Settings";
 import AuditLogs from "../Pages/auditLogs/AuditLogs";
 
@@ -29,6 +30,7 @@ const PRIVATE_PAGES = [
   { path: "/alerts", element: <Alerts /> },
   { path: "/reports", element: <Reports /> },
   { path: "/users", element: <Users /> },
+  { path: "/roles", element: <Roles /> },
   { path: "/settings", element: <Settings /> },
   { path: "/logs", element: <AuditLogs /> },
 ];
