@@ -115,49 +115,62 @@ const useAuthStore = create((set, get) => ({
       error: null,
     });
 
-    await new Promise((r) => setTimeout(r, 500));
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password }),
+      });
 
-    const found = get().users.find(
-      (u) => u.email.toLowerCase() === email.trim().toLowerCase() && u.password === password,
-    );
+      const json = await res.json();
 
-    if (!found) {
+      if (!res.ok || json.statusCode !== 200) {
+        set({
+          loading: false,
+          error: json.message || "Invalid email or password",
+        });
+
+        return false;
+      }
+
+      const data = json.data;
+
+      const user = {
+        id: String(data.userId),
+        name: data.fullName,
+        email: data.email,
+        role: data.roles?.[0] === "SuperAdmin" ? "SUPER_ADMIN" : "ADMIN",
+        jobTitle: data.roles?.[0] ?? "Admin",
+        disabled: false,
+        permissions: data.permissions,
+      };
+
+      /*
+      عند تفعيل التخزين لاحقاً:
+      localStorage.setItem(
+        "user",
+        JSON.stringify(user)
+      );
+      */
+
+      set({
+        user,
+        isAuthenticated: true,
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+        loading: false,
+        error: null,
+      });
+
+      return true;
+    } catch (err) {
       set({
         loading: false,
-        error: "Invalid email or password",
+        error: "Network error. Please try again.",
       });
 
       return false;
     }
-
-    if (found.disabled) {
-      set({
-        loading: false,
-        error: "This account has been disabled",
-      });
-
-      return false;
-    }
-
-    const safeUser = { ...found };
-    delete safeUser.password;
-
-    /*
-    عند تفعيل التخزين لاحقاً:
-    localStorage.setItem(
-      "user",
-      JSON.stringify(safeUser)
-    );
-    */
-
-    set({
-      user: safeUser,
-      isAuthenticated: true,
-      loading: false,
-      error: null,
-    });
-
-    return true;
   },
 
   logout: async () => {
