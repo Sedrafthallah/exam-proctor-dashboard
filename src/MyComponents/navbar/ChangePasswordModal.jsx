@@ -6,27 +6,60 @@ import MyForm from "../myForm/MyForm";
 import MyButtonPrimary from "../myButton/MyButtonPrimary";
 import MyButtonSecondary from "../myButton/MyButtonSecondary";
 import MyText from "../myText/MyText";
+import useAuthStore from "../../store/useAuthStore";
+import { apiFetch } from "../../api/apiClient";
 
 export default function ChangePasswordModal({ open, onClose }) {
   const { token } = theme.useToken();
   const [form] = MyForm.useForm();
   const [saving, setSaving] = useState(false);
 
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const setTokens = useAuthStore((state) => state.setTokens);
+
   const handleCancel = () => {
     form.resetFields();
     onClose();
   };
 
-  const handleFinish = async () => {
+  const handleFinish = async ({
+    currentPassword,
+    newPassword,
+    confirmPassword,
+  }) => {
     setSaving(true);
 
-    // POST /api/auth/change-password { currentPassword, newPassword }
-    await new Promise((resolve) => setTimeout(resolve, 700));
+    try {
+      const res = await apiFetch("/api/auth/change-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          CurrentPassword: currentPassword,
+          NewPassword: newPassword,
+          ConfirmPassword: confirmPassword,
+        }),
+      });
 
-    setSaving(false);
-    message.success("Password changed successfully.");
-    form.resetFields();
-    onClose();
+      const json = await res.json();
+
+      if (!res.ok || json.statusCode !== 200) {
+        message.error(json.message || "Failed to change password.");
+        return;
+      }
+
+      setTokens(json.data.accessToken, json.data.refreshToken);
+
+      message.success("Password changed successfully.");
+      form.resetFields();
+      onClose();
+    } catch {
+      message.error("Network error. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (

@@ -168,6 +168,11 @@ const useQuestionBankStore = create((set) => ({
 
     return bank;
   },
+
+  deleteBank: (code) =>
+    set((state) => ({
+      questionBanks: state.questionBanks.filter((b) => b.code !== code),
+    })),
 }));
 
 export default useQuestionBankStore;

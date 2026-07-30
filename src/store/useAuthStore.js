@@ -194,6 +194,10 @@ const useAuthStore = create((set, get) => ({
     });
   },
 
+  setTokens: (accessToken, refreshToken) => {
+    set({ accessToken, refreshToken });
+  },
+
   // Creates a real login account for a new admin (Users Management > New Admin).
   // Returns { success, error } so the caller can surface a duplicate-email error inline.
   registerAdmin: ({ name, email, password, permissions }) => {
