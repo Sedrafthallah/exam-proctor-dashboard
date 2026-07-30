@@ -1,26 +1,6 @@
 import { create } from "zustand";
 
-const ALL_PERMISSIONS_GRANTED = {
-  P01: true,
-  P02: true,
-  P03: true,
-  P04: true,
-  P05: true,
-  P06: true,
-  P07: true,
-};
-
 const INITIAL_USERS = [
-  {
-    id: "SA-001",
-    name: "Sedra Fathallah",
-    email: "sidra@university.edu",
-    password: "admin123",
-    role: "SUPER_ADMIN",
-    jobTitle: "Super Admin",
-    disabled: false,
-    permissions: ALL_PERMISSIONS_GRANTED,
-  },
   {
     id: "AD-002",
     name: "Manar Aljarkas",
@@ -48,7 +28,15 @@ const INITIAL_USERS = [
     role: "ADMIN",
     jobTitle: "Session Coordinator",
     disabled: false,
-    permissions: { P01: false, P02: false, P03: true, P04: true, P05: false, P06: false, P07: true },
+    permissions: {
+      P01: false,
+      P02: false,
+      P03: true,
+      P04: true,
+      P05: false,
+      P06: false,
+      P07: true,
+    },
   },
   {
     id: "AD-004",
@@ -58,7 +46,15 @@ const INITIAL_USERS = [
     role: "ADMIN",
     jobTitle: "Question Author",
     disabled: false,
-    permissions: { P01: true, P02: false, P03: false, P04: false, P05: false, P06: false, P07: false },
+    permissions: {
+      P01: true,
+      P02: false,
+      P03: false,
+      P04: false,
+      P05: false,
+      P06: false,
+      P07: false,
+    },
   },
   {
     id: "AD-005",
@@ -68,7 +64,15 @@ const INITIAL_USERS = [
     role: "ADMIN",
     jobTitle: "Proctor",
     disabled: false,
-    permissions: { P01: false, P02: false, P03: false, P04: true, P05: false, P06: false, P07: true },
+    permissions: {
+      P01: false,
+      P02: false,
+      P03: false,
+      P04: true,
+      P05: false,
+      P06: false,
+      P07: true,
+    },
   },
   {
     id: "AD-006",
@@ -78,34 +82,24 @@ const INITIAL_USERS = [
     role: "ADMIN",
     jobTitle: "Registrar",
     disabled: false,
-    permissions: { P01: false, P02: false, P03: false, P04: false, P05: true, P06: true, P07: false },
+    permissions: {
+      P01: false,
+      P02: false,
+      P03: false,
+      P04: false,
+      P05: true,
+      P06: true,
+      P07: false,
+    },
   },
 ];
 
-/*
-==================================================
-عند تفعيل التخزين لاحقاً مع الباك:
-const storedUser = localStorage.getItem("user");
-==================================================
-*/
-
 const useAuthStore = create((set, get) => ({
-  // الوضع الحالي أثناء تطوير الـ UI
   user: null,
   isAuthenticated: false,
   accessToken: null,
   refreshToken: null,
-
-  /*
-  عند تفعيل التخزين لاحقاً:
-  user: storedUser ? JSON.parse(storedUser) : null,
-  */
-
-  // All registered admin accounts (super admin + admins). This is what both
-  // the Login page authenticates against and the Users Management page displays,
-  // so an account created from Users Management can log in right away.
   users: INITIAL_USERS,
-
   loading: false,
   error: null,
 
@@ -145,14 +139,6 @@ const useAuthStore = create((set, get) => ({
         permissions: data.permissions,
       };
 
-      /*
-      عند تفعيل التخزين لاحقاً:
-      localStorage.setItem(
-        "user",
-        JSON.stringify(user)
-      );
-      */
-
       set({
         user,
         isAuthenticated: true,
@@ -174,20 +160,29 @@ const useAuthStore = create((set, get) => ({
   },
 
   logout: async () => {
-    /*
-    عند تفعيل التخزين لاحقاً:
-    localStorage.removeItem("user");
+    try {
+      const { refreshToken, accessToken } = get();
 
-    const { refreshToken } = get();
-    await fetch("/api/auth/logout", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${get().accessToken}`,
-      },
-      body: JSON.stringify({ refreshToken }),
-    });
-    */
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          refreshToken,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Logout failed");
+      }
+
+      const result = await response.json();
+      console.log(result.message);
+    } catch (error) {
+      console.error(error);
+    }
 
     set({
       user: null,
@@ -202,10 +197,15 @@ const useAuthStore = create((set, get) => ({
   // Returns { success, error } so the caller can surface a duplicate-email error inline.
   registerAdmin: ({ name, email, password, permissions }) => {
     const normalizedEmail = email.trim().toLowerCase();
-    const emailTaken = get().users.some((u) => u.email.toLowerCase() === normalizedEmail);
+    const emailTaken = get().users.some(
+      (u) => u.email.toLowerCase() === normalizedEmail,
+    );
 
     if (emailTaken) {
-      return { success: false, error: "An account with this email already exists" };
+      return {
+        success: false,
+        error: "An account with this email already exists",
+      };
     }
 
     const newUser = {
@@ -242,7 +242,10 @@ const useAuthStore = create((set, get) => ({
     );
 
     if (emailTaken) {
-      return { success: false, error: "An account with this email already exists" };
+      return {
+        success: false,
+        error: "An account with this email already exists",
+      };
     }
 
     set((state) => ({
@@ -253,7 +256,10 @@ const useAuthStore = create((set, get) => ({
               name,
               email: email.trim(),
               ...(password ? { password } : {}),
-              permissions: u.role === "SUPER_ADMIN" ? u.permissions : { ...u.permissions, ...permissions },
+              permissions:
+                u.role === "SUPER_ADMIN"
+                  ? u.permissions
+                  : { ...u.permissions, ...permissions },
             }
           : u,
       ),
@@ -267,14 +273,18 @@ const useAuthStore = create((set, get) => ({
   toggleUserStatus: (userId) => {
     set((state) => ({
       users: state.users.map((u) =>
-        u.id === userId && u.role !== "SUPER_ADMIN" ? { ...u, disabled: !u.disabled } : u,
+        u.id === userId && u.role !== "SUPER_ADMIN"
+          ? { ...u, disabled: !u.disabled }
+          : u,
       ),
     }));
   },
 
   deleteAdmin: (userId) => {
     set((state) => ({
-      users: state.users.filter((u) => u.id !== userId || u.role === "SUPER_ADMIN"),
+      users: state.users.filter(
+        (u) => u.id !== userId || u.role === "SUPER_ADMIN",
+      ),
     }));
   },
 
