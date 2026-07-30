@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import dayjs from "dayjs";
-
+import { apiFetch } from "../api/apiClient";
 export const INITIAL_SESSIONS = [
   {
     id: "sess-001",
@@ -156,9 +156,10 @@ export const INITIAL_SESSIONS = [
   },
 ];
 
-const useSessionStore = create((set) => ({
+const useSessionStore = create((set, get) => ({
   sessions: INITIAL_SESSIONS,
-
+  weeklyStatistics: [],
+  weeklyStatisticsLoading: false,
   // Creates a new session as a Draft — it only becomes visible to students once
   // published from the sessions table.
   addSession: (fields) =>
@@ -221,5 +222,39 @@ const useSessionStore = create((set) => ({
         s.id === sessionId ? { ...s, forceClosed: true } : s,
       ),
     })),
+
+  fetchWeeklyStatistics: async () => {
+    set({
+      weeklyStatisticsLoading: true,
+    });
+
+    try {
+      const response = await apiFetch("/exam-sessions/weekly-statistics");
+      console.log(response.url);
+      const result = await response.json();
+
+      if (!response.ok || result.statusCode !== 200) {
+        throw new Error(result.message || "Failed to fetch weekly statistics");
+      }
+
+      const chartData = result.data.map((item) => ({
+        day: item.day.slice(0, 3), // Sat, Sun...
+        sessions: item.totalSessions,
+        submissions: item.totalStudents,
+      }));
+
+      set({
+        weeklyStatistics: chartData,
+        weeklyStatisticsLoading: false,
+      });
+    } catch (error) {
+      console.error("Weekly statistics error:", error);
+
+      set({
+        weeklyStatistics: [],
+        weeklyStatisticsLoading: false,
+      });
+    }
+  },
 }));
 export default useSessionStore;

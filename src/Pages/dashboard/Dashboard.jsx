@@ -1,11 +1,16 @@
 import { theme, Avatar, Flex } from "antd";
+import { useEffect } from "react";
 import dayjs from "dayjs";
 import MyRow from "../../MyComponents/myRow/MyRow";
 import MyCol from "../../MyComponents/myCol/MyCol";
 import MyCard from "../../MyComponents/myCard/MyCard";
 import MyText from "../../MyComponents/myText/MyText";
 
-import { WarningFilled, UserSwitchOutlined, CheckCircleFilled } from "@ant-design/icons";
+import {
+  WarningFilled,
+  UserSwitchOutlined,
+  CheckCircleFilled,
+} from "@ant-design/icons";
 import { MdOutlineSensors, MdGroups } from "react-icons/md";
 import { FiInbox } from "react-icons/fi";
 import { AiFillThunderbolt } from "react-icons/ai";
@@ -40,18 +45,40 @@ function SuperAdminDashboard() {
   const { token } = theme.useToken();
 
   const sessions = useSessionStore((state) => state.sessions);
+  const weeklyStatistics = useSessionStore((state) => state.weeklyStatistics);
+
+  const fetchWeeklyStatistics = useSessionStore(
+    (state) => state.fetchWeeklyStatistics,
+  );
+
   const students = useStudentStore((state) => state.students);
   const alerts = useAlertsStore((state) => state.alerts);
   const questionBanks = useQuestionBankStore((state) => state.questionBanks);
 
-  const activeSessionsCount = sessions.filter((s) => getSessionStatus(s) === "ACTIVE").length;
-  const registeredStudentsCount = students.filter((s) => s.status === "REGISTERED").length;
+  useEffect(() => {
+    fetchWeeklyStatistics();
+  }, [fetchWeeklyStatistics]);
+
+  console.log("weeklyStatistics:", weeklyStatistics);
+
+  const activeSessionsCount = sessions.filter(
+    (s) => getSessionStatus(s) === "ACTIVE",
+  ).length;
+  const registeredStudentsCount = students.filter(
+    (s) => s.status === "REGISTERED",
+  ).length;
   const openAlertsCount = alerts.filter((a) => a.status === "OPEN").length;
   const criticalOpenAlertsCount = alerts.filter(
-    (a) => a.status === "OPEN" && (a.type === "FACE_ABSENCE" || a.type === "MULTIPLE_FACES"),
+    (a) =>
+      a.status === "OPEN" &&
+      (a.type === "FACE_ABSENCE" || a.type === "MULTIPLE_FACES"),
   ).length;
-  const draftBanksCount = questionBanks.filter((b) => getBankStatus(b) === "DRAFT").length;
-  const pendingAuthCount = alerts.filter((a) => a.type === "FACE_ABSENCE" && a.status === "OPEN").length;
+  const draftBanksCount = questionBanks.filter(
+    (b) => getBankStatus(b) === "DRAFT",
+  ).length;
+  const pendingAuthCount = alerts.filter(
+    (a) => a.type === "FACE_ABSENCE" && a.status === "OPEN",
+  ).length;
 
   const dashboardCards = [
     {
@@ -110,12 +137,16 @@ function SuperAdminDashboard() {
 
   const sessionsOverviewData = sessions
     .slice()
-    .sort((a, b) => new Date(b.scheduledStartUTC) - new Date(a.scheduledStartUTC))
+    .sort(
+      (a, b) => new Date(b.scheduledStartUTC) - new Date(a.scheduledStartUTC),
+    )
     .slice(0, 5)
     .map((session) => {
       const status = getSessionStatus(session);
       const start = dayjs(session.scheduledStartUTC);
-      const graceEnd = start.add(session.duration, "minute").add(session.gracePeriod, "minute");
+      const graceEnd = start
+        .add(session.duration, "minute")
+        .add(session.gracePeriod, "minute");
 
       let seconds = 0;
       if (status === "ACTIVE" || status === "GRACE") {
@@ -139,12 +170,7 @@ function SuperAdminDashboard() {
     <>
       <MyRow gutter={[16, 16]}>
         {dashboardCards.map((item) => (
-          <MyCol
-            key={item.key}
-            xs={24}
-            sm={12}
-            md={{ flex: "1 1 200px" }}
-          >
+          <MyCol key={item.key} xs={24} sm={12} md={{ flex: "1 1 200px" }}>
             <MyCard
               styles={{ body: { padding: 0 } }}
               style={{
@@ -220,7 +246,7 @@ function SuperAdminDashboard() {
         <MyCol xs={24} lg={16}>
           <Flex vertical gap={20}>
             <SessionsOverview sessions={sessionsOverviewData} />
-            <ExamActivityChart />
+            <ExamActivityChart data={weeklyStatistics} />
           </Flex>
         </MyCol>
         <MyCol xs={24} lg={8}>
