@@ -74,14 +74,15 @@ export const superAdminItems = [
     label: "Roles & Permissions",
     icon: <SafetyCertificateOutlined />,
   },
-  {
-    key: "/settings",
-    label: "System Settings",
-    icon: <SettingOutlined />,
-  },
+
   {
     key: "/logs",
     label: "Audit Logs",
     icon: <HistoryOutlined />,
+  },
+  {
+    key: "/settings",
+    label: "System Settings",
+    icon: <SettingOutlined />,
   },
 ];

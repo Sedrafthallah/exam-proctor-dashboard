@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { apiFetch } from "../api/apiClient";
 
 const INITIAL_USERS = [
   {
@@ -110,7 +111,7 @@ const useAuthStore = create((set, get) => ({
     });
 
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await apiFetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), password }),
@@ -163,7 +164,7 @@ const useAuthStore = create((set, get) => ({
     try {
       const { refreshToken, accessToken } = get();
 
-      const response = await fetch("/api/auth/logout", {
+      const response = await apiFetch("/api/auth/logout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
