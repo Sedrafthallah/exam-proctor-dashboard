@@ -50,14 +50,16 @@ function SuperAdminDashboard() {
   const fetchWeeklyStatistics = useSessionStore(
     (state) => state.fetchWeeklyStatistics,
   );
+  const fetchSessions = useSessionStore((state) => state.fetchSessions);
 
   const students = useStudentStore((state) => state.students);
   const alerts = useAlertsStore((state) => state.alerts);
   const questionBanks = useQuestionBankStore((state) => state.questionBanks);
 
   useEffect(() => {
+    fetchSessions();
     fetchWeeklyStatistics();
-  }, [fetchWeeklyStatistics]);
+  }, []);
 
   console.log("weeklyStatistics:", weeklyStatistics);
 

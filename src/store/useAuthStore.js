@@ -95,11 +95,15 @@ const INITIAL_USERS = [
   },
 ];
 
+const savedUser = sessionStorage.getItem("user");
+const savedToken = sessionStorage.getItem("accessToken");
+const savedRefreshToken = sessionStorage.getItem("refreshToken");
+
 const useAuthStore = create((set, get) => ({
-  user: null,
-  isAuthenticated: false,
-  accessToken: null,
-  refreshToken: null,
+  user: savedUser ? JSON.parse(savedUser) : null,
+  isAuthenticated: !!savedToken,
+  accessToken: savedToken ?? null,
+  refreshToken: savedRefreshToken ?? null,
   users: INITIAL_USERS,
   loading: false,
   error: null,
@@ -139,6 +143,10 @@ const useAuthStore = create((set, get) => ({
         disabled: false,
         permissions: data.permissions,
       };
+
+      sessionStorage.setItem("accessToken", data.accessToken);
+      sessionStorage.setItem("refreshToken", data.refreshToken);
+      sessionStorage.setItem("user", JSON.stringify(user));
 
       set({
         user,
@@ -185,6 +193,10 @@ const useAuthStore = create((set, get) => ({
       console.error(error);
     }
 
+    sessionStorage.removeItem("user");
+    sessionStorage.removeItem("accessToken");
+    sessionStorage.removeItem("refreshToken");
+
     set({
       user: null,
       isAuthenticated: false,
@@ -195,6 +207,8 @@ const useAuthStore = create((set, get) => ({
   },
 
   setTokens: (accessToken, refreshToken) => {
+    sessionStorage.setItem("accessToken", accessToken);
+    sessionStorage.setItem("refreshToken", refreshToken);
     set({ accessToken, refreshToken });
   },
 

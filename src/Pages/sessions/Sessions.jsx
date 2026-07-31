@@ -1,7 +1,7 @@
 import useSessionStore from "../../store/useSessionStore";
 import { getSessionStatus } from "../../utils/sessionUtils";
 import { theme, Flex, message } from "antd";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MyTitle from "../../MyComponents/MyTitle/MyTitle";
 import MyText from "../../MyComponents/myText/MyText";
 import MyButtonPrimary from "../../MyComponents/myButton/MyButtonPrimary";
@@ -25,6 +25,11 @@ export default function Sessions() {
   const { token } = theme.useToken();
   const sessions = useSessionStore((state) => state.sessions);
   const addSession = useSessionStore((state) => state.addSession);
+  const fetchSessions = useSessionStore((state) => state.fetchSessions);
+
+  useEffect(() => {
+    fetchSessions();
+  }, []);
 
   const filteredSessions = sessions.filter((session) => {
     if (activeFilter === "ALL") return true;

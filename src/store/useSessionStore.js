@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import dayjs from "dayjs";
 import { apiFetch } from "../api/apiClient";
+import useAuthStore from "./useAuthStore";
 export const INITIAL_SESSIONS = [
   {
     id: "sess-001",
@@ -160,6 +161,58 @@ const useSessionStore = create((set, get) => ({
   sessions: INITIAL_SESSIONS,
   weeklyStatistics: [],
   weeklyStatisticsLoading: false,
+  loading: false,
+
+  fetchSessions: async () => {
+    set({ loading: true });
+    try {
+      const accessToken = useAuthStore.getState().accessToken;
+
+      const res = await apiFetch("/api/exam-sessions?pageSize=100&page=1", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      const json = await res.json();
+      console.log("Sessions from API:", json);
+      if (!res.ok || json.statusCode !== 200) {
+        throw new Error(json.message || "Failed to fetch sessions");
+      }
+
+      const sessions = json.data.map((s) => ({
+        id: String(s.id),
+        sessionTitle: s.title,
+        courseCode: s.courseTag,
+        status: s.status, // ← جاهز من الباك مباشرة
+        scheduledStartUTC: s.startTime,
+        duration: s.durationMinutes,
+        gracePeriod: s.gracePeriodMinutes,
+        loginWindow: s.loginWindowMinutes,
+        gazeThreshold: s.eyeGazeThresholdSec,
+        questionBank: s.questionBankName ?? null,
+        questionBankId: s.questionBankId ?? null,
+        lockedAt: s.lockedAt ?? null,
+        closedAt: s.closedAt ?? null,
+        createdAt: s.createdAt ?? null,
+        createdBy: s.createdBy ?? null,
+        // حقول ناقصة من الباك — رح تتضاف لاحقاً
+        enrolledStudents: s.enrolledStudents ?? 0,
+        proctor: s.assignedProctor ?? null,
+        published: s.status !== "DRAFT",
+        archived: s.status === "ARCHIVED",
+        // monitoring defaults
+        audioMonitoring: s.audioMonitoring ?? false,
+        faceAlertSensitivity: s.faceAlertSensitivity ?? "Medium",
+        questionRandomisation: s.questionRandomisation ?? true,
+        optionShuffle: s.optionShuffle ?? true,
+      }));
+
+      set({ sessions, loading: false });
+    } catch (error) {
+      console.error("fetchSessions error:", error);
+      set({ loading: false });
+    }
+  },
+
   // Creates a new session as a Draft — it only becomes visible to students once
   // published from the sessions table.
   addSession: (fields) =>
@@ -224,13 +277,18 @@ const useSessionStore = create((set, get) => ({
     })),
 
   fetchWeeklyStatistics: async () => {
-    set({
-      weeklyStatisticsLoading: true,
-    });
+    set({ weeklyStatisticsLoading: true });
 
     try {
-      const response = await apiFetch("/exam-sessions/weekly-statistics");
-      console.log(response.url);
+      // جيبي الـ token من useAuthStore
+      const accessToken = useAuthStore.getState().accessToken;
+
+      const response = await apiFetch("/api/exam-sessions/weekly-statistics", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
       const result = await response.json();
 
       if (!response.ok || result.statusCode !== 200) {
@@ -238,22 +296,15 @@ const useSessionStore = create((set, get) => ({
       }
 
       const chartData = result.data.map((item) => ({
-        day: item.day.slice(0, 3), // Sat, Sun...
+        day: item.day.slice(0, 3),
         sessions: item.totalSessions,
         submissions: item.totalStudents,
       }));
 
-      set({
-        weeklyStatistics: chartData,
-        weeklyStatisticsLoading: false,
-      });
+      set({ weeklyStatistics: chartData, weeklyStatisticsLoading: false });
     } catch (error) {
       console.error("Weekly statistics error:", error);
-
-      set({
-        weeklyStatistics: [],
-        weeklyStatisticsLoading: false,
-      });
+      set({ weeklyStatistics: [], weeklyStatisticsLoading: false });
     }
   },
 }));
