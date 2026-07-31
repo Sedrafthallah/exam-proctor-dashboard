@@ -79,8 +79,8 @@ export default function NewAdminModal({ open, onClose, onCreate }) {
               {data.temporaryPassword}
             </p>
             <p style={{ color: "#888", fontSize: 12 }}>
-              Share this password with the admin. They should change it on
-              first login.
+              Share this password with the admin. They should change it on first
+              login.
             </p>
           </div>
         ),
@@ -89,7 +89,7 @@ export default function NewAdminModal({ open, onClose, onCreate }) {
       form.resetFields();
       onClose();
       onCreate?.(data); // ← notify parent if needed
-    } catch (err) {
+    } catch {
       message.error("Network error. Please try again.");
     } finally {
       setLoading(false);

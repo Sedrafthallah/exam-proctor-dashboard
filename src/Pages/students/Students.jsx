@@ -1,51 +1,42 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { theme, Flex, message, Upload } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 
 import useStudentStore from "../../store/useStudentStore";
-import { parseStudentsCSVWithValidation } from "../../utils/csvUtils";
 
 import MyTitle from "../../MyComponents/MyTitle/MyTitle";
 import MyText from "../../MyComponents/myText/MyText";
 import MyButtonPrimary from "../../MyComponents/myButton/MyButtonPrimary";
 
 import StudentsRoster from "../../MyComponents/studentsTable/StudentsRoster";
-import ImportPreviewModal from "../../MyComponents/studentsTable/ImportPreviewModal";
+import ImportResultsModal from "../../MyComponents/studentsTable/ImportResultsModal";
 
 export default function Students() {
   const { token } = theme.useToken();
   const students = useStudentStore((state) => state.students);
-  const bulkRegisterStudents = useStudentStore((state) => state.bulkRegisterStudents);
+  const loading = useStudentStore((state) => state.loading);
+  const importing = useStudentStore((state) => state.importing);
+  const fetchStudents = useStudentStore((state) => state.fetchStudents);
+  const importStudentsCsv = useStudentStore((state) => state.importStudentsCsv);
 
-  const [previewData, setPreviewData] = useState(null); // { valid: [], errors: [] }
-  const [previewOpen, setPreviewOpen] = useState(false);
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
+
+  const [importResult, setImportResult] = useState(null);
+  const [resultsOpen, setResultsOpen] = useState(false);
 
   const handleImportCsv = async (file) => {
     try {
-      const text = await file.text();
-      const { valid, errors } = parseStudentsCSVWithValidation(text);
-      setPreviewData({ valid, errors });
-      setPreviewOpen(true);
-    } catch {
-      message.error("Couldn't read that file. Please upload a valid CSV.");
+      const result = await importStudentsCsv(file);
+      setImportResult(result);
+      setResultsOpen(true);
+      fetchStudents();
+    } catch (error) {
+      message.error(error.message || "Couldn't import that CSV file.");
     }
 
     return false; // prevent antd's default auto-upload
-  };
-
-  const handleConfirmImport = () => {
-    const { addedCount, skippedCount } = bulkRegisterStudents(previewData.valid);
-    setPreviewOpen(false);
-    setPreviewData(null);
-
-    if (addedCount > 0) {
-      message.success(
-        `Imported ${addedCount} student${addedCount === 1 ? "" : "s"}.` +
-          (skippedCount > 0 ? ` Skipped ${skippedCount} duplicates.` : ""),
-      );
-    } else {
-      message.info("All rows already on the roster — nothing imported.");
-    }
   };
 
   return (
@@ -62,21 +53,22 @@ export default function Students() {
 
         <Flex gap={10}>
           <Upload accept=".csv" showUploadList={false} beforeUpload={handleImportCsv}>
-            <MyButtonPrimary icon={<UploadOutlined />}>Import Roster CSV</MyButtonPrimary>
+            <MyButtonPrimary icon={<UploadOutlined />} loading={importing}>
+              Import Roster CSV
+            </MyButtonPrimary>
           </Upload>
         </Flex>
       </Flex>
 
-      <StudentsRoster students={students} />
+      <StudentsRoster students={students} loading={loading} />
 
-      <ImportPreviewModal
-        open={previewOpen}
-        data={previewData}
+      <ImportResultsModal
+        open={resultsOpen}
+        result={importResult}
         onClose={() => {
-          setPreviewOpen(false);
-          setPreviewData(null);
+          setResultsOpen(false);
+          setImportResult(null);
         }}
-        onConfirm={handleConfirmImport}
       />
     </Flex>
   );

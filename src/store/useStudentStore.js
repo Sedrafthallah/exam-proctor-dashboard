@@ -1,87 +1,80 @@
 import { create } from "zustand";
+import { apiFetch } from "../api/apiClient";
+import useAuthStore from "./useAuthStore";
 
-export const INITIAL_STUDENTS = [
-  {
-    id: "S-20211847",
-    name: "Layla Mansour",
-    email: "layla.m@std.damascus.edu",
-    status: "REGISTERED",
-  },
-  {
-    id: "S-20210934",
-    name: "Omar Khalil",
-    email: "omar.k@std.damascus.edu",
-    status: "REGISTERED",
-  },
-  {
-    id: "S-20213302",
-    name: "Nour Haidar",
-    email: "nour.h@std.damascus.edu",
-    status: "REGISTERED",
-  },
-  {
-    id: "S-20209981",
-    name: "Yousef Aziz",
-    email: "yousef.a@std.damascus.edu",
-    status: "REGISTERED",
-  },
-  {
-    id: "S-20214410",
-    name: "Sara Deeb",
-    email: "sara.d@std.damascus.edu",
-    status: "NO_PHOTO",
-  },
-  {
-    id: "S-20211205",
-    name: "Karim Nseir",
-    email: "karim.n@std.damascus.edu",
-    status: "REGISTERED",
-  },
-  {
-    id: "S-20212876",
-    name: "Dima Suleiman",
-    email: "dima.s@std.damascus.edu",
-    status: "REGISTERED",
-  },
-  {
-    id: "S-20210467",
-    name: "Bassel Rahal",
-    email: "bassel.r@std.damascus.edu",
-    status: "NO_PHOTO",
-  },
-];
+const useStudentStore = create((set) => ({
+  students: [],
+  loading: false,
+  importing: false,
 
-const useStudentStore = create((set, get) => ({
-  students: INITIAL_STUDENTS,
+  // GET /api/students?Page=&PgeSize= (the "PgeSize" spelling is the backend's
+  // actual query param, not a typo on our side).
+  fetchStudents: async () => {
+    set({ loading: true });
+    try {
+      const accessToken =
+        useAuthStore.getState().accessToken ??
+        sessionStorage.getItem("accessToken");
 
-  // Bulk-imports parsed CSV rows ({ id, name, email }). Rows whose ID already
-  // exists in the roster are skipped rather than overwriting the existing record.
-  // CSVs never carry a photo, so imported students land as NO_PHOTO until one
-  // is uploaded from their row.
-  bulkRegisterStudents: (records) => {
-    const existingIds = new Set(get().students.map((s) => s.id));
-    const newStudents = [];
-    let skipped = 0;
-
-    records.forEach((record) => {
-      if (existingIds.has(record.id)) {
-        skipped += 1;
-        return;
-      }
-      existingIds.add(record.id);
-      newStudents.push({
-        id: record.id,
-        name: record.name,
-        email: record.email || "",
-        status: "NO_PHOTO",
+      const res = await apiFetch("/api/students?Page=1&PgeSize=1000", {
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
-    });
 
-    if (newStudents.length > 0) {
-      set((state) => ({ students: [...state.students, ...newStudents] }));
+      const json = await res.json();
+
+      if (!res.ok || json.statusCode !== 200) {
+        throw new Error(json.message || "Failed to fetch students");
+      }
+
+      const students = json.data.map((s) => ({
+        id: s.universityNumber,
+        userId: s.id,
+        userName: s.userName,
+        name: [s.firstName, s.lastName].filter(Boolean).join(" "),
+        middleName: s.middleName,
+        email: s.email,
+        phoneNumber: s.phoneNumber,
+      }));
+
+      set({ students, loading: false });
+    } catch (error) {
+      console.error("fetchStudents error:", error);
+      set({ loading: false });
     }
+  },
 
-    return { added: newStudents, addedCount: newStudents.length, skippedCount: skipped };
+  // POST /api/students/import-csv — multipart/form-data with a "csvFile"
+  // field. Returns the backend's per-row results { totalRecords,
+  // successfulImports, failedImports, results[] } so the caller can show
+  // what succeeded/failed; the roster itself should be re-fetched after.
+  importStudentsCsv: async (file) => {
+    set({ importing: true });
+    try {
+      const accessToken =
+        useAuthStore.getState().accessToken ??
+        sessionStorage.getItem("accessToken");
+
+      const formData = new FormData();
+      formData.append("csvFile", file);
+
+      const res = await apiFetch("/api/students/import-csv", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: formData,
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.message || "Failed to import CSV");
+      }
+
+      set({ importing: false });
+      return json.data;
+    } catch (error) {
+      set({ importing: false });
+      throw error;
+    }
   },
 }));
 

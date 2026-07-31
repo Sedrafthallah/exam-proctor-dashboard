@@ -1,29 +1,12 @@
 import { useState } from "react";
-import { theme, Flex, Input, Tag, Avatar } from "antd";
-import {
-  TeamOutlined,
-  SearchOutlined,
-  CheckCircleFilled,
-  CloseCircleFilled,
-} from "@ant-design/icons";
+import { theme, Flex, Input, Avatar } from "antd";
+import { TeamOutlined, SearchOutlined } from "@ant-design/icons";
 import MyCard from "../myCard/MyCard";
 import MyText from "../myText/MyText";
 import MyTable from "../mytable/MyTable";
 import { getInitials } from "../usersTable/adminsData";
 
-const STATUS_CONFIG = {
-  REGISTERED: { color: "success", label: "Registered" },
-  NO_PHOTO: { color: "error", label: "No Photo" },
-};
-
-function IdPhotoIndicator({ status, token }) {
-  if (status === "NO_PHOTO") {
-    return <CloseCircleFilled style={{ color: token.colorError, fontSize: 16 }} />;
-  }
-  return <CheckCircleFilled style={{ color: token.colorSuccess, fontSize: 16 }} />;
-}
-
-export default function StudentsRoster({ students }) {
+export default function StudentsRoster({ students, loading }) {
   const { token } = theme.useToken();
   const [search, setSearch] = useState("");
 
@@ -38,26 +21,40 @@ export default function StudentsRoster({ students }) {
 
   const columns = [
     {
-      title: "Student",
-      dataIndex: "name",
-      key: "name",
-      width: 200,
-      render: (name) => (
+      title: "Username",
+      dataIndex: "userName",
+      key: "userName",
+      width: 150,
+      render: (userName, student) => (
         <Flex align="center" gap={10}>
           <Avatar size={32} style={{ background: token.colorPrimary, fontWeight: 600, fontSize: 12 }}>
-            {getInitials(name)}
+            {getInitials(student.name)}
           </Avatar>
           <MyText strong style={{ fontSize: 13.5 }}>
-            {name}
+            {userName}
           </MyText>
         </Flex>
       ),
     },
     {
-      title: "ID",
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+      width: 180,
+      render: (name) => <MyText style={{ fontSize: 13 }}>{name}</MyText>,
+    },
+    {
+      title: "Middle Name",
+      dataIndex: "middleName",
+      key: "middleName",
+      width: 140,
+      render: (middleName) => <MyText style={{ fontSize: 13 }}>{middleName}</MyText>,
+    },
+    {
+      title: "University Number",
       dataIndex: "id",
       key: "id",
-      width: 140,
+      width: 150,
       render: (id) => <MyText style={{ fontSize: 13 }}>{id}</MyText>,
     },
     {
@@ -72,38 +69,14 @@ export default function StudentsRoster({ students }) {
       ),
     },
     {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      width: 120,
-      render: (status) => {
-        const { color, label } = STATUS_CONFIG[status] ?? STATUS_CONFIG.NO_PHOTO;
-        return (
-          <Tag
-            color={color}
-            style={{
-              borderRadius: 5,
-              padding: "1px 8px",
-              fontSize: 11,
-              fontWeight: 600,
-              margin: 0,
-              lineHeight: "1.5",
-            }}
-          >
-            {label}
-          </Tag>
-        );
-      },
-    },
-    {
-      title: "ID Photo",
-      key: "idPhoto",
-      align: "center",
-      width: 90,
-      render: (_, student) => (
-        <Flex justify="center">
-          <IdPhotoIndicator status={student.status} token={token} />
-        </Flex>
+      title: "Phone",
+      dataIndex: "phoneNumber",
+      key: "phoneNumber",
+      width: 140,
+      render: (phoneNumber) => (
+        <MyText type="secondary" style={{ fontSize: 13 }}>
+          {phoneNumber}
+        </MyText>
       ),
     },
   ];
@@ -138,6 +111,7 @@ export default function StudentsRoster({ students }) {
         columns={columns}
         dataSource={filteredStudents}
         rowKey="id"
+        loading={loading}
         pagination={false}
         locale={{ emptyText: "No students match your search" }}
       />

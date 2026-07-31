@@ -83,41 +83,6 @@ export function parseStudentsCSV(text) {
   );
 }
 
-// Same parsing as parseStudentsCSV, but returns every row split into either
-// { id, name, email, status } (valid) or { row, reason } (errors) so a
-// preview step can show what will import and what won't, before committing.
-export function parseStudentsCSVWithValidation(text) {
-  const rows = parseCsvRows(text);
-  if (rows.length === 0) return { valid: [], errors: [] };
-
-  const records = mapRowsToRecords(rows, STUDENT_HEADER_ALIASES);
-
-  const valid = [];
-  const errors = [];
-
-  records.forEach((record, index) => {
-    const rowNum = index + 2; // +1 for the header row, +1 for 1-based indexing
-    const { id = "", name = "", email = "" } = record;
-
-    if (!name) {
-      errors.push({ row: rowNum, reason: "Missing name" });
-      return;
-    }
-    if (!id) {
-      errors.push({ row: rowNum, reason: "Missing student ID" });
-      return;
-    }
-    if (!email || !email.includes("@")) {
-      errors.push({ row: rowNum, reason: `Invalid email: "${email}"` });
-      return;
-    }
-
-    valid.push({ id, name, email, status: "REGISTERED" });
-  });
-
-  return { valid, errors };
-}
-
 const QUESTION_HEADER_ALIASES = {
   id: ["id", "questionid", "question id"],
   question: ["question", "questiontext", "question text", "text", "prompt"],
