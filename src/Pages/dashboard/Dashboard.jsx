@@ -1,5 +1,6 @@
 import { theme, Avatar, Flex } from "antd";
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import MyRow from "../../MyComponents/myRow/MyRow";
 import MyCol from "../../MyComponents/myCol/MyCol";
@@ -22,12 +23,8 @@ import RecentAuditActivity from "../../MyComponents/dashboardTable/RecentAuditAc
 import AdminWelcome from "../../MyComponents/dashboardTable/AdminWelcome";
 
 import useSessionStore from "../../store/useSessionStore";
-import useStudentStore from "../../store/useStudentStore";
 import useAlertsStore from "../../store/useAlertsStore";
-import useQuestionBankStore from "../../store/useQuestionBankStore";
 import useAuthStore from "../../store/useAuthStore";
-import { getSessionStatus } from "../../utils/sessionUtils";
-import { getBankStatus } from "../../utils/questionBankUtils";
 
 export default function Dashboard() {
   const user = useAuthStore((state) => state.user);
@@ -43,51 +40,32 @@ export default function Dashboard() {
 
 function SuperAdminDashboard() {
   const { token } = theme.useToken();
+  const navigate = useNavigate();
 
   const sessions = useSessionStore((state) => state.sessions);
   const weeklyStatistics = useSessionStore((state) => state.weeklyStatistics);
+  const stats = useSessionStore((state) => state.stats);
 
   const fetchWeeklyStatistics = useSessionStore(
     (state) => state.fetchWeeklyStatistics,
   );
   const fetchSessions = useSessionStore((state) => state.fetchSessions);
+  const fetchStats = useSessionStore((state) => state.fetchStats);
 
-  const students = useStudentStore((state) => state.students);
   const alerts = useAlertsStore((state) => state.alerts);
-  const questionBanks = useQuestionBankStore((state) => state.questionBanks);
 
   useEffect(() => {
+    fetchStats();
     fetchSessions();
     fetchWeeklyStatistics();
   }, []);
-
-  console.log("weeklyStatistics:", weeklyStatistics);
-
-  const activeSessionsCount = sessions.filter(
-    (s) => getSessionStatus(s) === "ACTIVE",
-  ).length;
-  const registeredStudentsCount = students.filter(
-    (s) => s.status === "REGISTERED",
-  ).length;
-  const openAlertsCount = alerts.filter((a) => a.status === "OPEN").length;
-  const criticalOpenAlertsCount = alerts.filter(
-    (a) =>
-      a.status === "OPEN" &&
-      (a.type === "FACE_ABSENCE" || a.type === "MULTIPLE_FACES"),
-  ).length;
-  const draftBanksCount = questionBanks.filter(
-    (b) => getBankStatus(b) === "DRAFT",
-  ).length;
-  const pendingAuthCount = alerts.filter(
-    (a) => a.type === "FACE_ABSENCE" && a.status === "OPEN",
-  ).length;
 
   const dashboardCards = [
     {
       key: "active-sessions",
       title: "Active Sessions",
-      value: String(activeSessionsCount),
-      subText: "live",
+      value: String(stats.activeSessions),
+      subText: stats.activeSessions > 0 ? "live" : "none active",
       subIcon: <AiFillThunderbolt />,
       subTextColor: "#6c8cff",
       icon: <MdOutlineSensors />,
@@ -97,8 +75,8 @@ function SuperAdminDashboard() {
     {
       key: "total-students",
       title: "Total Students",
-      value: String(students.length),
-      subText: `${registeredStudentsCount} verified`,
+      value: String(stats.studentsInExam),
+      subText: `in exam now`,
       subIcon: <CheckCircleFilled />,
       subTextColor: "#22c55e",
       icon: <MdGroups />,
@@ -108,8 +86,8 @@ function SuperAdminDashboard() {
     {
       key: "open-alerts",
       title: "Open Alerts",
-      value: String(openAlertsCount),
-      subText: `${criticalOpenAlertsCount} critical`,
+      value: String(stats.openAlerts),
+      subText: "need review",
       subTextColor: "#ef4444",
       icon: <WarningFilled />,
       color: "rgb(239, 68, 68)",
@@ -118,19 +96,19 @@ function SuperAdminDashboard() {
     {
       key: "question-banks",
       title: "Question Banks",
-      value: String(questionBanks.length),
-      subText: `${draftBanksCount} draft`,
+      value: String(stats.questionBanks),
+      subText: "total banks",
       subTextColor: "#8b5cf6",
       icon: <FiInbox />,
       color: "rgb(139,92,246)",
       bg: "rgba(139,92,246,0.15)",
     },
     {
-      key: "pending-auth",
-      title: "Pending Auth",
-      value: String(pendingAuthCount),
-      subText: pendingAuthCount > 0 ? "needs review" : "all clear",
-      subTextColor: pendingAuthCount > 0 ? "#ef4444" : "#22c55e",
+      key: "admin-users",
+      title: "Admin Users",
+      value: String(stats.adminUsers),
+      subText: "registered",
+      subTextColor: "#22c55e",
       icon: <UserSwitchOutlined />,
       color: "rgb(217,119,6)",
       bg: "rgba(217,119,6,0.15)",
@@ -139,12 +117,14 @@ function SuperAdminDashboard() {
 
   const sessionsOverviewData = sessions
     .slice()
-    .sort(
-      (a, b) => new Date(b.scheduledStartUTC) - new Date(a.scheduledStartUTC),
-    )
+    .sort((a, b) => {
+      const diffA = Math.abs(dayjs(a.scheduledStartUTC).diff(dayjs()));
+      const diffB = Math.abs(dayjs(b.scheduledStartUTC).diff(dayjs()));
+      return diffA - diffB;
+    })
     .slice(0, 5)
     .map((session) => {
-      const status = getSessionStatus(session);
+      const status = session.status;
       const start = dayjs(session.scheduledStartUTC);
       const graceEnd = start
         .add(session.duration, "minute")
@@ -247,7 +227,10 @@ function SuperAdminDashboard() {
       <MyRow gutter={[16, 16]} style={{ marginTop: 24 }}>
         <MyCol xs={24} lg={16}>
           <Flex vertical gap={20}>
-            <SessionsOverview sessions={sessionsOverviewData} />
+            <SessionsOverview
+              sessions={sessionsOverviewData}
+              onViewAll={() => navigate("/sessions")}
+            />
             <ExamActivityChart data={weeklyStatistics} />
           </Flex>
         </MyCol>

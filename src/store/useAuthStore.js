@@ -158,7 +158,7 @@ const useAuthStore = create((set, get) => ({
       });
 
       return true;
-    } catch (err) {
+    } catch {
       set({
         loading: false,
         error: "Network error. Please try again.",
@@ -210,6 +210,37 @@ const useAuthStore = create((set, get) => ({
     sessionStorage.setItem("accessToken", accessToken);
     sessionStorage.setItem("refreshToken", refreshToken);
     set({ accessToken, refreshToken });
+  },
+
+  fetchAdmins: async () => {
+    try {
+      const accessToken = get().accessToken ?? sessionStorage.getItem("accessToken");
+
+      const res = await apiFetch(
+        "/api/admins/with-permissions?Page=1&PageSize=100",
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        },
+      );
+
+      const json = await res.json();
+
+      if (!res.ok || json.statusCode !== 200) return;
+
+      const admins = json.data.map((a) => ({
+        id: String(a.userId ?? a.userName),
+        name: a.fullName ?? a.userName,
+        email: a.email ?? "—",
+        role: a.role ?? "ADMIN",
+        jobTitle: a.role ?? "Admin",
+        disabled: a.isActive === false,
+        permissions: a.permissions ?? {},
+      }));
+
+      set({ users: admins });
+    } catch (err) {
+      console.error("fetchAdmins error:", err);
+    }
   },
 
   // Creates a real login account for a new admin (Users Management > New Admin).

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Checkbox, Segmented, Alert, Flex, theme } from "antd";
 import { LockOutlined } from "@ant-design/icons";
 
@@ -15,6 +15,11 @@ export default function Roles() {
   const roles = useRolesStore((state) => state.roles);
   const updateRolePermission = useRolesStore((state) => state.updateRolePermission);
   const saveRole = useRolesStore((state) => state.saveRole);
+  const fetchRoles = useRolesStore((state) => state.fetchRoles);
+
+  useEffect(() => {
+    fetchRoles();
+  }, []);
 
   const [selectedRoleId, setSelectedRoleId] = useState(roles[0]?.id);
 
@@ -31,7 +36,7 @@ export default function Roles() {
           </MyTitle>
           <MyText type="secondary">Define what each role can access.</MyText>
         </div>
-        {selectedRole?.id !== "superadmin" && (
+        {!selectedRole?.isFixed && (
           <MyButtonPrimary onClick={handleSave}>Save Changes</MyButtonPrimary>
         )}
       </Flex>

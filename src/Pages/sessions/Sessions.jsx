@@ -23,8 +23,10 @@ export default function Sessions() {
   const [activeFilter, setActiveFilter] = useState("ALL");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { token } = theme.useToken();
+  //"أعطيني sessions من الـ store" — وكل مرة sessions بتتغير بالـ store، الكومبوننت بيتحدث تلقائياً.
   const sessions = useSessionStore((state) => state.sessions);
   const addSession = useSessionStore((state) => state.addSession);
+  //هاد بيجيب الدالة اللي بتبعت الـ API request
   const fetchSessions = useSessionStore((state) => state.fetchSessions);
 
   useEffect(() => {

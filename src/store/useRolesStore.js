@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import { message } from "antd";
+import { apiFetch } from "../api/apiClient";
+import useAuthStore from "./useAuthStore";
 
 // Labels/descriptions for the P01..P07 permission set, shared by the Roles
 // Management page and anywhere else a role's permissions need to be summarised
@@ -88,6 +90,39 @@ export const INITIAL_ROLES = [
 // PUT  /api/roles/{roleId}/permissions  → replace saveRole's mock success
 const useRolesStore = create((set, get) => ({
   roles: INITIAL_ROLES,
+
+  fetchRoles: async () => {
+    try {
+      const accessToken =
+        useAuthStore.getState().accessToken ??
+        sessionStorage.getItem("accessToken");
+
+      const res = await apiFetch("/api/roles", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || json.statusCode !== 200) return;
+
+      // حولي الـ response لشكل يناسب الـ store
+      const roles = json.data.map((r) => ({
+        id: String(r.id),
+        name: r.name,
+        isFixed: r.name === "SuperAdmin",
+        permissions:
+          r.permissions?.length > 0
+            ? r.permissions // لو الباك بعت permissions
+            : (INITIAL_ROLES.find((ir) => ir.name === r.name)?.permissions ??
+              {}),
+        // لو فاضية → خدي من الـ INITIAL_ROLES الموك
+      }));
+
+      set({ roles });
+    } catch (err) {
+      console.error("fetchRoles error:", err);
+    }
+  },
 
   updateRolePermission: (roleId, permId, value) =>
     set((state) => ({

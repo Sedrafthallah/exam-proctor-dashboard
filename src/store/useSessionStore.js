@@ -157,11 +157,36 @@ export const INITIAL_SESSIONS = [
   },
 ];
 
-const useSessionStore = create((set, get) => ({
-  sessions: INITIAL_SESSIONS,
+const useSessionStore = create((set) => ({
+  sessions: [],
   weeklyStatistics: [],
   weeklyStatisticsLoading: false,
   loading: false,
+  stats: {
+    activeSessions: 0,
+    studentsInExam: 0,
+    openAlerts: 0,
+    questionBanks: 0,
+    adminUsers: 0,
+  },
+
+  fetchStats: async () => {
+    try {
+      const accessToken = useAuthStore.getState().accessToken;
+
+      const res = await apiFetch("/api/dashboard/stats", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      const json = await res.json();
+
+      if (res.ok && json.statusCode === 200) {
+        set({ stats: json.data });
+      }
+    } catch (error) {
+      console.error("fetchStats error:", error);
+    }
+  },
 
   fetchSessions: async () => {
     set({ loading: true });
@@ -173,7 +198,7 @@ const useSessionStore = create((set, get) => ({
       });
 
       const json = await res.json();
-      console.log("Sessions from API:", json);
+
       if (!res.ok || json.statusCode !== 200) {
         throw new Error(json.message || "Failed to fetch sessions");
       }

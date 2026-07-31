@@ -1,4 +1,5 @@
-import { Input, Select, Flex, Tag } from "antd";
+import { useState } from "react";
+import { Input, Select, Flex, Tag, Modal, message } from "antd";
 import { UserAddOutlined } from "@ant-design/icons";
 import MyModal from "../myModal/MyModal";
 import MyForm from "../myForm/MyForm";
@@ -6,9 +7,18 @@ import MyButtonPrimary from "../myButton/MyButtonPrimary";
 import MyButtonSecondary from "../myButton/MyButtonSecondary";
 import MyText from "../myText/MyText";
 import useRolesStore from "../../store/useRolesStore";
+import { apiFetch } from "../../api/apiClient";
+import useAuthStore from "../../store/useAuthStore";
+
+const ROLE_IDS = {
+  Admin: 2,
+  Proctor: 3,
+  SuperAdmin: 1,
+};
 
 export default function NewAdminModal({ open, onClose, onCreate }) {
   const [form] = MyForm.useForm();
+  const [loading, setLoading] = useState(false);
   const roles = useRolesStore((state) => state.roles);
   const assignableRoles = roles.filter((role) => !role.isFixed);
 
@@ -17,21 +27,72 @@ export default function NewAdminModal({ open, onClose, onCreate }) {
     onClose();
   };
 
-  const handleFinish = (values) => {
-    const role = assignableRoles.find((r) => r.id === values.role);
+  const handleFinish = async (values) => {
+    setLoading(true);
+    try {
+      const accessToken =
+        useAuthStore.getState().accessToken ??
+        sessionStorage.getItem("accessToken");
 
-    const result = onCreate({
-      name: values.name,
-      email: values.email,
-      password: values.password,
-      role: values.role,
-      permissions: role?.permissions || {},
-    });
+      const res = await apiFetch("/api/admins/create-admin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          fullName: values.name,
+          email: values.email,
+          roleIds: [ROLE_IDS[values.role] ?? 2],
+        }),
+      });
 
-    if (result?.success) {
+      const json = await res.json();
+
+      if (!res.ok || json.statusCode !== 200) {
+        message.error(json.message || "Failed to create admin.");
+        setLoading(false);
+        return;
+      }
+
+      const data = json.data;
+
+      // عرض الـ temporary password للسوبر أدمن
+      Modal.success({
+        title: "Admin account created",
+        content: (
+          <div>
+            <p>
+              <strong>{data.fullName}</strong> ({data.email})
+            </p>
+            <p>Temporary password:</p>
+            <p
+              style={{
+                fontFamily: "monospace",
+                fontSize: 16,
+                background: "#f0f0f0",
+                padding: "8px 12px",
+                borderRadius: 6,
+                letterSpacing: 1,
+              }}
+            >
+              {data.temporaryPassword}
+            </p>
+            <p style={{ color: "#888", fontSize: 12 }}>
+              Share this password with the admin. They should change it on
+              first login.
+            </p>
+          </div>
+        ),
+      });
+
       form.resetFields();
-    } else if (result?.error) {
-      form.setFields([{ name: "email", errors: [result.error] }]);
+      onClose();
+      onCreate?.(data); // ← notify parent if needed
+    } catch (err) {
+      message.error("Network error. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -74,25 +135,14 @@ export default function NewAdminModal({ open, onClose, onCreate }) {
         </MyForm.Item>
 
         <MyForm.Item
-          name="password"
-          label="Temporary Password"
-          rules={[
-            { required: true, message: "Please set a temporary password" },
-            { min: 6, message: "Password must be at least 6 characters" },
-          ]}
-        >
-          <Input.Password placeholder="Set a temporary password" />
-        </MyForm.Item>
-
-        <MyForm.Item
           name="role"
           label="Role"
-          initialValue={assignableRoles[0]?.id}
+          initialValue={assignableRoles[0]?.name}
           rules={[{ required: true, message: "Please select a role" }]}
         >
           <Select
             options={assignableRoles.map((role) => ({
-              value: role.id,
+              value: role.name,
               label: role.name,
             }))}
           />
@@ -101,7 +151,7 @@ export default function NewAdminModal({ open, onClose, onCreate }) {
         <MyForm.Item shouldUpdate noStyle>
           {() => {
             const role = assignableRoles.find(
-              (r) => r.id === form.getFieldValue("role"),
+              (r) => r.name === form.getFieldValue("role"),
             );
             const granted = Object.entries(role?.permissions || {})
               .filter(([, value]) => value)
@@ -132,7 +182,11 @@ export default function NewAdminModal({ open, onClose, onCreate }) {
 
         <Flex justify="end" gap={10} style={{ marginTop: 8 }}>
           <MyButtonSecondary onClick={handleCancel}>Cancel</MyButtonSecondary>
-          <MyButtonPrimary htmlType="submit" icon={<UserAddOutlined />}>
+          <MyButtonPrimary
+            htmlType="submit"
+            icon={<UserAddOutlined />}
+            loading={loading}
+          >
             Create Account
           </MyButtonPrimary>
         </Flex>

@@ -1,6 +1,6 @@
 import { theme, Flex, message } from "antd";
 import { UserAddOutlined } from "@ant-design/icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import useAuthStore from "../../store/useAuthStore";
 
@@ -21,24 +21,20 @@ export default function Users() {
   const [editingAdminId, setEditingAdminId] = useState(null);
 
   const admins = useAuthStore((state) => state.users);
-  const registerAdmin = useAuthStore((state) => state.registerAdmin);
+  const fetchAdmins = useAuthStore((state) => state.fetchAdmins);
   const updateAdmin = useAuthStore((state) => state.updateAdmin);
   const toggleUserStatus = useAuthStore((state) => state.toggleUserStatus);
   const deleteAdmin = useAuthStore((state) => state.deleteAdmin);
 
   const editingAdmin = admins.find((a) => a.id === editingAdminId) || null;
 
-  const handleCreate = (values) => {
-    const result = registerAdmin(values);
+  useEffect(() => {
+    fetchAdmins();
+  }, []);
 
-    if (result.success) {
-      setIsModalOpen(false);
-      message.success(
-        `${values.name}'s account was created. They can now log in.`,
-      );
-    }
-
-    return result;
+  const handleCreate = () => {
+    fetchAdmins(); // ← بيجيب القائمة الحديثة من الـ API
+    setIsModalOpen(false);
   };
 
   const handleSaveEdit = (adminId, values) => {
