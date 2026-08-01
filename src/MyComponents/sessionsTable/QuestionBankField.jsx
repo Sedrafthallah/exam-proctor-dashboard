@@ -14,7 +14,7 @@ export default function QuestionBankField({ form, disabled }) {
 
   const bankOptions = questionBanks.map((bank) => ({
     value: bank.code,
-    label: `${bank.code} — ${bank.title} (${bank.questions.length} Qs)`,
+    label: `${bank.code} — ${bank.title} (${bank.questionCount ?? bank.questions?.length ?? 0} Qs)`,
   }));
 
   const handleUpload = async (file) => {
@@ -94,7 +94,7 @@ export default function QuestionBankField({ form, disabled }) {
               return (
                 <MyText type="secondary" style={{ fontSize: 12 }}>
                   {bank
-                    ? `Using "${bank.code}" — ${bank.questions.length} questions.`
+                    ? `Using "${bank.code}" — ${bank.questionCount ?? bank.questions?.length ?? 0} questions.`
                     : "Creates a new question bank from the file."}
                 </MyText>
               );

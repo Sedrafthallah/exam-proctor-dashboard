@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input, InputNumber, DatePicker, Select, Switch, Segmented, Upload, Flex, message } from "antd";
 import { PlusCircleOutlined, UploadOutlined } from "@ant-design/icons";
 import MyModal from "../myModal/MyModal";
@@ -10,6 +10,7 @@ import MyButtonSecondary from "../myButton/MyButtonSecondary";
 import MyText from "../myText/MyText";
 import useAuthStore from "../../store/useAuthStore";
 import useStudentStore from "../../store/useStudentStore";
+import useQuestionBankStore from "../../store/useQuestionBankStore";
 import { parseStudentsCSV } from "../../utils/csvUtils";
 import QuestionBankField from "./QuestionBankField";
 
@@ -21,6 +22,11 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
   const admins = useAuthStore((state) => state.users);
   const students = useStudentStore((state) => state.students);
   const bulkRegisterStudents = useStudentStore((state) => state.bulkRegisterStudents);
+  const fetchQuestionBanks = useQuestionBankStore((state) => state.fetchQuestionBanks);
+
+  useEffect(() => {
+    fetchQuestionBanks();
+  }, []);
 
   const proctorOptions = admins
     .filter((admin) => !admin.disabled)

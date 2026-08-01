@@ -1,6 +1,6 @@
 import useSessionStore from "../../store/useSessionStore";
 import { getSessionStatus } from "../../utils/sessionUtils";
-import { theme, Flex, message } from "antd";
+import { theme, Flex } from "antd";
 import { useState, useEffect } from "react";
 import MyTitle from "../../MyComponents/MyTitle/MyTitle";
 import MyText from "../../MyComponents/myText/MyText";
@@ -25,7 +25,7 @@ export default function Sessions() {
   const { token } = theme.useToken();
   //"أعطيني sessions من الـ store" — وكل مرة sessions بتتغير بالـ store، الكومبوننت بيتحدث تلقائياً.
   const sessions = useSessionStore((state) => state.sessions);
-  const addSession = useSessionStore((state) => state.addSession);
+  const createSessionApi = useSessionStore((state) => state.createSessionApi);
   //هاد بيجيب الدالة اللي بتبعت الـ API request
   const fetchSessions = useSessionStore((state) => state.fetchSessions);
 
@@ -38,10 +38,9 @@ export default function Sessions() {
     return getSessionStatus(session) === activeFilter;
   });
 
-  const handleCreateSession = (fields) => {
-    addSession(fields);
-    setIsModalOpen(false);
-    message.success(`"${fields.sessionTitle}" was created as a draft.`);
+  const handleCreateSession = async (fields) => {
+    const success = await createSessionApi(fields);
+    if (success) setIsModalOpen(false);
   };
 
   return (

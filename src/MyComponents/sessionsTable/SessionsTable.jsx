@@ -159,8 +159,8 @@ export default function SessionsTable({ sessions }) {
 
   const currentUser = useAuthStore((state) => state.user);
   const updateSession = useSessionStore((state) => state.updateSession);
-  const deleteSession = useSessionStore((state) => state.deleteSession);
-  const publishSession = useSessionStore((state) => state.publishSession);
+  const deleteSessionApi = useSessionStore((state) => state.deleteSessionApi);
+  const publishSessionApi = useSessionStore((state) => state.publishSessionApi);
   const emergencyOverrideSession = useSessionStore((state) => state.emergencyOverrideSession);
   const extendSessionTime = useSessionStore((state) => state.extendSessionTime);
   const terminateSession = useSessionStore((state) => state.terminateSession);
@@ -174,14 +174,12 @@ export default function SessionsTable({ sessions }) {
     message.success("Session updated.");
   };
 
-  const handlePublish = (session) => {
-    publishSession(session.id);
-    message.success(`"${session.sessionTitle}" was published.`);
+  const handlePublish = async (session) => {
+    await publishSessionApi(session.id);
   };
 
-  const handleDelete = (session) => {
-    deleteSession(session.id);
-    message.success(`"${session.sessionTitle}" was deleted.`);
+  const handleDelete = async (session) => {
+    await deleteSessionApi(session.id);
   };
 
   const handleOverride = (session) => {

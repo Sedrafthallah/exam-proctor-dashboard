@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { message } from "antd";
 import dayjs from "dayjs";
 import { apiFetch } from "../api/apiClient";
 import useAuthStore from "./useAuthStore";
@@ -19,7 +20,7 @@ export const INITIAL_SESSIONS = [
     audioMonitoring: true,
     gazeThreshold: 3,
     faceAlertSensitivity: "Medium",
-    published: true,
+    published: false,
     archived: false,
   },
   {
@@ -158,7 +159,7 @@ export const INITIAL_SESSIONS = [
 ];
 
 const useSessionStore = create((set) => ({
-  sessions: INITIAL_SESSIONS,
+  sessions: [],
   weeklyStatistics: [],
   weeklyStatisticsLoading: false,
   loading: false,
@@ -254,6 +255,79 @@ const useSessionStore = create((set) => ({
       ],
     })),
 
+  createSessionApi: async (fields) => {
+    try {
+      const accessToken =
+        useAuthStore.getState().accessToken ??
+        sessionStorage.getItem("accessToken");
+
+      const res = await apiFetch("/api/exam-sessions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          title: fields.sessionTitle,
+          courseTag: fields.courseCode,
+          startTime: fields.scheduledStartUTC,
+          durationMinutes: fields.duration,
+          gracePeriodMinutes: fields.gracePeriod,
+          loginWindowMinutes: fields.loginWindow,
+          questionBankId: fields.questionBankId ?? null,
+
+          assignedProctorIds: fields.proctorId ? [fields.proctorId] : [],
+          randomization: fields.questionRandomisation ?? true,
+          optionShuffle: fields.optionShuffle ?? true,
+          eyeGazeThresholdSec: fields.gazeThreshold ?? 3,
+          faceAlertSensitivity: fields.faceAlertSensitivity ?? "Medium",
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || (json.statusCode !== 200 && json.statusCode !== 201)) {
+        message.error(json.message || "Failed to create session.");
+        return false;
+      }
+
+      const s = json.data.session;
+
+      const newSession = {
+        id: String(s.id),
+        sessionTitle: s.title,
+        courseCode: s.courseTag,
+        status: s.status,
+        scheduledStartUTC: s.startTime,
+        duration: s.durationMinutes,
+        gracePeriod: s.gracePeriodMinutes,
+        loginWindow: s.loginWindowMinutes,
+        gazeThreshold: s.eyeGazeThresholdSec,
+        faceAlertSensitivity: s.faceAlertSensitivity,
+        questionRandomisation: s.randomization,
+        optionShuffle: s.optionShuffle,
+        audioMonitoring: false,
+        questionBank: s.questionBankTitle ?? null,
+        questionBankId: s.questionBankId ?? null,
+        proctor: s.assignedProctors?.[0]?.fullName ?? null,
+        enrolledStudents: 0,
+        published: false,
+        archived: false,
+      };
+
+      set((state) => ({
+        sessions: [newSession, ...state.sessions],
+      }));
+
+      message.success(`"${s.title}" created as draft.`);
+      return true;
+    } catch (err) {
+      console.error("createSessionApi error:", err);
+      message.error("Network error.");
+      return false;
+    }
+  },
+
   // Applies edits from the session edit modal. The modal only submits fields
   // that isEditable() allowed for the session's current status.
   updateSession: (sessionId, fields) =>
@@ -269,12 +343,80 @@ const useSessionStore = create((set) => ({
       sessions: state.sessions.filter((s) => s.id !== sessionId),
     })),
 
+  deleteSessionApi: async (id) => {
+    try {
+      const accessToken =
+        useAuthStore.getState().accessToken ??
+        sessionStorage.getItem("accessToken");
+
+      const res = await apiFetch(`/api/exam-sessions/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || json.statusCode !== 200) {
+        message.error(json.message || "Failed to delete session.");
+        return false;
+      }
+
+      set((state) => ({
+        sessions: state.sessions.filter((s) => s.id !== id),
+      }));
+
+      message.success("Session deleted successfully.");
+      return true;
+    } catch (err) {
+      console.error("deleteSessionApi error:", err);
+      message.error("Network error.");
+      return false;
+    }
+  },
+
   publishSession: (sessionId) =>
     set((state) => ({
       sessions: state.sessions.map((s) =>
         s.id === sessionId ? { ...s, published: true } : s,
       ),
     })),
+
+  publishSessionApi: async (id) => {
+    try {
+      const accessToken =
+        useAuthStore.getState().accessToken ??
+        sessionStorage.getItem("accessToken");
+
+      const res = await apiFetch(`/api/exam-sessions/${id}/publish`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({}),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || json.statusCode !== 200) {
+        message.error(json.message || "Failed to publish session.");
+        return false;
+      }
+
+      set((state) => ({
+        sessions: state.sessions.map((s) =>
+          s.id === id ? { ...s, status: "SCHEDULED", published: true } : s,
+        ),
+      }));
+
+      message.success("Session published successfully.");
+      return true;
+    } catch (err) {
+      console.error("publishSessionApi error:", err);
+      message.error("Network error.");
+      return false;
+    }
+  },
 
   // Super Admin only: lets a locked (T-24h) session be edited like a
   // SCHEDULED one (proctor/roster) despite the lock window.
@@ -300,6 +442,47 @@ const useSessionStore = create((set) => ({
         s.id === sessionId ? { ...s, forceClosed: true } : s,
       ),
     })),
+
+  fetchSessionById: async (id) => {
+    try {
+      const accessToken =
+        useAuthStore.getState().accessToken ??
+        sessionStorage.getItem("accessToken");
+
+      const res = await apiFetch(`/api/exam-sessions/${id}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || json.statusCode !== 200) return null;
+
+      const s = json.data;
+
+      return {
+        id: String(s.id),
+        sessionTitle: s.title,
+        courseCode: s.courseTag,
+        status: s.status,
+        scheduledStartUTC: s.startTime,
+        duration: s.durationMinutes,
+        gracePeriod: s.gracePeriodMinutes,
+        loginWindow: s.loginWindowMinutes,
+        gazeThreshold: s.eyeGazeThresholdSec,
+        faceAlertSensitivity: s.faceAlertSensitivity,
+        questionRandomisation: s.randomization,
+        optionShuffle: s.optionShuffle,
+        audioMonitoring: s.audioMonitoring ?? false,
+        questionBank: s.questionBankTitle ?? null,
+        questionBankId: s.questionBankId ?? null,
+        proctor: s.assignedProctors?.[0]?.fullName ?? null,
+        enrolledStudents: s.enrolledStudents?.length ?? 0,
+      };
+    } catch (err) {
+      console.error("fetchSessionById error:", err);
+      return null;
+    }
+  },
 
   fetchWeeklyStatistics: async () => {
     set({ weeklyStatisticsLoading: true });

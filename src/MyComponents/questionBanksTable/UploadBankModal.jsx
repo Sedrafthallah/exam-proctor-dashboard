@@ -11,15 +11,17 @@ import { validateQuestionRows } from "../../utils/questionBankUtils";
 
 // Quick-create path: pick a CSV, name the bank, done. Which session (if any)
 // uses this bank is decided later from the session's own question bank field.
-export default function UploadBankModal({ open, onClose, onCreate }) {
+export default function UploadBankModal({ open, onClose, onUpload, uploading }) {
   const [form] = MyForm.useForm();
   const [fileName, setFileName] = useState("");
   const [parsedRows, setParsedRows] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const reset = () => {
     form.resetFields();
     setFileName("");
     setParsedRows(null);
+    setSelectedFile(null);
   };
 
   const handleCancel = () => {
@@ -39,6 +41,7 @@ export default function UploadBankModal({ open, onClose, onCreate }) {
 
       setFileName(file.name);
       setParsedRows(validateQuestionRows(parsed, []));
+      setSelectedFile(file);
       form.setFieldValue("title", file.name.replace(/\.csv$/i, "").replace(/[_-]+/g, " "));
     } catch {
       message.error("Couldn't read that file. Please upload a valid CSV.");
@@ -50,24 +53,9 @@ export default function UploadBankModal({ open, onClose, onCreate }) {
   const validRows = (parsedRows || []).filter((r) => r.status === "valid");
   const flaggedCount = (parsedRows || []).length - validRows.length;
 
-  const handleFinish = (values) => {
-    const bank = onCreate({
-      title: values.title,
-      questions: validRows.map((r) => ({
-        type: r.type,
-        text: r.question,
-        options: r.options,
-        correctAnswer: r.correctAnswer || null,
-        marks: r.marks,
-      })),
-    });
-
-    message.success(
-      `"${bank.title}" created with ${validRows.length} question${validRows.length === 1 ? "" : "s"}.` +
-        (flaggedCount > 0 ? ` Skipped ${flaggedCount} flagged row${flaggedCount === 1 ? "" : "s"}.` : ""),
-    );
-
-    reset();
+  const handleFinish = async () => {
+    const success = await onUpload(selectedFile);
+    if (success) reset();
   };
 
   return (
@@ -117,7 +105,12 @@ export default function UploadBankModal({ open, onClose, onCreate }) {
 
           <Flex justify="end" gap={10} style={{ marginTop: 8 }}>
             <MyButtonSecondary onClick={handleCancel}>Cancel</MyButtonSecondary>
-            <MyButtonPrimary htmlType="submit" icon={<UploadOutlined />} disabled={validRows.length === 0}>
+            <MyButtonPrimary
+              htmlType="submit"
+              icon={<UploadOutlined />}
+              disabled={validRows.length === 0}
+              loading={uploading}
+            >
               Create &amp; Import
             </MyButtonPrimary>
           </Flex>

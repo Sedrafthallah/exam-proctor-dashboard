@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Input, InputNumber, DatePicker, Select, Switch, Flex } from "antd";
 import { EditOutlined, EyeOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -10,6 +10,7 @@ import MyButtonPrimary from "../myButton/MyButtonPrimary";
 import MyButtonSecondary from "../myButton/MyButtonSecondary";
 import MyText from "../myText/MyText";
 import useAuthStore from "../../store/useAuthStore";
+import useSessionStore from "../../store/useSessionStore";
 import { isEditable } from "../../utils/sessionUtils";
 import QuestionBankField from "./QuestionBankField";
 
@@ -18,6 +19,8 @@ const FACE_ALERT_OPTIONS = ["Low", "Medium", "High"];
 export default function EditSessionModal({ open, session, status, onClose, onSave }) {
   const [form] = MyForm.useForm();
   const admins = useAuthStore((state) => state.users);
+  const fetchSessionById = useSessionStore((state) => state.fetchSessionById);
+  const [detailLoading, setDetailLoading] = useState(false);
   const proctorOptions = admins
     .filter((admin) => !admin.disabled)
     .map((admin) => ({ value: admin.name, label: admin.name }));
@@ -27,20 +30,25 @@ export default function EditSessionModal({ open, session, status, onClose, onSav
 
   useEffect(() => {
     if (open && session) {
-      form.setFieldsValue({
-        sessionTitle: session.sessionTitle,
-        courseCode: session.courseCode,
-        scheduledStartUTC: dayjs(session.scheduledStartUTC),
-        duration: session.duration,
-        gracePeriod: session.gracePeriod,
-        loginWindow: session.loginWindow,
-        questionBank: session.questionBank,
-        proctor: session.proctor,
-        gazeThreshold: session.gazeThreshold,
-        faceAlertSensitivity: session.faceAlertSensitivity,
-        questionRandomisation: session.questionRandomisation,
-        optionShuffle: session.optionShuffle,
-        audioMonitoring: session.audioMonitoring,
+      setDetailLoading(true);
+      fetchSessionById(session.id).then((data) => {
+        const s = data ?? session; // fallback to store data if API fails
+        form.setFieldsValue({
+          sessionTitle: s.sessionTitle,
+          courseCode: s.courseCode,
+          scheduledStartUTC: dayjs(s.scheduledStartUTC),
+          duration: s.duration,
+          gracePeriod: s.gracePeriod,
+          loginWindow: s.loginWindow,
+          questionBank: s.questionBank,
+          proctor: s.proctor,
+          gazeThreshold: s.gazeThreshold,
+          faceAlertSensitivity: s.faceAlertSensitivity,
+          questionRandomisation: s.questionRandomisation,
+          optionShuffle: s.optionShuffle,
+          audioMonitoring: s.audioMonitoring,
+        });
+        setDetailLoading(false);
       });
     }
   }, [open, session, form]);
@@ -69,6 +77,7 @@ export default function EditSessionModal({ open, session, status, onClose, onSav
     <MyModal
       open={open}
       onCancel={handleCancel}
+      confirmLoading={detailLoading}
       title={
         <Flex align="center" gap={8}>
           {isReadOnly ? <EyeOutlined /> : <EditOutlined />}
@@ -186,7 +195,7 @@ export default function EditSessionModal({ open, session, status, onClose, onSav
             {isReadOnly ? "Close" : "Cancel"}
           </MyButtonSecondary>
           {!isReadOnly && (
-            <MyButtonPrimary htmlType="submit" icon={<EditOutlined />}>
+            <MyButtonPrimary htmlType="submit" icon={<EditOutlined />} loading={detailLoading}>
               Save Changes
             </MyButtonPrimary>
           )}

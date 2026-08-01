@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { theme, Flex, message, Upload } from "antd";
 import { UploadOutlined, TeamOutlined } from "@ant-design/icons";
 
@@ -9,7 +9,6 @@ import MyText from "../../MyComponents/myText/MyText";
 import MyButtonPrimary from "../../MyComponents/myButton/MyButtonPrimary";
 
 import StudentsRoster from "../../MyComponents/studentsTable/StudentsRoster";
-import ImportResultsModal from "../../MyComponents/studentsTable/ImportResultsModal";
 
 export default function Students() {
   const { token } = theme.useToken();
@@ -23,17 +22,30 @@ export default function Students() {
     fetchStudents();
   }, [fetchStudents]);
 
-  const [importResult, setImportResult] = useState(null);
-  const [resultsOpen, setResultsOpen] = useState(false);
-
   const handleImportCsv = async (file) => {
     try {
       const result = await importStudentsCsv(file);
-      setImportResult(result);
-      setResultsOpen(true);
-      fetchStudents();
-    } catch (error) {
-      message.error(error.message || "Couldn't import that CSV file.");
+
+      if (!result.success) {
+        message.error(result.error || "Import failed.");
+        return false;
+      }
+
+      if (result.added > 0) {
+        message.success(
+          `Imported ${result.added} student${result.added === 1 ? "" : "s"}.` +
+            (result.skipped > 0 ? ` ${result.skipped} skipped.` : ""),
+        );
+      } else {
+        message.info("No new students imported.");
+      }
+
+      if (result.errors?.length > 0) {
+        message.warning(`${result.errors.length} row(s) had errors.`);
+      }
+    } catch (err) {
+      console.error("handleImportCsv error:", err);
+      message.error("Couldn't import that CSV file.");
     }
 
     return false; // prevent antd's default auto-upload
@@ -77,15 +89,6 @@ export default function Students() {
       </Flex>
 
       <StudentsRoster students={students} loading={loading} />
-
-      <ImportResultsModal
-        open={resultsOpen}
-        result={importResult}
-        onClose={() => {
-          setResultsOpen(false);
-          setImportResult(null);
-        }}
-      />
     </Flex>
   );
 }

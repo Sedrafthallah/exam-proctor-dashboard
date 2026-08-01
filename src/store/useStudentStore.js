@@ -15,7 +15,7 @@ export const INITIAL_STUDENTS = [
   { id: "S-20216604", userId: 8, userName: "tarek.salem", name: "Tarek Salem", middleName: "Walid", email: "tarek.salem@student.vu.edu", phoneNumber: "0940000008" },
 ];
 
-const useStudentStore = create((set) => ({
+const useStudentStore = create((set, get) => ({
   students: INITIAL_STUDENTS,
   loading: false,
   importing: false,
@@ -56,10 +56,9 @@ const useStudentStore = create((set) => ({
     }
   },
 
-  // POST /api/students/import-csv — multipart/form-data with a "csvFile"
-  // field. Returns the backend's per-row results { totalRecords,
-  // successfulImports, failedImports, results[] } so the caller can show
-  // what succeeded/failed; the roster itself should be re-fetched after.
+  // POST /api/students/import-csv — multipart/form-data with a "file" field.
+  // No frontend validation or parsing — the backend handles all of it and
+  // returns { added, skipped, errors[] }; the roster is re-fetched after.
   importStudentsCsv: async (file) => {
     set({ importing: true });
     try {
@@ -68,25 +67,49 @@ const useStudentStore = create((set) => ({
         sessionStorage.getItem("accessToken");
 
       const formData = new FormData();
-      formData.append("csvFile", file);
+      formData.append("file", file);
 
       const res = await apiFetch("/api/students/import-csv", {
         method: "POST",
-        headers: { Authorization: `Bearer ${accessToken}` },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: formData,
       });
 
       const json = await res.json();
 
-      if (!res.ok) {
-        throw new Error(json.message || "Failed to import CSV");
+      if (!res.ok || (json.statusCode !== 200 && json.statusCode !== 201)) {
+        set({ importing: false });
+        return {
+          success: false,
+          error: json.message || "Import failed.",
+          added: 0,
+          skipped: 0,
+          errors: [],
+        };
       }
 
+      await get().fetchStudents();
+
       set({ importing: false });
-      return json.data;
-    } catch (error) {
+
+      return {
+        success: true,
+        added: json.data?.added ?? 0,
+        skipped: json.data?.skipped ?? 0,
+        errors: json.data?.errors ?? [],
+      };
+    } catch (err) {
+      console.error("importStudentsCsv error:", err);
       set({ importing: false });
-      throw error;
+      return {
+        success: false,
+        error: "Network error.",
+        added: 0,
+        skipped: 0,
+        errors: [],
+      };
     }
   },
 }));

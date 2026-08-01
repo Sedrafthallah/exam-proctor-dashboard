@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { theme, Flex, Tag, Button } from "antd";
 import { UploadOutlined, ArrowLeftOutlined, BookOutlined } from "@ant-design/icons";
 
@@ -16,7 +16,7 @@ import UploadBankModal from "../../MyComponents/questionBanksTable/UploadBankMod
 
 export default function QuestionBanks() {
   const { token } = theme.useToken();
-  const [selectedBankCode, setSelectedBankCode] = useState(null);
+  const [selectedBankId, setSelectedBankId] = useState(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   const currentUser = useAuthStore((state) => state.user);
@@ -24,26 +24,42 @@ export default function QuestionBanks() {
   const canAuthor = isSuperAdmin || currentUser?.permissions?.P01 === true;
 
   const questionBanks = useQuestionBankStore((state) => state.questionBanks);
-  const createBankFromCsv = useQuestionBankStore((state) => state.createBankFromCsv);
+  const fetchQuestionBanks = useQuestionBankStore((state) => state.fetchQuestionBanks);
+  const uploadQuestionBankApi = useQuestionBankStore((state) => state.uploadQuestionBankApi);
+  const uploading = useQuestionBankStore((state) => state.uploading);
+  const fetchQuestionBankById = useQuestionBankStore((state) => state.fetchQuestionBankById);
+  const selectedBankDetail = useQuestionBankStore((state) => state.selectedBankDetail);
+  const detailLoading = useQuestionBankStore((state) => state.detailLoading);
 
-  const selectedBank = questionBanks.find((b) => b.code === selectedBankCode) ?? null;
+  useEffect(() => {
+    fetchQuestionBanks();
+  }, []);
 
-  const handleUploadBank = ({ questions, ...values }) => {
-    const bank = createBankFromCsv(questions, values);
-    setSelectedBankCode(bank.code);
-    setIsUploadModalOpen(false);
-    return bank;
+  // summary from the list — shown immediately in the detail header while the
+  // full question set (selectedBankDetail) is still loading
+  const selectedBankSummary = questionBanks.find((b) => b.id === selectedBankId) ?? null;
+
+  const handleSelectBank = async (bankId) => {
+    setSelectedBankId(bankId);
+    await fetchQuestionBankById(bankId);
+  };
+
+  const handleUploadBank = async (file) => {
+    const success = await uploadQuestionBankApi(file);
+    if (success) setIsUploadModalOpen(false);
+    return success;
   };
 
   const uploadModal = canAuthor && (
     <UploadBankModal
       open={isUploadModalOpen}
       onClose={() => setIsUploadModalOpen(false)}
-      onCreate={handleUploadBank}
+      onUpload={handleUploadBank}
+      uploading={uploading}
     />
   );
 
-  if (!selectedBank) {
+  if (!selectedBankId) {
     return (
       <Flex vertical gap={20}>
         <Flex justify="space-between" align="center" wrap="wrap" gap={12}>
@@ -79,7 +95,7 @@ export default function QuestionBanks() {
 
         <BanksList
           questionBanks={questionBanks}
-          onSelectBank={setSelectedBankCode}
+          onSelectBank={handleSelectBank}
           canAuthor={canAuthor}
         />
 
@@ -88,23 +104,25 @@ export default function QuestionBanks() {
     );
   }
 
-  const { color, label } = getStatusConfig(getBankStatus(selectedBank));
+  const { color, label } = getStatusConfig(
+    selectedBankSummary ? getBankStatus(selectedBankSummary) : "",
+  );
 
   return (
     <Flex vertical gap={20}>
       <Flex align="center" gap={12} wrap="wrap">
-        <Button icon={<ArrowLeftOutlined />} onClick={() => setSelectedBankCode(null)}>
+        <Button icon={<ArrowLeftOutlined />} onClick={() => setSelectedBankId(null)}>
           Back
         </Button>
         <MyTitle level={3} style={{ margin: 0, color: token.colorText }}>
-          {selectedBank.code}
+          {selectedBankSummary?.code ?? ""}
         </MyTitle>
         <Tag color={color} style={{ margin: 0 }}>
           {label}
         </Tag>
       </Flex>
 
-      <QuestionsPanel bank={selectedBank} />
+      <QuestionsPanel bank={selectedBankDetail} loading={detailLoading} />
 
       {uploadModal}
     </Flex>

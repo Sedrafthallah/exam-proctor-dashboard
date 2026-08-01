@@ -18,6 +18,10 @@ export function getStatusConfig(status) {
 // session start — no admin action, and no way back once locked. ARCHIVED is
 // a separate, explicit flag set once a bank's exam cycle is fully over.
 export function getBankStatus(bank) {
+  if (bank.status) {
+    return bank.status.toUpperCase();
+  }
+
   if (bank.archived) {
     return "ARCHIVED";
   }

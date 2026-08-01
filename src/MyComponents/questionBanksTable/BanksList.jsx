@@ -28,17 +28,18 @@ export default function BanksList({ questionBanks, onSelectBank, canAuthor }) {
     },
     {
       title: "Course",
-      dataIndex: "courseCode",
       key: "courseCode",
       width: 110,
-      render: (courseCode) => <Tag style={{ margin: 0 }}>{courseCode || "—"}</Tag>,
+      render: (_, bank) => <Tag style={{ margin: 0 }}>{bank.courseCode ?? bank.courseTag ?? "—"}</Tag>,
     },
     {
       title: "Questions",
       key: "questions",
       align: "center",
       width: 100,
-      render: (_, bank) => <MyText style={{ fontSize: 13 }}>{bank.questions.length}</MyText>,
+      render: (_, bank) => (
+        <MyText style={{ fontSize: 13 }}>{bank.questionCount ?? bank.questions?.length ?? 0}</MyText>
+      ),
     },
     {
       title: "Status",
@@ -99,7 +100,7 @@ export default function BanksList({ questionBanks, onSelectBank, canAuthor }) {
         rowKey="code"
         pagination={false}
         onRow={(bank) => ({
-          onClick: () => onSelectBank(bank.code),
+          onClick: () => onSelectBank(bank.id),
           style: { cursor: "pointer" },
         })}
         locale={{ emptyText: "No question banks yet — upload a CSV to create one" }}
