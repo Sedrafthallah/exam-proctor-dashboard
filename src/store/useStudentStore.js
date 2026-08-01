@@ -58,7 +58,8 @@ const useStudentStore = create((set, get) => ({
 
   // POST /api/students/import-csv — multipart/form-data with a "file" field.
   // No frontend validation or parsing — the backend handles all of it and
-  // returns { added, skipped, errors[] }; the roster is re-fetched after.
+  // returns { totalRecords, successfulImports, failedImports, results[] };
+  // the roster is re-fetched after.
   importStudentsCsv: async (file) => {
     set({ importing: true });
     try {
@@ -96,9 +97,11 @@ const useStudentStore = create((set, get) => ({
 
       return {
         success: true,
-        added: json.data?.added ?? 0,
-        skipped: json.data?.skipped ?? 0,
-        errors: json.data?.errors ?? [],
+        added: json.data?.successfulImports ?? 0,
+        skipped: json.data?.failedImports ?? 0,
+        errors: (json.data?.results ?? [])
+          .filter((r) => !r.isSuccess)
+          .map((r) => r.message),
       };
     } catch (err) {
       console.error("importStudentsCsv error:", err);

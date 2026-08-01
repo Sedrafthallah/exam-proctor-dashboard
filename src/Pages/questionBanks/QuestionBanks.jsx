@@ -44,8 +44,8 @@ export default function QuestionBanks() {
     await fetchQuestionBankById(bankId);
   };
 
-  const handleUploadBank = async (file) => {
-    const success = await uploadQuestionBankApi(file);
+  const handleUploadBank = async (file, fields) => {
+    const success = await uploadQuestionBankApi(file, fields);
     if (success) setIsUploadModalOpen(false);
     return success;
   };

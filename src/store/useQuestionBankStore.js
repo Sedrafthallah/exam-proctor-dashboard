@@ -35,7 +35,12 @@ export const INITIAL_QUESTION_BANKS = [
         id: "Q003",
         type: "MCQ_MULTI",
         text: "Which of the following are sorting algorithms?",
-        options: ["Quick sort", "Dijkstra", "Merge sort", "Breadth-first search"],
+        options: [
+          "Quick sort",
+          "Dijkstra",
+          "Merge sort",
+          "Breadth-first search",
+        ],
         correctAnswer: ["Quick sort", "Merge sort"],
         marks: 2,
       },
@@ -72,7 +77,12 @@ export const INITIAL_QUESTION_BANKS = [
         id: "Q001",
         type: "MCQ_SINGLE",
         text: "What is the default subnet mask for a Class C network?",
-        options: ["255.0.0.0", "255.255.0.0", "255.255.255.0", "255.255.255.255"],
+        options: [
+          "255.0.0.0",
+          "255.255.0.0",
+          "255.255.255.0",
+          "255.255.255.255",
+        ],
         correctAnswer: "255.255.255.0",
         marks: 2,
       },
@@ -238,7 +248,7 @@ const useQuestionBankStore = create((set, get) => ({
     }
   },
 
-  uploadQuestionBankApi: async (file) => {
+  uploadQuestionBankApi: async (file, fields = {}) => {
     set({ uploading: true });
     try {
       const accessToken =
@@ -246,7 +256,10 @@ const useQuestionBankStore = create((set, get) => ({
         sessionStorage.getItem("accessToken");
 
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("csvFile", file);
+      formData.append("title", fields.title ?? "Untitled Bank");
+      formData.append("courseCode", fields.courseCode ?? "");
+      formData.append("version", fields.version ?? "1.0");
 
       const res = await apiFetch("/api/question-banks/upload", {
         method: "POST",
@@ -283,7 +296,12 @@ const useQuestionBankStore = create((set, get) => ({
   // bank field when set via "Upload CSV" instead of picking an existing bank.
   createBankFromCsv: (
     questions,
-    { title, courseCode, linkedSessionId = null, linkedSessionStartUTC = null } = {},
+    {
+      title,
+      courseCode,
+      linkedSessionId = null,
+      linkedSessionStartUTC = null,
+    } = {},
   ) => {
     const currentUser = useAuthStore.getState().user;
     const code = `QB-${Date.now()}`;
@@ -297,7 +315,10 @@ const useQuestionBankStore = create((set, get) => ({
       linkedSessionId,
       linkedSessionStartUTC,
       archived: false,
-      questions: questions.map((q, index) => ({ id: q.id || `Q${Date.now()}-${index}`, ...q })),
+      questions: questions.map((q, index) => ({
+        id: q.id || `Q${Date.now()}-${index}`,
+        ...q,
+      })),
     };
 
     set((state) => ({ questionBanks: [...state.questionBanks, bank] }));
