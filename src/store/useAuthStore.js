@@ -134,14 +134,30 @@ const useAuthStore = create((set, get) => ({
 
       const data = json.data;
 
+      // Temporary mock permissions for testing dashboards
+      // TODO: remove when backend returns real permissions
+      const mockPermissions = {
+        SuperAdmin: { P01: true, P02: true, P03: true, P04: true, P05: true, P06: true, P07: true },
+        Admin: { P01: true, P02: true, P03: true, P04: false, P05: true, P06: true, P07: false },
+        Proctor: { P01: false, P02: false, P03: false, P04: true, P05: false, P06: false, P07: true },
+      };
+
       const user = {
         id: String(data.userId),
         name: data.fullName,
         email: data.email,
-        role: data.roles?.[0] === "SuperAdmin" ? "SUPER_ADMIN" : "ADMIN",
+        role:
+          data.roles?.[0] === "SuperAdmin"
+            ? "SUPER_ADMIN"
+            : data.roles?.[0] === "Proctor"
+              ? "PROCTOR"
+              : "ADMIN",
         jobTitle: data.roles?.[0] ?? "Admin",
         disabled: false,
-        permissions: data.permissions,
+        permissions:
+          data.permissions?.length > 0
+            ? data.permissions
+            : (mockPermissions[data.roles?.[0]] ?? mockPermissions.Admin),
       };
 
       sessionStorage.setItem("accessToken", data.accessToken);
@@ -227,15 +243,30 @@ const useAuthStore = create((set, get) => ({
 
       if (!res.ok || json.statusCode !== 200) return;
 
-      const admins = json.data.map((a) => ({
-        id: String(a.userId ?? a.userName),
-        name: a.fullName ?? a.userName,
-        email: a.email ?? "—",
-        role: a.role ?? "ADMIN",
-        jobTitle: a.role ?? "Admin",
-        disabled: a.isActive === false,
-        permissions: a.permissions ?? {},
-      }));
+      const admins = json.data.map((a) => {
+        // Temporary mock permissions for testing dashboards
+        // TODO: remove when backend returns real permissions
+        const mockPermissions = {
+          admin: { P01: true, P02: true, P03: true, P04: false, P05: true, P06: true, P07: false },
+          proctor: { P01: false, P02: false, P03: false, P04: true, P05: false, P06: false, P07: true },
+        };
+
+        const roleName = (a.role ?? "admin").toLowerCase();
+        const permissions =
+          a.permissions?.length > 0
+            ? a.permissions // ← real permissions if available
+            : (mockPermissions[roleName] ?? mockPermissions.admin); // ← mock fallback
+
+        return {
+          id: String(a.userId ?? a.userName),
+          name: a.fullName ?? a.userName,
+          email: a.email ?? "—",
+          role: a.role === "Proctor" ? "PROCTOR" : "ADMIN",
+          jobTitle: a.role ?? "Admin",
+          disabled: a.isActive === false,
+          permissions,
+        };
+      });
 
       set({ users: admins });
     } catch (err) {

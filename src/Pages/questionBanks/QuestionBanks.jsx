@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { theme, Flex, Tag, Button } from "antd";
-import { UploadOutlined, ArrowLeftOutlined } from "@ant-design/icons";
+import { UploadOutlined, ArrowLeftOutlined, BookOutlined } from "@ant-design/icons";
 
 import useAuthStore from "../../store/useAuthStore";
 import useQuestionBankStore from "../../store/useQuestionBankStore";
 import { getBankStatus, getStatusConfig } from "../../utils/questionBankUtils";
 
 import MyTitle from "../../MyComponents/MyTitle/MyTitle";
+import MyText from "../../MyComponents/myText/MyText";
 import MyButtonPrimary from "../../MyComponents/myButton/MyButtonPrimary";
 
 import BanksList from "../../MyComponents/questionBanksTable/BanksList";
@@ -46,9 +47,28 @@ export default function QuestionBanks() {
     return (
       <Flex vertical gap={20}>
         <Flex justify="space-between" align="center" wrap="wrap" gap={12}>
-          <MyTitle level={3} style={{ margin: 0, color: token.colorText }}>
-            Question Banks
-          </MyTitle>
+          <Flex align="center" gap={12}>
+            <Flex
+              align="center"
+              justify="center"
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                background: `linear-gradient(135deg, ${token.colorPrimary}, ${token.colorPrimaryActive})`,
+                boxShadow: `0 6px 16px -6px ${token.colorPrimary}`,
+                flexShrink: 0,
+              }}
+            >
+              <BookOutlined style={{ fontSize: 20, color: "#fff" }} />
+            </Flex>
+            <Flex vertical gap={2}>
+              <MyTitle level={3} style={{ margin: 0, color: token.colorText }}>
+                Question Banks
+              </MyTitle>
+              <MyText type="secondary">Author and manage question banks for exam sessions.</MyText>
+            </Flex>
+          </Flex>
 
           {canAuthor && (
             <MyButtonPrimary icon={<UploadOutlined />} onClick={() => setIsUploadModalOpen(true)}>

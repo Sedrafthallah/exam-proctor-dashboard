@@ -1,5 +1,5 @@
 import { theme, Flex } from "antd";
-import { DownloadOutlined } from "@ant-design/icons";
+import { DownloadOutlined, AuditOutlined } from "@ant-design/icons";
 
 import useAuditLogStore from "../../store/useAuditLogStore";
 
@@ -26,11 +26,27 @@ export default function AuditLogs() {
   return (
     <Flex vertical gap={20}>
       <Flex justify="space-between" align="flex-start" wrap="wrap" gap={12}>
-        <Flex vertical gap={4}>
-          <MyTitle level={3} style={{ margin: 0, color: token.colorText }}>
-            Audit Logs
-          </MyTitle>
-          <MyText type="secondary">Immutable, signed record of every administrative action.</MyText>
+        <Flex align="center" gap={12}>
+          <Flex
+            align="center"
+            justify="center"
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: `linear-gradient(135deg, ${token.colorPrimary}, ${token.colorPrimaryActive})`,
+              boxShadow: `0 6px 16px -6px ${token.colorPrimary}`,
+              flexShrink: 0,
+            }}
+          >
+            <AuditOutlined style={{ fontSize: 20, color: "#fff" }} />
+          </Flex>
+          <Flex vertical gap={2}>
+            <MyTitle level={3} style={{ margin: 0, color: token.colorText }}>
+              Audit Logs
+            </MyTitle>
+            <MyText type="secondary">Immutable, signed record of every administrative action.</MyText>
+          </Flex>
         </Flex>
 
         <MyButtonSecondary icon={<DownloadOutlined />} onClick={handleExport}>

@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { theme, Flex, Select, Tooltip, message } from "antd";
+import { theme, Flex, Select, Tag, Tooltip, Divider, message } from "antd";
 import {
   FileZipOutlined,
   CodeOutlined,
   SafetyCertificateOutlined,
   DownloadOutlined,
+  FolderOpenOutlined,
+  CalendarOutlined,
+  InboxOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import MyTitle from "../../MyComponents/MyTitle/MyTitle";
@@ -15,7 +18,6 @@ import MyRow from "../../MyComponents/myRow/MyRow";
 import MyCol from "../../MyComponents/myCol/MyCol";
 import MyButtonPrimary from "../../MyComponents/myButton/MyButtonPrimary";
 import MyButtonSecondary from "../../MyComponents/myButton/MyButtonSecondary";
-import ResponseViewerTable from "../../MyComponents/reportsTable/ResponseViewerTable";
 import useSessionStore from "../../store/useSessionStore";
 import useAuthStore from "../../store/useAuthStore";
 import { useSessionResponses } from "../../store/useReportsStore";
@@ -99,15 +101,29 @@ export default function Reports() {
   return (
     <Flex vertical gap={20}>
       <Flex justify="space-between" align="flex-start" wrap="wrap" gap={12}>
-        <Flex vertical gap={4}>
-          <MyTitle level={3} style={{ margin: 0, color: token.colorText }}>
-            Reports & Exports
-          </MyTitle>
-          <MyText type="secondary">
-            {selectedSession && statusConfig
-              ? `${selectedSession.courseCode} · ${statusConfig.label.toUpperCase()} — response viewer and export packages.`
-              : "Session data exports and signed incident logs for closed sessions."}
-          </MyText>
+        <Flex align="center" gap={12}>
+          <Flex
+            align="center"
+            justify="center"
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: `linear-gradient(135deg, ${token.colorPrimary}, ${token.colorPrimaryActive})`,
+              boxShadow: `0 6px 16px -6px ${token.colorPrimary}`,
+              flexShrink: 0,
+            }}
+          >
+            <FolderOpenOutlined style={{ fontSize: 20, color: "#fff" }} />
+          </Flex>
+          <Flex vertical gap={2}>
+            <MyTitle level={3} style={{ margin: 0, color: token.colorText }}>
+              Reports & Exports
+            </MyTitle>
+            <MyText type="secondary">
+              Session data exports and signed incident logs for closed sessions.
+            </MyText>
+          </Flex>
         </Flex>
         <Select
           value={selectedSessionId}
@@ -123,143 +139,216 @@ export default function Reports() {
         <MyCard
           style={{
             borderRadius: 14,
-            border: `1px solid ${token.colorBorder}`,
+            border: `1px dashed ${token.colorBorder}`,
             background: token.colorBgElevated,
-            textAlign: "center",
           }}
+          styles={{ body: { padding: "48px 24px" } }}
         >
-          <MyText type="secondary">
-            No closed or archived sessions available for reporting yet.
-          </MyText>
+          <Flex vertical align="center" gap={10}>
+            <InboxOutlined style={{ fontSize: 32, color: token.colorTextQuaternary }} />
+            <MyText type="secondary">
+              No closed or archived sessions available for reporting yet.
+            </MyText>
+          </Flex>
         </MyCard>
       ) : (
-        <>
-          <MyRow gutter={[20, 20]}>
+        <Flex vertical gap={20}>
+          <MyCard
+            style={{
+              borderRadius: 14,
+              border: `1px solid ${token.colorBorder}`,
+              background: token.colorBgElevated,
+            }}
+            styles={{ body: { padding: "16px 20px" } }}
+          >
+            <Flex align="center" justify="space-between" wrap="wrap" gap={10}>
+              <Flex align="center" gap={10}>
+                <MyText strong style={{ fontSize: 15 }}>
+                  {selectedSession.sessionTitle}
+                </MyText>
+                <Tag color={statusConfig.color} style={{ borderRadius: 5, margin: 0 }}>
+                  {statusConfig.label.toUpperCase()}
+                </Tag>
+              </Flex>
+              <Flex align="center" gap={16}>
+                <MyText type="secondary" style={{ fontSize: 13 }}>
+                  {selectedSession.courseCode}
+                </MyText>
+                <Flex align="center" gap={6}>
+                  <CalendarOutlined style={{ fontSize: 12, color: token.colorTextTertiary }} />
+                  <MyText type="secondary" style={{ fontSize: 13 }}>
+                    {dayjs(selectedSession.scheduledStartUTC).format("YYYY-MM-DD")}
+                  </MyText>
+                </Flex>
+              </Flex>
+            </Flex>
+          </MyCard>
+
+          <MyRow gutter={[24, 24]}>
             <MyCol xs={24} lg={12}>
               <MyCard
+                hoverable
                 style={{
-                  borderRadius: 14,
+                  borderRadius: 16,
                   boxShadow: token.boxShadow,
                   border: `1px solid ${token.colorBorder}`,
+                  borderTop: `4px solid ${token.colorPrimary}`,
                   background: token.colorBgElevated,
                   height: "100%",
+                  minHeight: 380,
+                  transition: "transform 0.15s ease, box-shadow 0.15s ease",
                 }}
+                styles={{ body: { padding: "40px 36px", height: "100%" } }}
               >
-                <Flex gap={14} align="flex-start">
+                <Flex vertical align="center" gap={16} style={{ height: "100%" }}>
                   <Flex
                     align="center"
                     justify="center"
                     style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 10,
-                      background: token.colorPrimaryBg,
+                      width: 72,
+                      height: 72,
+                      borderRadius: 18,
+                      background: `linear-gradient(135deg, ${token.colorPrimaryBg}, ${token.colorPrimaryBgHover})`,
                       flexShrink: 0,
                     }}
                   >
                     <FileZipOutlined
-                      style={{ fontSize: 18, color: token.colorPrimary }}
+                      style={{ fontSize: 30, color: token.colorPrimary }}
                     />
                   </Flex>
-                  <Flex vertical gap={4}>
-                    <MyText strong style={{ fontSize: 14.5 }}>
+                  <Flex vertical align="center" gap={8}>
+                    <MyText strong style={{ fontSize: 18 }}>
                       Grading-Ready Package
                     </MyText>
-                    <MyText type="secondary" style={{ fontSize: 13 }}>
+                    <MyText
+                      type="secondary"
+                      style={{ fontSize: 14, textAlign: "center", maxWidth: 340, lineHeight: 1.6 }}
+                    >
                       Session metadata, question manifest, auto-scored results
                       and score summary with SHA-256 manifest.
                     </MyText>
                   </Flex>
-                </Flex>
-                <Flex gap={10} style={{ marginTop: 18 }}>
-                  <Tooltip
-                    title={
-                      !canExport ? "Requires export permission (P-06)." : ""
-                    }
-                  >
-                    <MyButtonPrimary
-                      icon={<FileZipOutlined />}
-                      disabled={!canExport}
-                      onClick={handleDownloadCsv}
-                    >
-                      CSV ZIP
-                    </MyButtonPrimary>
-                  </Tooltip>
-                  <Tooltip
-                    title={
-                      !canExport ? "Requires export permission (P-06)." : ""
-                    }
-                  >
-                    <MyButtonSecondary
-                      icon={<CodeOutlined />}
-                      disabled={!canExport}
-                      onClick={handleDownloadJson}
-                    >
-                      JSON
-                    </MyButtonSecondary>
-                  </Tooltip>
+
+                  <Divider style={{ margin: "8px 0" }} />
+
+                  <Flex vertical align="center" gap={10} style={{ width: "100%", marginTop: "auto" }}>
+                    <Flex gap={12} justify="center" style={{ width: "100%" }}>
+                      <Tooltip
+                        title={
+                          !canExport ? "Requires export permission (P-06)." : ""
+                        }
+                      >
+                        <MyButtonPrimary
+                          size="large"
+                          icon={<FileZipOutlined />}
+                          disabled={!canExport}
+                          onClick={handleDownloadCsv}
+                          style={{ flex: 1 }}
+                        >
+                          CSV ZIP
+                        </MyButtonPrimary>
+                      </Tooltip>
+                      <Tooltip
+                        title={
+                          !canExport ? "Requires export permission (P-06)." : ""
+                        }
+                      >
+                        <MyButtonSecondary
+                          size="large"
+                          icon={<CodeOutlined />}
+                          disabled={!canExport}
+                          onClick={handleDownloadJson}
+                          style={{ flex: 1 }}
+                        >
+                          JSON
+                        </MyButtonSecondary>
+                      </Tooltip>
+                    </Flex>
+                    {!canExport && (
+                      <MyText type="secondary" style={{ fontSize: 12 }}>
+                        Export requires P06 permission.
+                      </MyText>
+                    )}
+                  </Flex>
                 </Flex>
               </MyCard>
             </MyCol>
 
             <MyCol xs={24} lg={12}>
               <MyCard
+                hoverable
                 style={{
-                  borderRadius: 14,
+                  borderRadius: 16,
                   boxShadow: token.boxShadow,
                   border: `1px solid ${token.colorBorder}`,
+                  borderTop: `4px solid ${token.colorError}`,
                   background: token.colorBgElevated,
                   height: "100%",
+                  minHeight: 380,
+                  transition: "transform 0.15s ease, box-shadow 0.15s ease",
                 }}
+                styles={{ body: { padding: "40px 36px", height: "100%" } }}
               >
-                <Flex gap={14} align="flex-start">
+                <Flex vertical align="center" gap={16} style={{ height: "100%" }}>
                   <Flex
                     align="center"
                     justify="center"
                     style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 10,
-                      background: token.colorErrorBg,
+                      width: 72,
+                      height: 72,
+                      borderRadius: 18,
+                      background: `linear-gradient(135deg, ${token.colorErrorBg}, ${token.colorErrorBgHover})`,
                       flexShrink: 0,
                     }}
                   >
                     <SafetyCertificateOutlined
-                      style={{ fontSize: 18, color: token.colorError }}
+                      style={{ fontSize: 30, color: token.colorError }}
                     />
                   </Flex>
-                  <Flex vertical gap={4}>
-                    <MyText strong style={{ fontSize: 14.5 }}>
+                  <Flex vertical align="center" gap={8}>
+                    <MyText strong style={{ fontSize: 18 }}>
                       Signed Audit Log
                     </MyText>
-                    <MyText type="secondary" style={{ fontSize: 13 }}>
+                    <MyText
+                      type="secondary"
+                      style={{ fontSize: 14, textAlign: "center", maxWidth: 340, lineHeight: 1.6 }}
+                    >
                       Cryptographically signed incident log for disciplinary
                       use, kept separate from grading. Requires export
                       permission (P-06).
                     </MyText>
                   </Flex>
-                </Flex>
-                <Flex gap={10} style={{ marginTop: 18 }}>
-                  <Tooltip
-                    title={
-                      !canExport ? "Requires export permission (P-06)." : ""
-                    }
-                  >
-                    <MyButtonPrimary
-                      icon={<DownloadOutlined />}
-                      disabled={!canExport}
-                      onClick={handleDownloadAuditLog}
+
+                  <Divider style={{ margin: "8px 0" }} />
+
+                  <Flex vertical align="center" gap={10} style={{ width: "100%", marginTop: "auto" }}>
+                    <Tooltip
+                      title={
+                        !canExport ? "Requires export permission (P-06)." : ""
+                      }
+                      style={{ width: "100%" }}
                     >
-                      Download Signed Log
-                    </MyButtonPrimary>
-                  </Tooltip>
+                      <MyButtonPrimary
+                        size="large"
+                        icon={<DownloadOutlined />}
+                        disabled={!canExport}
+                        onClick={handleDownloadAuditLog}
+                        style={{ width: "100%", maxWidth: 280 }}
+                      >
+                        Download Signed Log
+                      </MyButtonPrimary>
+                    </Tooltip>
+                    {!canExport && (
+                      <MyText type="secondary" style={{ fontSize: 12 }}>
+                        Requires P06 permission.
+                      </MyText>
+                    )}
+                  </Flex>
                 </Flex>
               </MyCard>
             </MyCol>
           </MyRow>
-
-          <ResponseViewerTable responses={responses} />
-        </>
+        </Flex>
       )}
     </Flex>
   );

@@ -3,6 +3,72 @@ import { message } from "antd";
 import { apiFetch } from "../api/apiClient";
 import useAuthStore from "./useAuthStore";
 
+// The backend still speaks its own permission names — this maps them to the
+// local P01-P07 set the UI is built around. Remove both this and
+// LOCAL_TO_API_PERMISSION once the backend switches to P01-P07 directly.
+const API_TO_LOCAL_PERMISSION = {
+  // P01 - Question Bank Author
+  CreateQuestionBank: "P01",
+  EditQuestionBank: "P01",
+  DeleteQuestionBank: "P01",
+  ImportQuestionBank: "P01",
+
+  // P02 - Question Bank View
+  ViewQuestionBank: "P02",
+
+  // P03 - Session Manage
+  CreateExamSession: "P03",
+  EditExamSession: "P03",
+  DeleteExamSession: "P03",
+  PublishExamSession: "P03",
+  ViewExamSession: "P03",
+
+  // P04 - Live Proctor
+  MonitorSession: "P04",
+  IssueWarning: "P04",
+  TerminateStudent: "P04",
+  ViewLiveSession: "P04",
+
+  // P05 - Students Register
+  RegisterStudent: "P05",
+  ImportRoster: "P05",
+  ViewStudents: "P05",
+
+  // P06 - Reports Export
+  ExportReports: "P06",
+  ExportAuditLog: "P06",
+
+  // P07 - View Violations
+  ViewViolations: "P07",
+  ViewAlerts: "P07",
+};
+
+// Reverse of API_TO_LOCAL_PERMISSION — used when saving a role's permissions
+// back to the API.
+const LOCAL_TO_API_PERMISSION = {
+  P01: ["CreateQuestionBank", "EditQuestionBank", "ImportQuestionBank"],
+  P02: ["ViewQuestionBank"],
+  P03: ["CreateExamSession", "EditExamSession", "PublishExamSession", "ViewExamSession"],
+  P04: ["MonitorSession", "IssueWarning", "TerminateStudent"],
+  P05: ["RegisterStudent", "ImportRoster", "ViewStudents"],
+  P06: ["ExportReports", "ExportAuditLog"],
+  P07: ["ViewViolations", "ViewAlerts"],
+};
+
+function mapApiPermissionsToLocal(apiPermissions = []) {
+  const local = {
+    P01: false, P02: false, P03: false,
+    P04: false, P05: false, P06: false, P07: false,
+  };
+
+  apiPermissions.forEach((perm) => {
+    const localKey = API_TO_LOCAL_PERMISSION[perm];
+    if (localKey) local[localKey] = true;
+  });
+
+  return local;
+}
+
 // Labels/descriptions for the P01..P07 permission set, shared by the Roles
 // Management page and anywhere else a role's permissions need to be summarised
 // (e.g. the New Admin modal's role picker).
@@ -85,9 +151,6 @@ export const INITIAL_ROLES = [
   },
 ];
 
-// When backend is ready:
-// GET  /api/roles                      → replace INITIAL_ROLES
-// PUT  /api/roles/{roleId}/permissions  → replace saveRole's mock success
 const useRolesStore = create((set, get) => ({
   roles: INITIAL_ROLES,
 
@@ -112,7 +175,7 @@ const useRolesStore = create((set, get) => ({
         isFixed: r.name === "SuperAdmin",
         permissions:
           r.permissions?.length > 0
-            ? r.permissions // لو الباك بعت permissions
+            ? mapApiPermissionsToLocal(r.permissions) // API permissions → P01-P07
             : (INITIAL_ROLES.find((ir) => ir.name === r.name)?.permissions ??
               {}),
         // لو فاضية → خدي من الـ INITIAL_ROLES الموك
@@ -133,11 +196,41 @@ const useRolesStore = create((set, get) => ({
       ),
     })),
 
-  saveRole: (roleId) => {
-    const role = get().roles.find((r) => r.id === roleId);
-    if (!role) return;
+  saveRole: async (roleId) => {
+    try {
+      const role = get().roles.find((r) => r.id === roleId);
+      if (!role || role.isFixed) return;
 
-    message.success(`"${role.name}" permissions saved.`);
+      const accessToken =
+        useAuthStore.getState().accessToken ??
+        sessionStorage.getItem("accessToken");
+
+      // convert P01-P07 → API permissions array
+      const apiPermissions = Object.entries(role.permissions)
+        .filter(([, value]) => value === true)
+        .flatMap(([key]) => LOCAL_TO_API_PERMISSION[key] ?? []);
+
+      const res = await apiFetch(`/api/roles/${roleId}/permissions`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ permissions: apiPermissions }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || json.statusCode !== 200) {
+        message.error(json.message || "Failed to save permissions.");
+        return;
+      }
+
+      message.success(`"${role.name}" permissions saved.`);
+    } catch (err) {
+      console.error("saveRole error:", err);
+      message.error("Network error.");
+    }
   },
 }));
 

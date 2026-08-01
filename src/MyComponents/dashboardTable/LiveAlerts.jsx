@@ -22,7 +22,7 @@ const getAlertConfig = (type) => {
 };
 
 // Swap `alerts` for a WebSocket/polling feed once the live-alerts API is ready.
-export default function LiveAlerts({ alerts = [] }) {
+export default function LiveAlerts({ alerts = [], title = "Live Alerts" }) {
   const { token } = theme.useToken();
 
   return (
@@ -31,7 +31,7 @@ export default function LiveAlerts({ alerts = [] }) {
         <Flex justify="space-between" align="center">
           <Flex align="center" gap={8}>
             <BellOutlined style={{ fontSize: 16, color: token.colorError }} />
-            <MyText strong>Live Alerts</MyText>
+            <MyText strong>{title}</MyText>
           </Flex>
           <Flex align="center" gap={6}>
             <Badge status="processing" color={token.colorSuccess} />

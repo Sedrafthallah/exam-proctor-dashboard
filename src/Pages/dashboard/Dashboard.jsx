@@ -28,11 +28,10 @@ import useAuthStore from "../../store/useAuthStore";
 
 export default function Dashboard() {
   const user = useAuthStore((state) => state.user);
-  const hasPermission = useAuthStore((state) => state.hasPermission);
   const isSuperAdmin = user?.role === "SUPER_ADMIN";
 
   if (!isSuperAdmin) {
-    return <AdminWelcome user={user} hasPermission={hasPermission} />;
+    return <AdminWelcome />;
   }
 
   return <SuperAdminDashboard />;

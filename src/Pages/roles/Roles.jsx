@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Checkbox, Segmented, Alert, Flex, theme } from "antd";
-import { LockOutlined } from "@ant-design/icons";
+import { LockOutlined, SafetyOutlined } from "@ant-design/icons";
 
 import MyCard from "../../MyComponents/myCard/MyCard";
 import MyTitle from "../../MyComponents/MyTitle/MyTitle";
@@ -30,12 +30,28 @@ export default function Roles() {
   return (
     <Flex vertical gap={20}>
       <Flex justify="space-between" align="center" wrap="wrap" gap={12}>
-        <div>
-          <MyTitle level={3} style={{ margin: 0, color: token.colorText }}>
-            Roles & Permissions Management
-          </MyTitle>
-          <MyText type="secondary">Define what each role can access.</MyText>
-        </div>
+        <Flex align="center" gap={12}>
+          <Flex
+            align="center"
+            justify="center"
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: `linear-gradient(135deg, ${token.colorPrimary}, ${token.colorPrimaryActive})`,
+              boxShadow: `0 6px 16px -6px ${token.colorPrimary}`,
+              flexShrink: 0,
+            }}
+          >
+            <SafetyOutlined style={{ fontSize: 20, color: "#fff" }} />
+          </Flex>
+          <div>
+            <MyTitle level={3} style={{ margin: 0, color: token.colorText }}>
+              Roles & Permissions Management
+            </MyTitle>
+            <MyText type="secondary">Define what each role can access.</MyText>
+          </div>
+        </Flex>
         {!selectedRole?.isFixed && (
           <MyButtonPrimary onClick={handleSave}>Save Changes</MyButtonPrimary>
         )}

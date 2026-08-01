@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { theme, Flex, Badge, Select, message } from "antd";
+import { VideoCameraOutlined } from "@ant-design/icons";
 import MyTitle from "../../MyComponents/MyTitle/MyTitle";
 import MyText from "../../MyComponents/myText/MyText";
 import MyRow from "../../MyComponents/myRow/MyRow";
@@ -86,11 +87,27 @@ export default function Monitoring() {
   return (
     <Flex vertical gap={20}>
       <Flex justify="space-between" align="flex-start" wrap="wrap" gap={12}>
-        <Flex vertical gap={4}>
-          <MyTitle level={3} style={{ margin: 0, color: token.colorText }}>
-            Live Monitoring
-          </MyTitle>
-          <MyText type="secondary">Real-time student activity during active sessions.</MyText>
+        <Flex align="center" gap={12}>
+          <Flex
+            align="center"
+            justify="center"
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: `linear-gradient(135deg, ${token.colorPrimary}, ${token.colorPrimaryActive})`,
+              boxShadow: `0 6px 16px -6px ${token.colorPrimary}`,
+              flexShrink: 0,
+            }}
+          >
+            <VideoCameraOutlined style={{ fontSize: 20, color: "#fff" }} />
+          </Flex>
+          <Flex vertical gap={2}>
+            <MyTitle level={3} style={{ margin: 0, color: token.colorText }}>
+              Live Monitoring
+            </MyTitle>
+            <MyText type="secondary">Real-time student activity during active sessions.</MyText>
+          </Flex>
         </Flex>
 
         <Flex align="center" gap={16} wrap="wrap">

@@ -102,13 +102,29 @@ export default function Alerts() {
   return (
     <Flex vertical gap={20}>
       <Flex justify="space-between" align="flex-start" wrap="wrap" gap={12}>
-        <Flex vertical gap={4}>
-          <MyTitle level={3} style={{ margin: 0, color: token.colorText }}>
-            Alerts
-          </MyTitle>
-          <MyText type="secondary">
-            Live proctoring alerts across all active and recent sessions.
-          </MyText>
+        <Flex align="center" gap={12}>
+          <Flex
+            align="center"
+            justify="center"
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: `linear-gradient(135deg, ${token.colorPrimary}, ${token.colorPrimaryActive})`,
+              boxShadow: `0 6px 16px -6px ${token.colorPrimary}`,
+              flexShrink: 0,
+            }}
+          >
+            <AlertOutlined style={{ fontSize: 20, color: "#fff" }} />
+          </Flex>
+          <Flex vertical gap={2}>
+            <MyTitle level={3} style={{ margin: 0, color: token.colorText }}>
+              Alerts
+            </MyTitle>
+            <MyText type="secondary">
+              Live proctoring alerts across all active and recent sessions.
+            </MyText>
+          </Flex>
         </Flex>
         <Flex align="center" gap={6}>
           <Badge status="processing" color={token.colorSuccess} />

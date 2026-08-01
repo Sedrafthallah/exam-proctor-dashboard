@@ -158,7 +158,7 @@ export const INITIAL_SESSIONS = [
 ];
 
 const useSessionStore = create((set) => ({
-  sessions: [],
+  sessions: INITIAL_SESSIONS,
   weeklyStatistics: [],
   weeklyStatisticsLoading: false,
   loading: false,

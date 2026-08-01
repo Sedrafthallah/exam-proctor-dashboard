@@ -1,5 +1,5 @@
 import { theme, Flex, Slider, Segmented, Switch, InputNumber, message } from "antd";
-import { VideoCameraOutlined, ClockCircleOutlined, SaveOutlined } from "@ant-design/icons";
+import { VideoCameraOutlined, ClockCircleOutlined, SaveOutlined, SettingOutlined } from "@ant-design/icons";
 import MyTitle from "../../MyComponents/MyTitle/MyTitle";
 import MyText from "../../MyComponents/myText/MyText";
 import MyCard from "../../MyComponents/myCard/MyCard";
@@ -45,13 +45,29 @@ export default function Settings() {
 
   return (
     <Flex vertical gap={20}>
-      <Flex vertical gap={4}>
-        <MyTitle level={3} style={{ margin: 0, color: token.colorText }}>
-          System Settings
-        </MyTitle>
-        <MyText type="secondary">
-          Platform-wide defaults for proctoring and session behavior.
-        </MyText>
+      <Flex align="center" gap={12}>
+        <Flex
+          align="center"
+          justify="center"
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 12,
+            background: `linear-gradient(135deg, ${token.colorPrimary}, ${token.colorPrimaryActive})`,
+            boxShadow: `0 6px 16px -6px ${token.colorPrimary}`,
+            flexShrink: 0,
+          }}
+        >
+          <SettingOutlined style={{ fontSize: 20, color: "#fff" }} />
+        </Flex>
+        <Flex vertical gap={2}>
+          <MyTitle level={3} style={{ margin: 0, color: token.colorText }}>
+            System Settings
+          </MyTitle>
+          <MyText type="secondary">
+            Platform-wide defaults for proctoring and session behavior.
+          </MyText>
+        </Flex>
       </Flex>
 
       <MyForm form={form} layout="vertical" initialValues={settings} onFinish={handleSave}>

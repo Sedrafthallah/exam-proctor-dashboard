@@ -7,7 +7,7 @@ import MyText from "../../MyComponents/myText/MyText";
 import MyButtonPrimary from "../../MyComponents/myButton/MyButtonPrimary";
 import SessionsTable from "../../MyComponents/sessionsTable/SessionsTable";
 import NewSessionModal from "../../MyComponents/sessionsTable/NewSessionModal";
-import { PlusCircleOutlined } from "@ant-design/icons";
+import { PlusCircleOutlined, CalendarOutlined } from "@ant-design/icons";
 
 export default function Sessions() {
   const FILTERS = [
@@ -47,13 +47,29 @@ export default function Sessions() {
   return (
     <Flex vertical gap={20}>
       <Flex justify="space-between" align="flex-start" wrap="wrap" gap={12}>
-        <Flex vertical gap={4}>
-          <MyTitle level={3} style={{ margin: 0, color: token.colorText }}>
-            Sessions Management
-          </MyTitle>
-          <MyText type="secondary">
-            Create, schedule and monitor exam sessions.
-          </MyText>
+        <Flex align="center" gap={12}>
+          <Flex
+            align="center"
+            justify="center"
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: `linear-gradient(135deg, ${token.colorPrimary}, ${token.colorPrimaryActive})`,
+              boxShadow: `0 6px 16px -6px ${token.colorPrimary}`,
+              flexShrink: 0,
+            }}
+          >
+            <CalendarOutlined style={{ fontSize: 20, color: "#fff" }} />
+          </Flex>
+          <Flex vertical gap={2}>
+            <MyTitle level={3} style={{ margin: 0, color: token.colorText }}>
+              Sessions Management
+            </MyTitle>
+            <MyText type="secondary">
+              Create, schedule and monitor exam sessions.
+            </MyText>
+          </Flex>
         </Flex>
         <Flex gap={10}>
           <MyButtonPrimary
