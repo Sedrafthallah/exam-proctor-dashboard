@@ -418,6 +418,50 @@ const useSessionStore = create((set) => ({
     }
   },
 
+  // extend
+  extendSessionTimeApi: async (id, extraMinutes) => {
+    try {
+      const accessToken =
+        useAuthStore.getState().accessToken ??
+        sessionStorage.getItem("accessToken");
+
+      const res = await apiFetch(`/api/exam-sessions/${id}/extend-time`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          ExtraMinutes: Number(extraMinutes),
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || json.statusCode !== 200) {
+        message.error(json.message || "Failed to extend session.");
+        return false;
+      }
+
+      set((state) => ({
+        sessions: state.sessions.map((s) =>
+          s.id === id
+            ? {
+                ...s,
+                duration: s.duration + extraMinutes,
+              }
+            : s,
+        ),
+      }));
+
+      message.success("Session extended successfully.");
+      return true;
+    } catch (err) {
+      console.error("extendSessionTimeApi error:", err);
+      message.error("Network error.");
+      return false;
+    }
+  },
   // Super Admin only: lets a locked (T-24h) session be edited like a
   // SCHEDULED one (proctor/roster) despite the lock window.
   emergencyOverrideSession: (sessionId) =>

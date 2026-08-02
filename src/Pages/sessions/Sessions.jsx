@@ -28,6 +28,9 @@ export default function Sessions() {
   const createSessionApi = useSessionStore((state) => state.createSessionApi);
   //هاد بيجيب الدالة اللي بتبعت الـ API request
   const fetchSessions = useSessionStore((state) => state.fetchSessions);
+  const extendSessionTimeApi = useSessionStore(
+    (state) => state.extendSessionTimeApi,
+  );
 
   useEffect(() => {
     fetchSessions();
@@ -102,7 +105,11 @@ export default function Sessions() {
         ))}
       </Flex>
 
-      <SessionsTable sessions={filteredSessions} />
+      {/* <SessionsTable sessions={filteredSessions} /> */}
+      <SessionsTable
+        sessions={filteredSessions}
+        onExtendTime={extendSessionTimeApi}
+      />
 
       <NewSessionModal
         open={isModalOpen}

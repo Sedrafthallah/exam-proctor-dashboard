@@ -161,12 +161,17 @@ export default function SessionsTable({ sessions }) {
   const updateSession = useSessionStore((state) => state.updateSession);
   const deleteSessionApi = useSessionStore((state) => state.deleteSessionApi);
   const publishSessionApi = useSessionStore((state) => state.publishSessionApi);
-  const emergencyOverrideSession = useSessionStore((state) => state.emergencyOverrideSession);
-  const extendSessionTime = useSessionStore((state) => state.extendSessionTime);
+  const emergencyOverrideSession = useSessionStore(
+    (state) => state.emergencyOverrideSession,
+  );
+  const extendSessionTimeApi = useSessionStore(
+    (state) => state.extendSessionTimeApi,
+  );
   const terminateSession = useSessionStore((state) => state.terminateSession);
 
   const isSuperAdmin = currentUser?.role === "SUPER_ADMIN";
-  const hasPermission = (perm) => isSuperAdmin || currentUser?.permissions?.[perm] === true;
+  const hasPermission = (perm) =>
+    isSuperAdmin || currentUser?.permissions?.[perm] === true;
 
   const handleSaveSession = (sessionId, fields) => {
     updateSession(sessionId, fields);
@@ -187,10 +192,12 @@ export default function SessionsTable({ sessions }) {
     message.success(`Emergency override applied to "${session.sessionTitle}".`);
   };
 
-  const handleExtend = (sessionId, extraMinutes) => {
-    extendSessionTime(sessionId, extraMinutes);
-    setExtendingSession(null);
-    message.success(`Extended by ${extraMinutes} minutes.`);
+  const handleExtend = async (sessionId, extraMinutes) => {
+    const success = await extendSessionTimeApi(sessionId, extraMinutes);
+
+    if (success) {
+      setExtendingSession(null);
+    }
   };
 
   const handleTerminate = (session) => {
@@ -232,7 +239,9 @@ export default function SessionsTable({ sessions }) {
         const start = dayjs(value);
         return (
           <Flex vertical gap={0}>
-            <MyText style={{ fontSize: 12.5 }}>{start.format("YYYY-MM-DD")}</MyText>
+            <MyText style={{ fontSize: 12.5 }}>
+              {start.format("YYYY-MM-DD")}
+            </MyText>
             <MyText type="secondary" style={{ fontSize: 12 }}>
               {start.format("HH:mm")}
             </MyText>
@@ -245,7 +254,9 @@ export default function SessionsTable({ sessions }) {
       dataIndex: "duration",
       key: "duration",
       width: 90,
-      render: (duration) => <MyText style={{ fontSize: 13 }}>{duration} min</MyText>,
+      render: (duration) => (
+        <MyText style={{ fontSize: 13 }}>{duration} min</MyText>
+      ),
     },
     {
       title: "Students",
@@ -253,7 +264,9 @@ export default function SessionsTable({ sessions }) {
       key: "enrolledStudents",
       align: "center",
       width: 90,
-      render: (count) => <MyText style={{ fontSize: 13 }}>{count > 0 ? count : "—"}</MyText>,
+      render: (count) => (
+        <MyText style={{ fontSize: 13 }}>{count > 0 ? count : "—"}</MyText>
+      ),
     },
     {
       title: "Status",
@@ -307,7 +320,9 @@ export default function SessionsTable({ sessions }) {
     <MyCard
       title={
         <Flex align="center" gap={8} wrap="wrap">
-          <CalendarOutlined style={{ fontSize: 16, color: token.colorPrimary }} />
+          <CalendarOutlined
+            style={{ fontSize: 16, color: token.colorPrimary }}
+          />
           <MyText strong>Exam Sessions</MyText>
         </Flex>
       }
