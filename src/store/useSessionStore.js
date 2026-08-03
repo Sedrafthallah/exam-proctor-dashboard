@@ -462,6 +462,103 @@ const useSessionStore = create((set) => ({
       return false;
     }
   },
+  //update
+  updateSessionApi: async (id, fields) => {
+    try {
+      const accessToken =
+        useAuthStore.getState().accessToken ??
+        sessionStorage.getItem("accessToken");
+
+      const res = await apiFetch(`/api/exam-sessions/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          title: fields.sessionTitle,
+          durationMinutes: fields.duration,
+          questionBankId: fields.questionBank,
+          gracePeriodMinutes: fields.gracePeriod,
+          loginWindowMinutes: fields.loginWindow,
+          eyeGazeThresholdSec: fields.gazeThreshold,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || json.statusCode !== 200) {
+        message.error(json.message || "Failed to update session.");
+        return false;
+      }
+
+      set((state) => ({
+        sessions: state.sessions.map((s) =>
+          s.id === id
+            ? {
+                ...s,
+                sessionTitle: json.data.title,
+                duration: json.data.durationMinutes,
+                questionBank: json.data.questionBankId,
+                gracePeriod: json.data.gracePeriodMinutes,
+                loginWindow: json.data.loginWindowMinutes,
+                gazeThreshold: json.data.eyeGazeThresholdSec,
+              }
+            : s,
+        ),
+      }));
+
+      message.success("Session updated successfully.");
+      return true;
+    } catch (err) {
+      console.error("updateSessionApi error:", err);
+      message.error("Network error.");
+      return false;
+    }
+  },
+
+  // edit restore
+  editRestoreSessionApi: async (id, fields) => {
+    try {
+      const accessToken =
+        useAuthStore.getState().accessToken ??
+        sessionStorage.getItem("accessToken");
+
+      const res = await apiFetch(`/api/exam-sessions/${id}/edit-restore`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          assignedProctorIds: fields.assignedProctorIds,
+          studentIdsToAdd: fields.studentIdsToAdd,
+          studentIdsToRemove: fields.studentIdsToRemove,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || json.statusCode !== 200) {
+        message.error(json.message || "Failed to update roster.");
+        return false;
+      }
+
+      set((state) => ({
+        sessions: state.sessions.map((s) =>
+          s.id === id ? { ...s, ...json.data } : s,
+        ),
+      }));
+
+      message.success("Roster updated successfully.");
+      return true;
+    } catch (err) {
+      console.error("editRestoreSessionApi error:", err);
+      message.error("Network error.");
+      return false;
+    }
+  },
+
   // Super Admin only: lets a locked (T-24h) session be edited like a
   // SCHEDULED one (proctor/roster) despite the lock window.
   emergencyOverrideSession: (sessionId) =>

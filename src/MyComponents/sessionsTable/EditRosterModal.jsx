@@ -23,18 +23,29 @@ export default function EditRosterModal({ open, session, onClose, onSave }) {
 
   const [proctor, setProctor] = useState(null);
   const [roster, setRoster] = useState([]);
-
+  const [initialRoster, setInitialRoster] = useState([]);
+  console.log("SESSION:", session);
   useEffect(() => {
     if (open && session) {
-      setProctor(session.proctor || null);
-      // Mock data has no roster IDs — show the first N students as a placeholder roster.
-      setRoster(students.slice(0, session.enrolledStudents || 0));
+      const selectedProctor = users.find((u) => u.name === session.proctor);
+
+      setProctor(selectedProctor?.id ?? null);
+
+      const initial = session.enrolledStudents?.length
+        ? session.enrolledStudents
+        : students.slice(0, session.enrolledStudents || 0);
+
+      setRoster(initial);
+      setInitialRoster(initial);
     }
-  }, [open, session]);
+  }, [open, session, students]);
 
   const proctorOptions = users
     .filter((u) => !u.disabled)
-    .map((u) => ({ value: u.name, label: u.name }));
+    .map((u) => ({
+      value: u.id,
+      label: u.name,
+    }));
 
   const rosterIds = new Set(roster.map((s) => s.id));
   const addStudentOptions = students
@@ -56,13 +67,32 @@ export default function EditRosterModal({ open, session, onClose, onSave }) {
   };
 
   const handleSave = () => {
-    onSave(session.id, {
-      proctor: proctor,
-      enrolledStudents: roster.length,
+    const addedStudents = roster
+      .filter(
+        (student) =>
+          !initialRoster.some((oldStudent) => oldStudent.id === student.id),
+      )
+      .map((student) => student.id);
+
+    const removedStudents = initialRoster
+      .filter(
+        (student) => !roster.some((newStudent) => newStudent.id === student.id),
+      )
+      .map((student) => student.id);
+    console.log("Saving roster:", {
+      sessionId: session.id,
+      assignedProctorIds: proctor ? [proctor] : [],
+      studentIdsToAdd: addedStudents,
+      studentIdsToRemove: removedStudents,
     });
+    onSave(session.id, {
+      assignedProctorIds: proctor ? [Number(proctor)] : [],
+      studentIdsToAdd: addedStudents,
+      studentIdsToRemove: removedStudents,
+    });
+
     message.success("Roster updated successfully.");
   };
-
   return (
     <MyModal
       open={open}
@@ -78,7 +108,10 @@ export default function EditRosterModal({ open, session, onClose, onSave }) {
         Assign a proctor and add or remove students for this session.
       </MyText>
 
-      <MyText strong style={{ display: "block", margin: "4px 0 8px", fontSize: 12.5 }}>
+      <MyText
+        strong
+        style={{ display: "block", margin: "4px 0 8px", fontSize: 12.5 }}
+      >
         ASSIGNED PROCTOR
       </MyText>
       <Select
@@ -90,7 +123,10 @@ export default function EditRosterModal({ open, session, onClose, onSave }) {
         onChange={setProctor}
       />
 
-      <MyText strong style={{ display: "block", margin: "4px 0 8px", fontSize: 12.5 }}>
+      <MyText
+        strong
+        style={{ display: "block", margin: "4px 0 8px", fontSize: 12.5 }}
+      >
         ENROLLED STUDENTS ({roster.length})
       </MyText>
       <Flex
@@ -121,7 +157,10 @@ export default function EditRosterModal({ open, session, onClose, onSave }) {
             }}
           >
             <Flex align="center" gap={10}>
-              <Avatar size={28} style={{ background: token.colorPrimary, fontSize: 12 }}>
+              <Avatar
+                size={28}
+                style={{ background: token.colorPrimary, fontSize: 12 }}
+              >
                 {getInitials(student.name)}
               </Avatar>
               <Flex vertical gap={0}>
@@ -142,7 +181,10 @@ export default function EditRosterModal({ open, session, onClose, onSave }) {
         ))}
       </Flex>
 
-      <MyText strong style={{ display: "block", margin: "4px 0 8px", fontSize: 12.5 }}>
+      <MyText
+        strong
+        style={{ display: "block", margin: "4px 0 8px", fontSize: 12.5 }}
+      >
         ADD STUDENTS
       </MyText>
       <Select
@@ -151,7 +193,9 @@ export default function EditRosterModal({ open, session, onClose, onSave }) {
         placeholder="Search and add a student..."
         value={null}
         options={addStudentOptions}
-        filterOption={(input, option) => option.label.toLowerCase().includes(input.toLowerCase())}
+        filterOption={(input, option) =>
+          String(option.label).toLowerCase().includes(input.toLowerCase())
+        }
         onChange={handleAddStudent}
       />
 

@@ -10,10 +10,16 @@ import { parseQuestionsCSV } from "../../utils/csvUtils";
 export default function QuestionBankField({ form, disabled }) {
   const [mode, setMode] = useState("select");
   const questionBanks = useQuestionBankStore((state) => state.questionBanks);
-  const createBankFromCsv = useQuestionBankStore((state) => state.createBankFromCsv);
+  const createBankFromCsv = useQuestionBankStore(
+    (state) => state.createBankFromCsv,
+  );
 
+  // const bankOptions = questionBanks.map((bank) => ({
+  //   value: bank.code,
+  //   label: `${bank.code} — ${bank.title} (${bank.questionCount ?? bank.questions?.length ?? 0} Qs)`,
+  // }));
   const bankOptions = questionBanks.map((bank) => ({
-    value: bank.code,
+    value: bank.id,
     label: `${bank.code} — ${bank.title} (${bank.questionCount ?? bank.questions?.length ?? 0} Qs)`,
   }));
 
@@ -41,8 +47,10 @@ export default function QuestionBankField({ form, disabled }) {
         },
       );
 
-      form.setFieldValue("questionBank", bank.code);
-      message.success(`Created "${bank.code}" with ${questions.length} questions.`);
+      form.setFieldValue("questionBank", bank.id);
+      message.success(
+        `Created "${bank.code}" with ${questions.length} questions.`,
+      );
     } catch {
       message.error("Couldn't read that file. Please upload a valid CSV.");
     }
@@ -53,7 +61,12 @@ export default function QuestionBankField({ form, disabled }) {
   if (disabled) {
     return (
       <MyForm.Item name="questionBank" label="Question bank">
-        <Select allowClear placeholder="No question bank" options={bankOptions} disabled />
+        <Select
+          allowClear
+          placeholder="No question bank"
+          options={bankOptions}
+          disabled
+        />
       </MyForm.Item>
     );
   }
@@ -71,7 +84,11 @@ export default function QuestionBankField({ form, disabled }) {
         ]}
       />
 
-      <MyForm.Item name="questionBank" label="Question bank" hidden={mode !== "select"}>
+      <MyForm.Item
+        name="questionBank"
+        label="Question bank"
+        hidden={mode !== "select"}
+      >
         <Select
           allowClear
           placeholder="Select a question bank"
@@ -82,15 +99,19 @@ export default function QuestionBankField({ form, disabled }) {
 
       {mode === "csv" && (
         <Flex vertical gap={8} style={{ marginBottom: 16 }}>
-          <Upload accept=".csv" showUploadList={false} beforeUpload={handleUpload}>
+          <Upload
+            accept=".csv"
+            showUploadList={false}
+            beforeUpload={handleUpload}
+          >
             <MyButtonSecondary icon={<UploadOutlined />} block>
               Upload questions CSV
             </MyButtonSecondary>
           </Upload>
           <MyForm.Item shouldUpdate noStyle>
             {() => {
-              const code = form.getFieldValue("questionBank");
-              const bank = questionBanks.find((b) => b.code === code);
+              const id = form.getFieldValue("questionBank");
+              const bank = questionBanks.find((b) => b.id === id);
               return (
                 <MyText type="secondary" style={{ fontSize: 12 }}>
                   {bank

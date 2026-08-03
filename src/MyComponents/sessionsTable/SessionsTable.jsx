@@ -158,7 +158,7 @@ export default function SessionsTable({ sessions }) {
   const [rosterSession, setRosterSession] = useState(null);
 
   const currentUser = useAuthStore((state) => state.user);
-  const updateSession = useSessionStore((state) => state.updateSession);
+
   const deleteSessionApi = useSessionStore((state) => state.deleteSessionApi);
   const publishSessionApi = useSessionStore((state) => state.publishSessionApi);
   const emergencyOverrideSession = useSessionStore(
@@ -173,12 +173,18 @@ export default function SessionsTable({ sessions }) {
   const hasPermission = (perm) =>
     isSuperAdmin || currentUser?.permissions?.[perm] === true;
 
-  const handleSaveSession = (sessionId, fields) => {
-    updateSession(sessionId, fields);
-    setOpenSession(null);
-    message.success("Session updated.");
-  };
+  const updateSessionApi = useSessionStore((state) => state.updateSessionApi);
+  const editRestoreSessionApi = useSessionStore(
+    (state) => state.editRestoreSessionApi,
+  );
 
+  const handleSaveSession = async (sessionId, fields) => {
+    const success = await updateSessionApi(sessionId, fields);
+
+    if (success) {
+      setOpenSession(null);
+    }
+  };
   const handlePublish = async (session) => {
     await publishSessionApi(session.id);
   };
@@ -205,12 +211,13 @@ export default function SessionsTable({ sessions }) {
     message.success(`"${session.sessionTitle}" was terminated.`);
   };
 
-  const handleSaveRoster = (sessionId, updates) => {
-    updateSession(sessionId, updates);
-    setRosterSession(null);
-    message.success("Roster updated successfully.");
-  };
+  const handleSaveRoster = async (sessionId, updates) => {
+    const success = await editRestoreSessionApi(sessionId, updates);
 
+    if (success) {
+      setRosterSession(null);
+    }
+  };
   const columns = [
     {
       title: "Session",
