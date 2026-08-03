@@ -27,18 +27,18 @@ export default function EditRosterModal({ open, session, onClose, onSave }) {
   console.log("SESSION:", session);
   useEffect(() => {
     if (open && session) {
-      const selectedProctor = users.find((u) => u.name === session.proctor);
+      const currentProctorId = session.assignedProctors?.[0]?.id ?? null;
 
-      setProctor(selectedProctor?.id ?? null);
+      setProctor(currentProctorId);
 
       const initial = session.enrolledStudents?.length
         ? session.enrolledStudents
-        : students.slice(0, session.enrolledStudents || 0);
+        : [];
 
       setRoster(initial);
       setInitialRoster(initial);
     }
-  }, [open, session, students]);
+  }, [open, session]);
 
   const proctorOptions = users
     .filter((u) => !u.disabled)
@@ -46,7 +46,6 @@ export default function EditRosterModal({ open, session, onClose, onSave }) {
       value: u.id,
       label: u.name,
     }));
-
   const rosterIds = new Set(roster.map((s) => s.id));
   const addStudentOptions = students
     .filter((s) => !rosterIds.has(s.id))
@@ -61,6 +60,9 @@ export default function EditRosterModal({ open, session, onClose, onSave }) {
     if (!selectedStudent) return;
     setRoster((prev) => [...prev, selectedStudent]);
   };
+  console.log("PROCTOR:", proctor);
+  console.log("STUDENTS:", students);
+  console.log("USERS:", users);
 
   const handleCancel = () => {
     onClose();
@@ -72,21 +74,26 @@ export default function EditRosterModal({ open, session, onClose, onSave }) {
         (student) =>
           !initialRoster.some((oldStudent) => oldStudent.id === student.id),
       )
-      .map((student) => student.id);
-
+      .map((student) => student.userId);
     const removedStudents = initialRoster
       .filter(
         (student) => !roster.some((newStudent) => newStudent.id === student.id),
       )
-      .map((student) => student.id);
+      .map((student) => student.userId);
     console.log("Saving roster:", {
       sessionId: session.id,
       assignedProctorIds: proctor ? [proctor] : [],
       studentIdsToAdd: addedStudents,
       studentIdsToRemove: removedStudents,
     });
+    console.log("SELECTED PROCTOR:", proctor);
+    console.log("PAYLOAD:", {
+      assignedProctorIds: proctor ? [proctor] : [],
+      studentIdsToAdd: addedStudents,
+      studentIdsToRemove: removedStudents,
+    });
     onSave(session.id, {
-      assignedProctorIds: proctor ? [Number(proctor)] : [],
+      assignedProctorIds: proctor ? [proctor] : [],
       studentIdsToAdd: addedStudents,
       studentIdsToRemove: removedStudents,
     });

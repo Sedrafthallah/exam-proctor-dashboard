@@ -3,14 +3,13 @@ import { apiFetch } from "../api/apiClient";
 
 const INITIAL_USERS = [
   {
-    id: "AD-002",
+    id: 2,
     name: "Manar Aljarkas",
     email: "manar@university.edu",
     password: "admin123",
     role: "ADMIN",
     jobTitle: "Admin",
     disabled: false,
-
     permissions: {
       P01: false,
       P02: false,
@@ -22,12 +21,12 @@ const INITIAL_USERS = [
     },
   },
   {
-    id: "AD-003",
+    id: 3,
     name: "Prof. Maher Saleh",
     email: "maher.saleh@vu.edu",
     password: "admin123",
-    role: "ADMIN",
-    jobTitle: "Session Coordinator",
+    role: "PROCTOR",
+    jobTitle: "Proctor",
     disabled: false,
     permissions: {
       P01: false,
@@ -40,7 +39,7 @@ const INITIAL_USERS = [
     },
   },
   {
-    id: "AD-004",
+    id: 4,
     name: "Dr. Lina Abbas",
     email: "lina.abbas@vu.edu",
     password: "admin123",
@@ -58,7 +57,7 @@ const INITIAL_USERS = [
     },
   },
   {
-    id: "AD-005",
+    id: 5,
     name: "Fadi Nasser",
     email: "fadi.nasser@vu.edu",
     password: "admin123",
@@ -76,7 +75,7 @@ const INITIAL_USERS = [
     },
   },
   {
-    id: "AD-006",
+    id: 6,
     name: "Yara Tannous",
     email: "yara.tannous@vu.edu",
     password: "admin123",
@@ -137,9 +136,33 @@ const useAuthStore = create((set, get) => ({
       // Temporary mock permissions for testing dashboards
       // TODO: remove when backend returns real permissions
       const mockPermissions = {
-        SuperAdmin: { P01: true, P02: true, P03: true, P04: true, P05: true, P06: true, P07: true },
-        Admin: { P01: true, P02: true, P03: true, P04: false, P05: true, P06: true, P07: false },
-        Proctor: { P01: false, P02: false, P03: false, P04: true, P05: false, P06: false, P07: true },
+        SuperAdmin: {
+          P01: true,
+          P02: true,
+          P03: true,
+          P04: true,
+          P05: true,
+          P06: true,
+          P07: true,
+        },
+        Admin: {
+          P01: true,
+          P02: true,
+          P03: true,
+          P04: false,
+          P05: true,
+          P06: true,
+          P07: false,
+        },
+        Proctor: {
+          P01: false,
+          P02: false,
+          P03: false,
+          P04: true,
+          P05: false,
+          P06: false,
+          P07: true,
+        },
       };
 
       const user = {
@@ -230,7 +253,8 @@ const useAuthStore = create((set, get) => ({
 
   fetchAdmins: async () => {
     try {
-      const accessToken = get().accessToken ?? sessionStorage.getItem("accessToken");
+      const accessToken =
+        get().accessToken ?? sessionStorage.getItem("accessToken");
 
       const res = await apiFetch(
         "/api/admins/with-permissions?Page=1&PageSize=100",
@@ -247,8 +271,24 @@ const useAuthStore = create((set, get) => ({
         // Temporary mock permissions for testing dashboards
         // TODO: remove when backend returns real permissions
         const mockPermissions = {
-          admin: { P01: true, P02: true, P03: true, P04: false, P05: true, P06: true, P07: false },
-          proctor: { P01: false, P02: false, P03: false, P04: true, P05: false, P06: false, P07: true },
+          admin: {
+            P01: true,
+            P02: true,
+            P03: true,
+            P04: false,
+            P05: true,
+            P06: true,
+            P07: false,
+          },
+          proctor: {
+            P01: false,
+            P02: false,
+            P03: false,
+            P04: true,
+            P05: false,
+            P06: false,
+            P07: true,
+          },
         };
 
         const roleName = (a.role ?? "admin").toLowerCase();
