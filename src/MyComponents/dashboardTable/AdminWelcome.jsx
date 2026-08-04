@@ -44,7 +44,6 @@ import useQuestionBankStore from "../../store/useQuestionBankStore";
 import { getSessionStatus } from "../../utils/sessionUtils";
 import { ALERT_TYPE_CONFIG } from "../../utils/alertUtils";
 
-// TODO: remove after backend sends real permissions
 // Handy fixtures for manually testing each permission combination in the
 // Admin dashboard — copy one of these into useAuthStore's `user` (e.g. via
 // devtools) to preview the cards/chart a given permission set produces.

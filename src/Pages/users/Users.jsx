@@ -12,8 +12,6 @@ import PermissionMatrix from "../../MyComponents/usersTable/PermissionMatrix";
 import PermissionReference from "../../MyComponents/usersTable/PermissionReference";
 import NewAdminModal from "../../MyComponents/usersTable/NewAdminModal";
 import EditAdminModal from "../../MyComponents/usersTable/EditAdminModal";
-import { getSessionStatus } from "../../utils/sessionUtils";
-import { INITIAL_SESSIONS } from "../../store/useSessionStore";
 
 export default function Users() {
   const { token } = theme.useToken();
@@ -52,8 +50,6 @@ export default function Users() {
 
   const handleToggleStatus = async (adminId) => {
     const admin = admins.find((a) => a.id === adminId);
-    console.log("ADMIN ID:", adminId);
-    console.log("ADMIN:", admin);
     if (!admin) return;
 
     if (admin.disabled) {
@@ -76,9 +72,6 @@ export default function Users() {
     }
   };
 
-  INITIAL_SESSIONS.forEach((s) => {
-    console.log(s.sessionTitle, "→", getSessionStatus(s));
-  });
   return (
     <Flex vertical gap={20}>
       <Flex justify="space-between" align="flex-start" wrap="wrap" gap={12}>

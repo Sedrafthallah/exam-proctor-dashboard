@@ -24,7 +24,6 @@ export default function EditRosterModal({ open, session, onClose, onSave }) {
   const [proctor, setProctor] = useState(null);
   const [roster, setRoster] = useState([]);
   const [initialRoster, setInitialRoster] = useState([]);
-  console.log("SESSION:", session);
   useEffect(() => {
     if (open && session) {
       const currentProctorId = session.assignedProctors?.[0]?.id ?? null;
@@ -60,10 +59,6 @@ export default function EditRosterModal({ open, session, onClose, onSave }) {
     if (!selectedStudent) return;
     setRoster((prev) => [...prev, selectedStudent]);
   };
-  console.log("PROCTOR:", proctor);
-  console.log("STUDENTS:", students);
-  console.log("USERS:", users);
-
   const handleCancel = () => {
     onClose();
   };
@@ -80,18 +75,6 @@ export default function EditRosterModal({ open, session, onClose, onSave }) {
         (student) => !roster.some((newStudent) => newStudent.id === student.id),
       )
       .map((student) => student.userId);
-    console.log("Saving roster:", {
-      sessionId: session.id,
-      assignedProctorIds: proctor ? [proctor] : [],
-      studentIdsToAdd: addedStudents,
-      studentIdsToRemove: removedStudents,
-    });
-    console.log("SELECTED PROCTOR:", proctor);
-    console.log("PAYLOAD:", {
-      assignedProctorIds: proctor ? [proctor] : [],
-      studentIdsToAdd: addedStudents,
-      studentIdsToRemove: removedStudents,
-    });
     onSave(session.id, {
       assignedProctorIds: proctor ? [proctor] : [],
       studentIdsToAdd: addedStudents,

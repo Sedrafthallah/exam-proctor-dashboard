@@ -135,7 +135,6 @@ const useAuthStore = create((set, get) => ({
       const data = json.data;
 
       // Temporary mock permissions for testing dashboards
-      // TODO: remove when backend returns real permissions
       const mockPermissions = {
         SuperAdmin: {
           P01: true,
@@ -227,10 +226,9 @@ const useAuthStore = create((set, get) => ({
         throw new Error("Logout failed");
       }
 
-      const result = await response.json();
-      console.log(result.message);
-    } catch (error) {
-      console.error(error);
+      await response.json();
+    } catch {
+      // logout still proceeds locally below regardless of API outcome
     }
 
     sessionStorage.removeItem("user");
@@ -270,7 +268,6 @@ const useAuthStore = create((set, get) => ({
 
       const admins = json.data.map((a) => {
         // Temporary mock permissions for testing dashboards
-        // TODO: remove when backend returns real permissions
         const mockPermissions = {
           admin: {
             P01: true,
