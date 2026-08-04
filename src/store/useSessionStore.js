@@ -478,7 +478,7 @@ const useSessionStore = create((set) => ({
         body: JSON.stringify({
           title: fields.sessionTitle,
           durationMinutes: fields.duration,
-          questionBankId: fields.questionBank,
+          questionBankId: fields.questionBankId ?? null,
           gracePeriodMinutes: fields.gracePeriod,
           loginWindowMinutes: fields.loginWindow,
           eyeGazeThresholdSec: fields.gazeThreshold,
@@ -499,7 +499,8 @@ const useSessionStore = create((set) => ({
                 ...s,
                 sessionTitle: json.data.title,
                 duration: json.data.durationMinutes,
-                questionBank: json.data.questionBankId,
+                questionBank: json.data.questionBankTitle,
+                questionBankId: String(json.data.questionBankId),
                 gracePeriod: json.data.gracePeriodMinutes,
                 loginWindow: json.data.loginWindowMinutes,
                 gazeThreshold: json.data.eyeGazeThresholdSec,

@@ -389,6 +389,97 @@ const useAuthStore = create((set, get) => ({
     return { success: true };
   },
 
+  deleteAdminApi: async (id) => {
+    try {
+      const accessToken =
+        get().accessToken ?? sessionStorage.getItem("accessToken");
+
+      const res = await apiFetch(`/api/admins/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || json.statusCode !== 200) {
+        return false;
+      }
+
+      set((state) => ({
+        users: state.users.filter((u) => u.id !== id),
+      }));
+
+      return true;
+    } catch (err) {
+      console.error("deleteAdminApi error:", err);
+      return false;
+    }
+  },
+
+  deactivateAdminApi: async (id) => {
+    try {
+      const accessToken =
+        get().accessToken ?? sessionStorage.getItem("accessToken");
+
+      const res = await apiFetch(`/api/admins/${id}/deactivate`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || json.statusCode !== 200) {
+        return false;
+      }
+
+      set((state) => ({
+        users: state.users.map((user) =>
+          user.id === id ? { ...user, disabled: true } : user,
+        ),
+      }));
+
+      return true;
+    } catch (err) {
+      console.error("deactivateAdminApi error:", err);
+      return false;
+    }
+  },
+
+  reactivateAdminApi: async (id) => {
+    try {
+      const accessToken =
+        get().accessToken ?? sessionStorage.getItem("accessToken");
+
+      const res = await apiFetch(`/api/admins/${id}/reactivate`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || json.statusCode !== 200) {
+        return false;
+      }
+
+      set((state) => ({
+        users: state.users.map((user) =>
+          user.id === id ? { ...user, disabled: false } : user,
+        ),
+      }));
+
+      return true;
+    } catch (err) {
+      console.error("reactivateAdminApi error:", err);
+      return false;
+    }
+  },
+
   // Super Admin accounts can't be disabled or deleted from the UI — there must
   // always be at least one account that can manage the other admins.
   toggleUserStatus: (userId) => {

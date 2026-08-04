@@ -3,7 +3,6 @@ import { useSearchParams } from "react-router-dom";
 import { theme, Flex, Select, Tag, Tooltip, Divider, message } from "antd";
 import {
   FileZipOutlined,
-  CodeOutlined,
   SafetyCertificateOutlined,
   DownloadOutlined,
   FolderOpenOutlined,
@@ -17,17 +16,12 @@ import MyCard from "../../MyComponents/myCard/MyCard";
 import MyRow from "../../MyComponents/myRow/MyRow";
 import MyCol from "../../MyComponents/myCol/MyCol";
 import MyButtonPrimary from "../../MyComponents/myButton/MyButtonPrimary";
-import MyButtonSecondary from "../../MyComponents/myButton/MyButtonSecondary";
+
 import useSessionStore from "../../store/useSessionStore";
 import useAuthStore from "../../store/useAuthStore";
-import { useSessionResponses } from "../../store/useReportsStore";
+// import { useSessionResponses } from "../../store/useReportsStore";
 import { getSessionStatus, getStatusConfig } from "../../utils/sessionUtils";
-import {
-  downloadTextFile,
-  buildGradingPackageCsv,
-  buildGradingPackageJson,
-  buildSignedAuditLog,
-} from "../../utils/downloadUtils";
+import { apiFetch } from "../../api/apiClient";
 
 export default function Reports() {
   const { token } = theme.useToken();
@@ -59,7 +53,7 @@ export default function Reports() {
 
   const selectedSession =
     reportableSessions.find((s) => s.id === selectedSessionId) ?? null;
-  const responses = useSessionResponses(selectedSession?.id);
+
   const status = selectedSession ? getSessionStatus(selectedSession) : null;
   const statusConfig = status ? getStatusConfig(status) : null;
 
@@ -68,34 +62,68 @@ export default function Reports() {
     label: `${session.sessionTitle} · ${session.courseCode} · ${dayjs(session.scheduledStartUTC).format("YYYY-MM-DD")}`,
   }));
 
-  const handleDownloadCsv = () => {
-    if (!selectedSession) return;
-    downloadTextFile(
-      `${selectedSession.courseCode}-grading-package.csv`,
-      buildGradingPackageCsv(selectedSession, responses),
-      "text/csv",
-    );
-    message.success("Grading-ready package (CSV) downloaded.");
+  const handleDownloadCsv = async () => {
+    if (!selectedSessionId) return;
+    try {
+      const accessToken =
+        useAuthStore.getState().accessToken ??
+        sessionStorage.getItem("accessToken");
+
+      const res = await apiFetch(
+        `/api/exam-sessions/${selectedSessionId}/export/grading`,
+        { headers: { Authorization: `Bearer ${accessToken}` } },
+      );
+
+      if (!res.ok) {
+        message.error("Failed to export grading report.");
+        return;
+      }
+
+      const text = await res.text();
+      const blob = new Blob([text], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `grading-${selectedSessionId}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      message.success("Grading report downloaded.");
+    } catch (err) {
+      console.error("export grading error:", err);
+      message.error("Network error.");
+    }
   };
 
-  const handleDownloadJson = () => {
-    if (!selectedSession) return;
-    downloadTextFile(
-      `${selectedSession.courseCode}-grading-package.json`,
-      buildGradingPackageJson(selectedSession, responses),
-      "application/json",
-    );
-    message.success("Grading-ready package (JSON) downloaded.");
-  };
+  const handleDownloadAuditLog = async () => {
+    if (!selectedSessionId) return;
+    try {
+      const accessToken =
+        useAuthStore.getState().accessToken ??
+        sessionStorage.getItem("accessToken");
 
-  const handleDownloadAuditLog = () => {
-    if (!selectedSession) return;
-    downloadTextFile(
-      `${selectedSession.courseCode}-signed-audit-log.json`,
-      buildSignedAuditLog(selectedSession, responses),
-      "application/json",
-    );
-    message.success("Signed audit log downloaded.");
+      const res = await apiFetch(
+        `/api/exam-sessions/${selectedSessionId}/export/audit-log`,
+        { headers: { Authorization: `Bearer ${accessToken}` } },
+      );
+
+      if (!res.ok) {
+        message.error("Failed to export audit log.");
+        return;
+      }
+
+      const text = await res.text();
+      const blob = new Blob([text], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `audit-log-${selectedSessionId}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      message.success("Audit log downloaded.");
+    } catch (err) {
+      console.error("export audit log error:", err);
+      message.error("Network error.");
+    }
   };
 
   return (
@@ -145,7 +173,9 @@ export default function Reports() {
           styles={{ body: { padding: "48px 24px" } }}
         >
           <Flex vertical align="center" gap={10}>
-            <InboxOutlined style={{ fontSize: 32, color: token.colorTextQuaternary }} />
+            <InboxOutlined
+              style={{ fontSize: 32, color: token.colorTextQuaternary }}
+            />
             <MyText type="secondary">
               No closed or archived sessions available for reporting yet.
             </MyText>
@@ -166,7 +196,10 @@ export default function Reports() {
                 <MyText strong style={{ fontSize: 15 }}>
                   {selectedSession.sessionTitle}
                 </MyText>
-                <Tag color={statusConfig.color} style={{ borderRadius: 5, margin: 0 }}>
+                <Tag
+                  color={statusConfig.color}
+                  style={{ borderRadius: 5, margin: 0 }}
+                >
                   {statusConfig.label.toUpperCase()}
                 </Tag>
               </Flex>
@@ -175,9 +208,13 @@ export default function Reports() {
                   {selectedSession.courseCode}
                 </MyText>
                 <Flex align="center" gap={6}>
-                  <CalendarOutlined style={{ fontSize: 12, color: token.colorTextTertiary }} />
+                  <CalendarOutlined
+                    style={{ fontSize: 12, color: token.colorTextTertiary }}
+                  />
                   <MyText type="secondary" style={{ fontSize: 13 }}>
-                    {dayjs(selectedSession.scheduledStartUTC).format("YYYY-MM-DD")}
+                    {dayjs(selectedSession.scheduledStartUTC).format(
+                      "YYYY-MM-DD",
+                    )}
                   </MyText>
                 </Flex>
               </Flex>
@@ -200,7 +237,12 @@ export default function Reports() {
                 }}
                 styles={{ body: { padding: "40px 36px", height: "100%" } }}
               >
-                <Flex vertical align="center" gap={16} style={{ height: "100%" }}>
+                <Flex
+                  vertical
+                  align="center"
+                  gap={16}
+                  style={{ height: "100%" }}
+                >
                   <Flex
                     align="center"
                     justify="center"
@@ -222,7 +264,12 @@ export default function Reports() {
                     </MyText>
                     <MyText
                       type="secondary"
-                      style={{ fontSize: 14, textAlign: "center", maxWidth: 340, lineHeight: 1.6 }}
+                      style={{
+                        fontSize: 14,
+                        textAlign: "center",
+                        maxWidth: 340,
+                        lineHeight: 1.6,
+                      }}
                     >
                       Session metadata, question manifest, auto-scored results
                       and score summary with SHA-256 manifest.
@@ -231,7 +278,12 @@ export default function Reports() {
 
                   <Divider style={{ margin: "8px 0" }} />
 
-                  <Flex vertical align="center" gap={10} style={{ width: "100%", marginTop: "auto" }}>
+                  <Flex
+                    vertical
+                    align="center"
+                    gap={10}
+                    style={{ width: "100%", marginTop: "auto" }}
+                  >
                     <Flex gap={12} justify="center" style={{ width: "100%" }}>
                       <Tooltip
                         title={
@@ -253,7 +305,7 @@ export default function Reports() {
                           !canExport ? "Requires export permission (P-06)." : ""
                         }
                       >
-                        <MyButtonSecondary
+                        {/* <MyButtonSecondary
                           size="large"
                           icon={<CodeOutlined />}
                           disabled={!canExport}
@@ -261,7 +313,7 @@ export default function Reports() {
                           style={{ flex: 1 }}
                         >
                           JSON
-                        </MyButtonSecondary>
+                        </MyButtonSecondary> */}
                       </Tooltip>
                     </Flex>
                     {!canExport && (
@@ -289,7 +341,12 @@ export default function Reports() {
                 }}
                 styles={{ body: { padding: "40px 36px", height: "100%" } }}
               >
-                <Flex vertical align="center" gap={16} style={{ height: "100%" }}>
+                <Flex
+                  vertical
+                  align="center"
+                  gap={16}
+                  style={{ height: "100%" }}
+                >
                   <Flex
                     align="center"
                     justify="center"
@@ -311,7 +368,12 @@ export default function Reports() {
                     </MyText>
                     <MyText
                       type="secondary"
-                      style={{ fontSize: 14, textAlign: "center", maxWidth: 340, lineHeight: 1.6 }}
+                      style={{
+                        fontSize: 14,
+                        textAlign: "center",
+                        maxWidth: 340,
+                        lineHeight: 1.6,
+                      }}
                     >
                       Cryptographically signed incident log for disciplinary
                       use, kept separate from grading. Requires export
@@ -321,7 +383,12 @@ export default function Reports() {
 
                   <Divider style={{ margin: "8px 0" }} />
 
-                  <Flex vertical align="center" gap={10} style={{ width: "100%", marginTop: "auto" }}>
+                  <Flex
+                    vertical
+                    align="center"
+                    gap={10}
+                    style={{ width: "100%", marginTop: "auto" }}
+                  >
                     <Tooltip
                       title={
                         !canExport ? "Requires export permission (P-06)." : ""

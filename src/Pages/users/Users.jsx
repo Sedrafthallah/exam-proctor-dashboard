@@ -23,8 +23,10 @@ export default function Users() {
   const admins = useAuthStore((state) => state.users);
   const fetchAdmins = useAuthStore((state) => state.fetchAdmins);
   const updateAdmin = useAuthStore((state) => state.updateAdmin);
-  const toggleUserStatus = useAuthStore((state) => state.toggleUserStatus);
-  const deleteAdmin = useAuthStore((state) => state.deleteAdmin);
+  const deactivateAdminApi = useAuthStore((state) => state.deactivateAdminApi);
+
+  const reactivateAdminApi = useAuthStore((state) => state.reactivateAdminApi);
+  const deleteAdminApi = useAuthStore((state) => state.deleteAdminApi);
 
   const editingAdmin = admins.find((a) => a.id === editingAdminId) || null;
 
@@ -48,20 +50,30 @@ export default function Users() {
     return result;
   };
 
-  const handleToggleStatus = (adminId) => {
+  const handleToggleStatus = async (adminId) => {
     const admin = admins.find((a) => a.id === adminId);
-    toggleUserStatus(adminId);
-    message.success(
-      admin?.disabled
-        ? `${admin.name}'s account was enabled.`
-        : `${admin?.name}'s account was disabled.`,
-    );
-  };
+    console.log("ADMIN ID:", adminId);
+    console.log("ADMIN:", admin);
+    if (!admin) return;
 
-  const handleDeleteAdmin = (adminId) => {
+    if (admin.disabled) {
+      if (await reactivateAdminApi(adminId)) {
+        message.success(`${admin.name}'s account was enabled.`);
+      }
+    } else {
+      if (await deactivateAdminApi(adminId)) {
+        message.success(`${admin.name}'s account was disabled.`);
+      }
+    }
+  };
+  const handleDeleteAdmin = async (adminId) => {
     const admin = admins.find((a) => a.id === adminId);
-    deleteAdmin(adminId);
-    message.success(`${admin?.name}'s account was deleted.`);
+
+    const success = await deleteAdminApi(adminId);
+
+    if (success) {
+      message.success(`${admin?.name}'s account was deleted.`);
+    }
   };
 
   INITIAL_SESSIONS.forEach((s) => {
