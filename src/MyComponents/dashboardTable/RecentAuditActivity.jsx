@@ -7,31 +7,37 @@ import {
   UserAddOutlined,
   FileExcelOutlined,
 } from "@ant-design/icons";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
 import MyCard from "../../MyComponents/myCard/MyCard";
 import MyText from "../../MyComponents/myText/MyText";
 
+dayjs.extend(relativeTime);
+
+// Keyed by the audit action names returned by GET /api/audits (see ACTION_LABELS
+// in useAuditLogStore.js). Actions not listed here fall back to DEFAULT_AUDIT_CONFIG.
 const AUDIT_CONFIG = {
-  PUBLISH: {
+  PublishedExamSession: {
     icon: <ArrowUpOutlined />,
     color: "#2f54eb",
     bg: "rgba(47, 84, 235, 0.15)",
   },
-  LOCK: {
+  LockedQuestionBank: {
     icon: <LockOutlined />,
     color: "#722ed1",
     bg: "rgba(114, 46, 209, 0.15)",
   },
-  TERMINATE: {
+  DeletedExamSession: {
     icon: <CloseCircleOutlined />,
     color: "#f5222d",
     bg: "rgba(245, 34, 45, 0.15)",
   },
-  CREATE_USER: {
+  CreatedAdmin: {
     icon: <UserAddOutlined />,
     color: "#52c41a",
     bg: "rgba(82, 196, 26, 0.15)",
   },
-  IMPORT: {
+  ImportedRoster: {
     icon: <FileExcelOutlined />,
     color: "#fa8c16",
     bg: "rgba(250, 140, 22, 0.15)",
@@ -46,52 +52,8 @@ const DEFAULT_AUDIT_CONFIG = {
 
 const getAuditConfig = (type) => AUDIT_CONFIG[type] ?? DEFAULT_AUDIT_CONFIG;
 
-// Swap `audits` for a paginated GET /api/audit-logs?limit=5 call once the endpoint is ready.
-const staticAudits = [
-  {
-    id: "1",
-    type: "PUBLISH",
-    user: "Sedra Fathallah",
-    action: "published session",
-    details: "EP-2025-CS210-M",
-    time: "2m ago",
-  },
-  {
-    id: "2",
-    type: "LOCK",
-    user: "Dr. Lina Abbas",
-    action: "locked question bank",
-    details: "QB-2025-CS301-F_v3",
-    time: "18m ago",
-  },
-  {
-    id: "3",
-    type: "TERMINATE",
-    user: "Fadi Nasser",
-    action: "terminated student",
-    details: "S-20211847 · CS301",
-    time: "32m ago",
-  },
-  {
-    id: "4",
-    type: "CREATE_USER",
-    user: "Sedra Fathallah",
-    action: "created admin account",
-    details: "y.tannous@damascus.edu",
-    time: "1h ago",
-  },
-  {
-    id: "5",
-    type: "IMPORT",
-    user: "Yara Tannous",
-    action: "imported roster",
-    details: "88 students · CS210",
-    time: "2h ago",
-  },
-];
-
 export default function RecentAuditActivity({
-  audits = staticAudits,
+  audits = [],
   onViewAuditLogs,
 }) {
   const { token } = theme.useToken();
@@ -162,7 +124,7 @@ export default function RecentAuditActivity({
                       }}
                     >
                       <MyText strong style={{ color: token.colorText }}>
-                        {item.user}
+                        {item.actor}
                       </MyText>{" "}
                       {item.action}
                     </MyText>
@@ -170,7 +132,7 @@ export default function RecentAuditActivity({
                       type="secondary"
                       style={{ fontSize: 11, fontFamily: "monospace" }}
                     >
-                      {item.details}
+                      {item.target}
                     </MyText>
                   </Flex>
                 </Flex>
@@ -179,7 +141,7 @@ export default function RecentAuditActivity({
                   type="secondary"
                   style={{ fontSize: 11, whiteSpace: "nowrap" }}
                 >
-                  {item.time}
+                  {dayjs(item.timestamp).fromNow()}
                 </MyText>
               </Flex>
             </List.Item>

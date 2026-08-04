@@ -8,7 +8,7 @@ import MyTable from "../mytable/MyTable";
 import MyButtonPrimary from "../myButton/MyButtonPrimary";
 import MyButtonSecondary from "../myButton/MyButtonSecondary";
 import { getInitials } from "../usersTable/adminsData";
-import { ALERT_TYPE_CONFIG, ALERT_STATUS_CONFIG } from "../../utils/alertUtils";
+import { ALERT_TYPE_CONFIG, ALERT_STATUS_CONFIG, DEFAULT_ALERT_TYPE_CONFIG } from "../../utils/alertUtils";
 
 dayjs.extend(relativeTime);
 
@@ -21,7 +21,7 @@ export default function AlertsTable({ alerts, canAct, onDismiss, onWarn, onEscal
       key: "alert",
       width: 240,
       render: (_, record) => {
-        const config = ALERT_TYPE_CONFIG[record.type];
+        const config = ALERT_TYPE_CONFIG[record.type] ?? DEFAULT_ALERT_TYPE_CONFIG;
         return (
           <Flex align="flex-start" gap={10}>
             <Avatar
@@ -49,21 +49,16 @@ export default function AlertsTable({ alerts, canAct, onDismiss, onWarn, onEscal
       render: (_, record) => (
         <Flex align="center" gap={10}>
           <Avatar size={28} style={{ background: token.colorPrimary, fontWeight: 600, fontSize: 11 }}>
-            {getInitials(record.studentName)}
+            {getInitials(record.student)}
           </Avatar>
-          <Flex vertical gap={0}>
-            <MyText style={{ fontSize: 13 }}>{record.studentName}</MyText>
-            <MyText type="secondary" style={{ fontSize: 11.5 }}>
-              {record.studentId}
-            </MyText>
-          </Flex>
+          <MyText style={{ fontSize: 13 }}>{record.student}</MyText>
         </Flex>
       ),
     },
     {
       title: "Session",
-      dataIndex: "sessionTitle",
-      key: "sessionTitle",
+      dataIndex: "session",
+      key: "session",
       width: 190,
       render: (title) => <MyText style={{ fontSize: 13 }}>{title}</MyText>,
     },

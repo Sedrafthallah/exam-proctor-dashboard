@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { theme, Flex } from "antd";
 import { DownloadOutlined, AuditOutlined } from "@ant-design/icons";
 
@@ -12,6 +13,11 @@ import AuditLogFeed from "../../MyComponents/auditLogsTable/AuditLogFeed";
 export default function AuditLogs() {
   const { token } = theme.useToken();
   const logs = useAuditLogStore((state) => state.logs);
+  const fetchAuditLogs = useAuditLogStore((state) => state.fetchAuditLogs);
+
+  useEffect(() => {
+    fetchAuditLogs();
+  }, []);
 
   const handleExport = () => {
     const blob = new Blob([JSON.stringify(logs, null, 2)], { type: "application/json" });

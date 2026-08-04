@@ -24,6 +24,7 @@ import AdminWelcome from "../../MyComponents/dashboardTable/AdminWelcome";
 
 import useSessionStore from "../../store/useSessionStore";
 import useAlertsStore from "../../store/useAlertsStore";
+import useAuditLogStore from "../../store/useAuditLogStore";
 import useAuthStore from "../../store/useAuthStore";
 
 export default function Dashboard() {
@@ -52,11 +53,17 @@ function SuperAdminDashboard() {
   const fetchStats = useSessionStore((state) => state.fetchStats);
 
   const alerts = useAlertsStore((state) => state.alerts);
+  const fetchAlerts = useAlertsStore((state) => state.fetchAlerts);
+
+  const logs = useAuditLogStore((state) => state.logs);
+  const fetchAuditLogs = useAuditLogStore((state) => state.fetchAuditLogs);
 
   useEffect(() => {
     fetchStats();
     fetchSessions();
     fetchWeeklyStatistics();
+    fetchAlerts();
+    fetchAuditLogs();
   }, []);
 
   const dashboardCards = [
@@ -236,7 +243,7 @@ function SuperAdminDashboard() {
         <MyCol xs={24} lg={8}>
           <Flex vertical gap={20}>
             <LiveAlerts alerts={recentAlerts} />
-            <RecentAuditActivity />
+            <RecentAuditActivity audits={logs.slice(0, 5)} />
           </Flex>
         </MyCol>
       </MyRow>

@@ -4,10 +4,10 @@ import {
   TeamOutlined,
   SwapOutlined,
   SoundOutlined,
+  DisconnectOutlined,
+  QuestionCircleOutlined,
 } from "@ant-design/icons";
 
-// Alert types per the SRS monitoring spec. Connectivity Lost and Kiosk
-// Warning are intentionally excluded — they aren't monitoring alerts.
 export const ALERT_TYPE_CONFIG = {
   GAZE_DEVIATION: {
     label: "Gaze Deviation",
@@ -44,6 +44,21 @@ export const ALERT_TYPE_CONFIG = {
     icon: <SoundOutlined />,
     severity: "WARNING",
   },
+  CONNECTIVITY_LOST: {
+    label: "Connectivity Lost",
+    description: "Student's connection dropped during the exam",
+    color: "#64748b",
+    icon: <DisconnectOutlined />,
+    severity: "WARNING",
+  },
+};
+
+export const DEFAULT_ALERT_TYPE_CONFIG = {
+  label: "Unknown Alert",
+  description: "Unrecognized alert type",
+  color: "#64748b",
+  icon: <QuestionCircleOutlined />,
+  severity: "WARNING",
 };
 
 export const ALERT_STATUS_CONFIG = {

@@ -6,7 +6,7 @@ import MyCard from "../myCard/MyCard";
 import MyText from "../myText/MyText";
 import MyButtonPrimary from "../myButton/MyButtonPrimary";
 import MyButtonSecondary from "../myButton/MyButtonSecondary";
-import { ALERT_TYPE_CONFIG, ALERT_STATUS_CONFIG } from "../../utils/alertUtils";
+import { ALERT_TYPE_CONFIG, ALERT_STATUS_CONFIG, DEFAULT_ALERT_TYPE_CONFIG } from "../../utils/alertUtils";
 
 dayjs.extend(relativeTime);
 
@@ -41,7 +41,7 @@ export default function AlertFeed({ alerts, canAct, onDismiss, onWarn, onEscalat
         dataSource={alerts}
         locale={{ emptyText: "No alerts for this session" }}
         renderItem={(alert) => {
-          const config = ALERT_TYPE_CONFIG[alert.type];
+          const config = ALERT_TYPE_CONFIG[alert.type] ?? DEFAULT_ALERT_TYPE_CONFIG;
           const statusConfig = ALERT_STATUS_CONFIG[alert.status] ?? ALERT_STATUS_CONFIG.OPEN;
           const showActions = canAct && alert.status === "OPEN";
 

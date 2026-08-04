@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { theme, Flex, Badge, Segmented, Select, message } from "antd";
 import {
   AlertOutlined,
@@ -65,10 +65,31 @@ export default function Alerts() {
   const { token } = theme.useToken();
   const alerts = useAlertsStore((state) => state.alerts);
   const updateAlertStatus = useAlertsStore((state) => state.updateAlertStatus);
+  const fetchAlerts = useAlertsStore((state) => state.fetchAlerts);
+  const fetchOpenAlerts = useAlertsStore((state) => state.fetchOpenAlerts);
+  const fetchResolvedAlerts = useAlertsStore((state) => state.fetchResolvedAlerts);
+  const fetchEscalatedAlerts = useAlertsStore((state) => state.fetchEscalatedAlerts);
+  const fetchAlertsByType = useAlertsStore((state) => state.fetchAlertsByType);
   const currentUser = useAuthStore((state) => state.user);
 
   const [statusFilter, setStatusFilter] = useState("All");
   const [typeFilter, setTypeFilter] = useState("ALL");
+
+  useEffect(() => {
+    const status = statusFilter.toUpperCase();
+    if (status === "OPEN") fetchOpenAlerts();
+    else if (status === "RESOLVED") fetchResolvedAlerts();
+    else if (status === "ESCALATED") fetchEscalatedAlerts();
+    else fetchAlerts(); // ALL
+  }, [statusFilter]);
+
+  useEffect(() => {
+    if (typeFilter && typeFilter !== "ALL") {
+      fetchAlertsByType(typeFilter);
+    } else {
+      fetchAlerts();
+    }
+  }, [typeFilter]);
 
   const isSuperAdmin = currentUser?.role === "SUPER_ADMIN";
   const hasPermission = (perm) => isSuperAdmin || currentUser?.permissions?.[perm] === true;
