@@ -52,27 +52,67 @@ export const MOCK_USERS_FOR_TESTING = {
   // Admin with P03 + P05
   adminSessions: {
     role: "ADMIN",
-    permissions: { P01: false, P02: false, P03: true, P04: false, P05: true, P06: false, P07: false },
+    permissions: {
+      P01: false,
+      P02: false,
+      P03: true,
+      P04: false,
+      P05: true,
+      P06: false,
+      P07: false,
+    },
   },
   // Admin with P01 + P02
   adminQBank: {
     role: "ADMIN",
-    permissions: { P01: true, P02: true, P03: false, P04: false, P05: false, P06: false, P07: false },
+    permissions: {
+      P01: true,
+      P02: true,
+      P03: false,
+      P04: false,
+      P05: false,
+      P06: false,
+      P07: false,
+    },
   },
   // Admin with P04 + P07
   adminProctor: {
     role: "ADMIN",
-    permissions: { P01: false, P02: false, P03: false, P04: true, P05: false, P06: false, P07: true },
+    permissions: {
+      P01: false,
+      P02: false,
+      P03: false,
+      P04: true,
+      P05: false,
+      P06: false,
+      P07: true,
+    },
   },
   // Admin with P06
   adminReports: {
     role: "ADMIN",
-    permissions: { P01: false, P02: false, P03: false, P04: false, P05: false, P06: true, P07: false },
+    permissions: {
+      P01: false,
+      P02: false,
+      P03: false,
+      P04: false,
+      P05: false,
+      P06: true,
+      P07: false,
+    },
   },
   // Full Admin
   adminFull: {
     role: "ADMIN",
-    permissions: { P01: true, P02: true, P03: true, P04: true, P05: true, P06: true, P07: true },
+    permissions: {
+      P01: true,
+      P02: true,
+      P03: true,
+      P04: true,
+      P05: true,
+      P06: true,
+      P07: true,
+    },
   },
 };
 
@@ -155,14 +195,24 @@ function StatCard({ icon, color, bg, value, label, sub, token }) {
           {icon}
         </Flex>
         <Flex vertical gap={0}>
-          <MyText style={{ fontSize: 26, fontWeight: 600, color: token.colorText, lineHeight: 1 }}>
+          <MyText
+            style={{
+              fontSize: 26,
+              fontWeight: 600,
+              color: token.colorText,
+              lineHeight: 1,
+            }}
+          >
             {value}
           </MyText>
           <MyText type="secondary" style={{ fontSize: 12.5, fontWeight: 500 }}>
             {label}
           </MyText>
           {sub && (
-            <MyText type="secondary" style={{ fontSize: 11, color: token.colorTextTertiary }}>
+            <MyText
+              type="secondary"
+              style={{ fontSize: 11, color: token.colorTextTertiary }}
+            >
               {sub}
             </MyText>
           )}
@@ -184,7 +234,9 @@ function AlertsByTypeChart({ alerts, token }) {
     <MyCard
       title={
         <Flex align="center" gap={8}>
-          <BarChartOutlined style={{ color: token.colorPrimary, fontSize: 16 }} />
+          <BarChartOutlined
+            style={{ color: token.colorPrimary, fontSize: 16 }}
+          />
           <MyText strong>Alerts by Type</MyText>
         </Flex>
       }
@@ -192,8 +244,15 @@ function AlertsByTypeChart({ alerts, token }) {
     >
       <Flex style={{ width: "100%", height: 220, marginTop: 5 }}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke={token.colorBorderSecondary} vertical={false} />
+          <BarChart
+            data={data}
+            margin={{ top: 5, right: 10, left: -25, bottom: 0 }}
+          >
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke={token.colorBorderSecondary}
+              vertical={false}
+            />
             <XAxis
               dataKey="label"
               tick={{ fill: token.colorTextDescription, fontSize: 11 }}
@@ -219,7 +278,12 @@ function AlertsByTypeChart({ alerts, token }) {
               }}
               cursor={{ fill: token.colorFillSecondary, opacity: 0.3 }}
             />
-            <Bar name="Alerts" dataKey="count" radius={[3, 3, 0, 0]} barSize={28}>
+            <Bar
+              name="Alerts"
+              dataKey="count"
+              radius={[3, 3, 0, 0]}
+              barSize={28}
+            >
               {data.map((entry) => (
                 <Cell key={entry.type} fill={entry.color} />
               ))}
@@ -236,7 +300,9 @@ function SessionsTrendChart({ token }) {
     <MyCard
       title={
         <Flex align="center" gap={8}>
-          <CalendarOutlined style={{ color: token.colorPrimary, fontSize: 16 }} />
+          <CalendarOutlined
+            style={{ color: token.colorPrimary, fontSize: 16 }}
+          />
           <MyText strong>Sessions Over Time — last 7 days</MyText>
         </Flex>
       }
@@ -244,14 +310,35 @@ function SessionsTrendChart({ token }) {
     >
       <Flex style={{ width: "100%", height: 220, marginTop: 5 }}>
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={SESSIONS_TREND_MOCK} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
+          <AreaChart
+            data={SESSIONS_TREND_MOCK}
+            margin={{ top: 5, right: 10, left: -25, bottom: 0 }}
+          >
             <defs>
-              <linearGradient id="sessionsTrendFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={token.colorPrimary} stopOpacity={0.35} />
-                <stop offset="95%" stopColor={token.colorPrimary} stopOpacity={0} />
+              <linearGradient
+                id="sessionsTrendFill"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop
+                  offset="5%"
+                  stopColor={token.colorPrimary}
+                  stopOpacity={0.35}
+                />
+                <stop
+                  offset="95%"
+                  stopColor={token.colorPrimary}
+                  stopOpacity={0}
+                />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke={token.colorBorderSecondary} vertical={false} />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke={token.colorBorderSecondary}
+              vertical={false}
+            />
             <XAxis
               dataKey="day"
               tick={{ fill: token.colorTextDescription, fontSize: 12 }}
@@ -289,8 +376,16 @@ function SessionsTrendChart({ token }) {
 
 function ReportsStatusPieChart({ sessions, token }) {
   const data = [
-    { name: "Exported", value: sessions.filter((s) => sessionStatus(s) === "CLOSED").length, color: token.colorSuccess },
-    { name: "Pending", value: sessions.filter((s) => sessionStatus(s) === "ACTIVE").length, color: token.colorWarning },
+    {
+      name: "Exported",
+      value: sessions.filter((s) => sessionStatus(s) === "CLOSED").length,
+      color: token.colorSuccess,
+    },
+    {
+      name: "Pending",
+      value: sessions.filter((s) => sessionStatus(s) === "ACTIVE").length,
+      color: token.colorWarning,
+    },
   ];
   const total = data.reduce((sum, d) => sum + d.value, 0);
 
@@ -298,7 +393,9 @@ function ReportsStatusPieChart({ sessions, token }) {
     <MyCard
       title={
         <Flex align="center" gap={8}>
-          <BarChartOutlined style={{ color: token.colorPrimary, fontSize: 16 }} />
+          <BarChartOutlined
+            style={{ color: token.colorPrimary, fontSize: 16 }}
+          />
           <MyText strong>Reports Status</MyText>
         </Flex>
       }
@@ -310,7 +407,14 @@ function ReportsStatusPieChart({ sessions, token }) {
         <Flex style={{ width: "100%", height: 220, marginTop: 5 }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie data={data} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80} paddingAngle={3}>
+              <Pie
+                data={data}
+                dataKey="value"
+                nameKey="name"
+                innerRadius={50}
+                outerRadius={80}
+                paddingAngle={3}
+              >
                 {data.map((entry) => (
                   <Cell key={entry.name} fill={entry.color} />
                 ))}
@@ -323,7 +427,11 @@ function ReportsStatusPieChart({ sessions, token }) {
                   color: token.colorText,
                 }}
               />
-              <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
+              <Legend
+                iconType="circle"
+                iconSize={8}
+                wrapperStyle={{ fontSize: 12 }}
+              />
             </PieChart>
           </ResponsiveContainer>
         </Flex>
@@ -353,8 +461,15 @@ function QuestionsPerBankChart({ questionBanks, token }) {
       ) : (
         <Flex style={{ width: "100%", height: 220, marginTop: 5 }}>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={token.colorBorderSecondary} vertical={false} />
+            <BarChart
+              data={data}
+              margin={{ top: 5, right: 10, left: -25, bottom: 0 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke={token.colorBorderSecondary}
+                vertical={false}
+              />
               <XAxis
                 dataKey="name"
                 tick={{ fill: token.colorTextDescription, fontSize: 11 }}
@@ -376,7 +491,13 @@ function QuestionsPerBankChart({ questionBanks, token }) {
                 }}
                 cursor={{ fill: token.colorFillSecondary, opacity: 0.3 }}
               />
-              <Bar name="Questions" dataKey="questions" fill={token.colorWarning} radius={[3, 3, 0, 0]} barSize={28} />
+              <Bar
+                name="Questions"
+                dataKey="questions"
+                fill={token.colorWarning}
+                radius={[3, 3, 0, 0]}
+                barSize={28}
+              />
             </BarChart>
           </ResponsiveContainer>
         </Flex>
@@ -396,11 +517,13 @@ function NoChartCard({ token }) {
 }
 
 function PermissionsTable({ permissions, token }) {
-  const dataSource = Object.entries(PERMISSION_DETAILS).map(([key, { label }]) => ({
-    key,
-    permission: label,
-    status: permissions[key] ? "Granted" : "Not Granted",
-  }));
+  const dataSource = Object.entries(PERMISSION_DETAILS).map(
+    ([key, { label }]) => ({
+      key,
+      permission: label,
+      status: permissions[key] ? "Granted" : "Not Granted",
+    }),
+  );
 
   const columns = [
     { title: "Permission", dataIndex: "permission" },
@@ -414,8 +537,16 @@ function PermissionsTable({ permissions, token }) {
   ];
 
   return (
-    <MyCard title={<MyText strong>My Permissions</MyText>} style={chartCardStyle(token)}>
-      <Table dataSource={dataSource} columns={columns} pagination={false} size="small" />
+    <MyCard
+      title={<MyText strong>My Permissions</MyText>}
+      style={chartCardStyle(token)}
+    >
+      <Table
+        dataSource={dataSource}
+        columns={columns}
+        pagination={false}
+        size="small"
+      />
     </MyCard>
   );
 }
@@ -431,30 +562,68 @@ export default function AdminWelcome() {
 
   const TEST_SCENARIOS = {
     "P03 + P05 (Session Manager)": {
-      P01: false, P02: false, P03: true, P04: false, P05: true, P06: false, P07: false
+      P01: false,
+      P02: false,
+      P03: true,
+      P04: false,
+      P05: true,
+      P06: false,
+      P07: false,
     },
     "P01 + P02 (Question Author)": {
-      P01: true, P02: true, P03: false, P04: false, P05: false, P06: false, P07: false
+      P01: true,
+      P02: true,
+      P03: false,
+      P04: false,
+      P05: false,
+      P06: false,
+      P07: false,
     },
     "P04 + P07 (Proctor)": {
-      P01: false, P02: false, P03: false, P04: true, P05: false, P06: false, P07: true
+      P01: false,
+      P02: false,
+      P03: false,
+      P04: true,
+      P05: false,
+      P06: false,
+      P07: true,
     },
     "P06 (Reports Manager)": {
-      P01: false, P02: false, P03: false, P04: false, P05: false, P06: true, P07: false
+      P01: false,
+      P02: false,
+      P03: false,
+      P04: false,
+      P05: false,
+      P06: true,
+      P07: false,
     },
     "All Permissions (Full Admin)": {
-      P01: true, P02: true, P03: true, P04: true, P05: true, P06: true, P07: true
+      P01: true,
+      P02: true,
+      P03: true,
+      P04: true,
+      P05: true,
+      P06: true,
+      P07: true,
     },
     "No Permissions": {
-      P01: false, P02: false, P03: false, P04: false, P05: false, P06: false, P07: false
+      P01: false,
+      P02: false,
+      P03: false,
+      P04: false,
+      P05: false,
+      P06: false,
+      P07: false,
     },
   };
 
-  const [testScenario, setTestScenario] = useState("P03 + P05 (Session Manager)");
+  const [testScenario, setTestScenario] = useState(
+    "P03 + P05 (Session Manager)",
+  );
 
   const permissions = TEST_MODE
     ? TEST_SCENARIOS[testScenario]
-    : user?.permissions ?? {};
+    : (user?.permissions ?? {});
   // ─────────────────────────────────────────────────────────────
 
   const sessions = useSessionStore((state) => state.sessions);
@@ -487,7 +656,11 @@ export default function AdminWelcome() {
       <Flex align="center" gap={14}>
         <Avatar
           size={48}
-          style={{ background: token.colorPrimary, fontWeight: 600, fontSize: 18 }}
+          style={{
+            background: token.colorPrimary,
+            fontWeight: 600,
+            fontSize: 18,
+          }}
         >
           {user?.name?.[0]}
         </Avatar>
@@ -601,19 +774,38 @@ export default function AdminWelcome() {
     },
   ].filter(Boolean);
 
-  let chart;
-  if (permissions.P04) {
-    chart = <AlertsByTypeChart alerts={alerts} token={token} />;
-  } else if (permissions.P03) {
-    chart = <SessionsTrendChart token={token} />;
-  } else if (permissions.P06) {
-    chart = <ReportsStatusPieChart sessions={sessions} token={token} />;
-  } else if (permissions.P01 || permissions.P02) {
-    chart = <QuestionsPerBankChart questionBanks={questionBanks} token={token} />;
-  } else {
-    chart = <NoChartCard token={token} />;
-  }
-
+  // let chart;
+  // if (permissions.P04) {
+  //   chart = <AlertsByTypeChart alerts={alerts} token={token} />;
+  // } else if (permissions.P03) {
+  //   chart = <SessionsTrendChart token={token} />;
+  // } else if (permissions.P06) {
+  //   chart = <ReportsStatusPieChart sessions={sessions} token={token} />;
+  // } else if (permissions.P01 || permissions.P02) {
+  //   chart = <QuestionsPerBankChart questionBanks={questionBanks} token={token} />;
+  // } else {
+  //   chart = <NoChartCard token={token} />;
+  // }
+  const activeCharts = [
+    permissions.P04 && {
+      key: "alerts-chart",
+      component: <AlertsByTypeChart alerts={alerts} token={token} />,
+    },
+    permissions.P03 && {
+      key: "sessions-chart",
+      component: <SessionsTrendChart token={token} />,
+    },
+    permissions.P06 && {
+      key: "reports-chart",
+      component: <ReportsStatusPieChart sessions={sessions} token={token} />,
+    },
+    (permissions.P01 || permissions.P02) && {
+      key: "qbank-chart",
+      component: (
+        <QuestionsPerBankChart questionBanks={questionBanks} token={token} />
+      ),
+    },
+  ].filter(Boolean);
   return (
     <Flex vertical gap={20}>
       {TEST_MODE && (
@@ -632,7 +824,10 @@ export default function AdminWelcome() {
               value={testScenario}
               onChange={setTestScenario}
               style={{ minWidth: 260 }}
-              options={Object.keys(TEST_SCENARIOS).map((k) => ({ label: k, value: k }))}
+              options={Object.keys(TEST_SCENARIOS).map((k) => ({
+                label: k,
+                value: k,
+              }))}
             />
           </Flex>
         </MyCard>
@@ -649,10 +844,33 @@ export default function AdminWelcome() {
         />
       )}
 
+      {/* {cards.length > 0 && (
+        <MyRow gutter={[16, 16]}>
+          {cards.map((card) => (
+            <MyCol
+              key={card.key}
+              xs={24}
+              sm={12}
+              md={8}
+              lg={{ flex: "1 1 180px" }}
+            >
+              <StatCard
+                token={token}
+                icon={card.icon}
+                color={card.color}
+                value={card.value}
+                label={card.title}
+                sub={card.sub}
+              />
+            </MyCol>
+          ))}
+        </MyRow>
+      )} */}
+
       {cards.length > 0 && (
         <MyRow gutter={[16, 16]}>
           {cards.map((card) => (
-            <MyCol key={card.key} xs={24} sm={12} md={8} lg={{ flex: "1 1 180px" }}>
+            <MyCol key={card.key} xs={24} sm={12} md={8} lg={6}>
               <StatCard
                 token={token}
                 icon={card.icon}
@@ -665,9 +883,31 @@ export default function AdminWelcome() {
           ))}
         </MyRow>
       )}
+      {/* {chart} */}
+      {/* عرض كل المخططات المتاحة للأدمن بجانب بعضها */}
+      {activeCharts.length > 0 ? (
+        <MyRow gutter={[16, 16]}>
+          {activeCharts.map((chartItem, index) => {
+            // فحص ما إذا كان هذا العنصر هو الأخير في مصفوفة فردية العدد
+            const isLastOddItem =
+              index === activeCharts.length - 1 &&
+              activeCharts.length % 2 !== 0;
 
-      {chart}
-
+            return (
+              <MyCol
+                key={chartItem.key}
+                xs={24}
+                // إذا كان المخطط الوحيد أو كان العنصر الأخير الفردي، يأخذ العرض كاملاً 24
+                lg={isLastOddItem || activeCharts.length === 1 ? 24 : 12}
+              >
+                {chartItem.component}
+              </MyCol>
+            );
+          })}
+        </MyRow>
+      ) : (
+        <NoChartCard token={token} />
+      )}
       <PermissionsTable permissions={permissions} token={token} />
     </Flex>
   );
