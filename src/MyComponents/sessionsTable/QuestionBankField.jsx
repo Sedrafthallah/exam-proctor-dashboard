@@ -14,13 +14,9 @@ export default function QuestionBankField({ form, disabled }) {
     (state) => state.createBankFromCsv,
   );
 
-  // const bankOptions = questionBanks.map((bank) => ({
-  //   value: bank.code,
-  //   label: `${bank.code} — ${bank.title} (${bank.questionCount ?? bank.questions?.length ?? 0} Qs)`,
-  // }));
   const bankOptions = questionBanks.map((bank) => ({
     value: bank.id,
-    label: `${bank.code} — ${bank.title} (${bank.questionCount ?? bank.questions?.length ?? 0} Qs)`,
+    label: `${bank.title} (${bank.courseTag}) — ${bank.questionCount} Q`,
   }));
 
   const handleUpload = async (file) => {

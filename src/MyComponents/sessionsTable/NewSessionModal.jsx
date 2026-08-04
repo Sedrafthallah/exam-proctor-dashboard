@@ -25,8 +25,10 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
   const fetchQuestionBanks = useQuestionBankStore((state) => state.fetchQuestionBanks);
 
   useEffect(() => {
-    fetchQuestionBanks();
-  }, []);
+    if (open) {
+      fetchQuestionBanks();
+    }
+  }, [open]);
 
   const proctorOptions = admins
     .filter((admin) => !admin.disabled)
@@ -77,7 +79,7 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
       duration: values.duration,
       gracePeriod: values.gracePeriod,
       loginWindow: values.loginWindow,
-      questionBank: values.questionBank || null,
+      questionBankId: values.questionBank ? Number(values.questionBank) : null,
       proctor: values.proctor || null,
       studentIds: values.studentIds || [],
       enrolledStudents: (values.studentIds || []).length,

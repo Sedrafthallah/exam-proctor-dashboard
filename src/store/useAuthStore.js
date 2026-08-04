@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { message } from "antd";
 import { apiFetch } from "../api/apiClient";
 
 const INITIAL_USERS = [
@@ -404,6 +405,7 @@ const useAuthStore = create((set, get) => ({
       const json = await res.json();
 
       if (!res.ok || json.statusCode !== 200) {
+        message.error("Failed to delete admin.");
         return false;
       }
 
@@ -411,9 +413,11 @@ const useAuthStore = create((set, get) => ({
         users: state.users.filter((u) => u.id !== id),
       }));
 
+      message.success("Admin deleted successfully.");
       return true;
     } catch (err) {
       console.error("deleteAdminApi error:", err);
+      message.error("Network error.");
       return false;
     }
   },
@@ -478,18 +482,6 @@ const useAuthStore = create((set, get) => ({
       console.error("reactivateAdminApi error:", err);
       return false;
     }
-  },
-
-  // Super Admin accounts can't be disabled or deleted from the UI — there must
-  // always be at least one account that can manage the other admins.
-  toggleUserStatus: (userId) => {
-    set((state) => ({
-      users: state.users.map((u) =>
-        u.id === userId && u.role !== "SUPER_ADMIN"
-          ? { ...u, disabled: !u.disabled }
-          : u,
-      ),
-    }));
   },
 
   deleteAdmin: (userId) => {

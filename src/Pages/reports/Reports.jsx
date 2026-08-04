@@ -304,17 +304,7 @@ export default function Reports() {
                         title={
                           !canExport ? "Requires export permission (P-06)." : ""
                         }
-                      >
-                        {/* <MyButtonSecondary
-                          size="large"
-                          icon={<CodeOutlined />}
-                          disabled={!canExport}
-                          onClick={handleDownloadJson}
-                          style={{ flex: 1 }}
-                        >
-                          JSON
-                        </MyButtonSecondary> */}
-                      </Tooltip>
+                      ></Tooltip>
                     </Flex>
                     {!canExport && (
                       <MyText type="secondary" style={{ fontSize: 12 }}>
