@@ -14,8 +14,8 @@ export default function ExtendTimeModal({ open, session, onClose, onExtend }) {
     onClose();
   };
 
-  const handleFinish = (values) => {
-    onExtend(session.id, values.extraMinutes);
+  const handleFinish = async (values) => {
+    await onExtend(session.id, values.extraMinutes);
     form.resetFields();
   };
 
@@ -31,15 +31,22 @@ export default function ExtendTimeModal({ open, session, onClose, onExtend }) {
       }
     >
       <MyText type="secondary" style={{ display: "block", marginBottom: 16 }}>
-        Super Admin override — adds extra minutes to "{session?.sessionTitle}", currently in
-        progress.
+        Super Admin override — adds extra minutes to "{session?.sessionTitle}",
+        currently in progress.
       </MyText>
 
-      <MyForm form={form} layout="vertical" onFinish={handleFinish} initialValues={{ extraMinutes: 10 }}>
+      <MyForm
+        form={form}
+        layout="vertical"
+        onFinish={handleFinish}
+        initialValues={{ extraMinutes: 10 }}
+      >
         <MyForm.Item
           name="extraMinutes"
           label="Extra minutes"
-          rules={[{ required: true, message: "Please enter how many minutes to add" }]}
+          rules={[
+            { required: true, message: "Please enter how many minutes to add" },
+          ]}
         >
           <InputNumber min={1} style={{ width: "100%" }} />
         </MyForm.Item>
