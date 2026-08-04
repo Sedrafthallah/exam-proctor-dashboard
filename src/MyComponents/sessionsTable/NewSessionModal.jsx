@@ -11,7 +11,6 @@ import MyText from "../myText/MyText";
 import useAuthStore from "../../store/useAuthStore";
 import useStudentStore from "../../store/useStudentStore";
 import useQuestionBankStore from "../../store/useQuestionBankStore";
-import { parseStudentsCSV } from "../../utils/csvUtils";
 import QuestionBankField from "./QuestionBankField";
 
 const FACE_ALERT_OPTIONS = ["Low", "Medium", "High"];
@@ -21,7 +20,6 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
   const [enrollMode, setEnrollMode] = useState("select");
   const admins = useAuthStore((state) => state.users);
   const students = useStudentStore((state) => state.students);
-  const bulkRegisterStudents = useStudentStore((state) => state.bulkRegisterStudents);
   const fetchQuestionBanks = useQuestionBankStore((state) => state.fetchQuestionBanks);
 
   useEffect(() => {
@@ -48,24 +46,21 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
   const handleImportRosterCsv = async (file) => {
     try {
       const text = await file.text();
-      const records = parseStudentsCSV(text);
+      const lines = text.trim().split("\n").slice(1); // skip header row
+      const ids = lines
+        .map((line) => line.split(",")[0]?.trim())
+        .filter(Boolean);
 
-      if (records.length === 0) {
-        message.error("No valid rows found — expected columns like ID, Name, Email.");
+      if (ids.length === 0) {
+        message.error("No valid rows found in the file.");
         return false;
       }
 
-      const { addedCount } = bulkRegisterStudents(records);
-      const csvIds = records.map((record) => record.id);
       const previousIds = form.getFieldValue("studentIds") || [];
-
-      form.setFieldValue("studentIds", [...new Set([...previousIds, ...csvIds])]);
-      message.success(
-        `Enrolled ${records.length} student${records.length === 1 ? "" : "s"} from the file` +
-          (addedCount > 0 ? ` (${addedCount} added to the roster).` : "."),
-      );
+      form.setFieldValue("studentIds", [...new Set([...previousIds, ...ids])]);
+      message.success(`${ids.length} student ID(s) loaded from file.`);
     } catch {
-      message.error("Couldn't read that file. Please upload a valid CSV.");
+      message.error("Couldn't read that file.");
     }
 
     return false; // prevent antd's default auto-upload

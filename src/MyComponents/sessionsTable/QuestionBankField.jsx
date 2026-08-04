@@ -5,13 +5,12 @@ import MyForm from "../myForm/MyForm";
 import MyButtonSecondary from "../myButton/MyButtonSecondary";
 import MyText from "../myText/MyText";
 import useQuestionBankStore from "../../store/useQuestionBankStore";
-import { parseQuestionsCSV } from "../../utils/csvUtils";
 
 export default function QuestionBankField({ form, disabled }) {
   const [mode, setMode] = useState("select");
   const questionBanks = useQuestionBankStore((state) => state.questionBanks);
-  const createBankFromCsv = useQuestionBankStore(
-    (state) => state.createBankFromCsv,
+  const uploadQuestionBankApi = useQuestionBankStore(
+    (state) => state.uploadQuestionBankApi,
   );
 
   const bankOptions = questionBanks.map((bank) => ({
@@ -20,35 +19,24 @@ export default function QuestionBankField({ form, disabled }) {
   }));
 
   const handleUpload = async (file) => {
-    try {
-      const text = await file.text();
-      const questions = parseQuestionsCSV(text);
+    const courseCode = form.getFieldValue("courseCode") || "UNKNOWN";
+    const title = file.name.replace(/\.csv$/i, "");
 
-      if (questions.length === 0) {
-        message.error("No valid rows found — expected a 'question' column.");
-        return false;
+    const success = await uploadQuestionBankApi(file, {
+      title,
+      courseCode,
+      version: "1.0",
+    });
+
+    if (success) {
+      const banks = useQuestionBankStore.getState().questionBanks;
+      const newBank = banks[0]; // fetchQuestionBanks refreshes and prepends
+      if (newBank) {
+        form.setFieldValue("questionBank", newBank.id);
+        message.success(
+          `Created "${newBank.title}" with ${newBank.questionCount} questions.`,
+        );
       }
-
-      const bank = createBankFromCsv(
-        questions.map((q) => ({
-          type: q.type,
-          text: q.question,
-          options: q.options,
-          correctAnswer: q.correctAnswer || null,
-          marks: q.marks,
-        })),
-        {
-          title: file.name.replace(/\.csv$/i, ""),
-          courseCode: form.getFieldValue("courseCode"),
-        },
-      );
-
-      form.setFieldValue("questionBank", bank.id);
-      message.success(
-        `Created "${bank.code}" with ${questions.length} questions.`,
-      );
-    } catch {
-      message.error("Couldn't read that file. Please upload a valid CSV.");
     }
 
     return false; // prevent antd's default auto-upload
