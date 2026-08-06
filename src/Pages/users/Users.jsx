@@ -20,7 +20,7 @@ export default function Users() {
 
   const admins = useAuthStore((state) => state.users);
   const fetchAdmins = useAuthStore((state) => state.fetchAdmins);
-  const updateAdmin = useAuthStore((state) => state.updateAdmin);
+  const updateAdminApi = useAuthStore((state) => state.updateAdminApi);
   const deactivateAdminApi = useAuthStore((state) => state.deactivateAdminApi);
 
   const reactivateAdminApi = useAuthStore((state) => state.reactivateAdminApi);
@@ -37,8 +37,8 @@ export default function Users() {
     setIsModalOpen(false);
   };
 
-  const handleSaveEdit = (adminId, values) => {
-    const result = updateAdmin(adminId, values);
+  const handleSaveEdit = async (adminId, values) => {
+    const result = await updateAdminApi(adminId, values);
 
     if (result.success) {
       setEditingAdminId(null);

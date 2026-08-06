@@ -7,7 +7,6 @@ import MyButtonPrimary from "../myButton/MyButtonPrimary";
 import MyButtonSecondary from "../myButton/MyButtonSecondary";
 import MyText from "../myText/MyText";
 import useRolesStore from "../../store/useRolesStore";
-import { apiFetch } from "../../api/apiClient";
 import useAuthStore from "../../store/useAuthStore";
 
 const ROLE_IDS = {
@@ -21,6 +20,7 @@ export default function NewAdminModal({ open, onClose, onCreate }) {
   const [loading, setLoading] = useState(false);
   const roles = useRolesStore((state) => state.roles);
   const assignableRoles = roles.filter((role) => !role.isFixed);
+  const registerAdminApi = useAuthStore((state) => state.registerAdminApi);
 
   const handleCancel = () => {
     form.resetFields();
@@ -29,71 +29,54 @@ export default function NewAdminModal({ open, onClose, onCreate }) {
 
   const handleFinish = async (values) => {
     setLoading(true);
-    try {
-      const accessToken =
-        useAuthStore.getState().accessToken ??
-        sessionStorage.getItem("accessToken");
 
-      const res = await apiFetch("/api/admins/create-admin", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          fullName: values.name,
-          email: values.email,
-          roleIds: [ROLE_IDS[values.role] ?? 2],
-        }),
-      });
+    const result = await registerAdminApi({
+      name: values.name,
+      email: values.email,
+      roleIds: [ROLE_IDS[values.role] ?? 2],
+    });
 
-      const json = await res.json();
+    setLoading(false);
 
-      if (!res.ok || json.statusCode !== 200) {
-        message.error(json.message || "Failed to create admin.");
-        setLoading(false);
-        return;
-      }
-
-      const data = json.data;
-
-      // عرض الـ temporary password للسوبر أدمن
-      Modal.success({
-        title: "Admin account created",
-        content: (
-          <div>
-            <p>
-              <strong>{data.fullName}</strong> ({data.email})
-            </p>
-            <p>Temporary password:</p>
-            <p
-              style={{
-                fontFamily: "monospace",
-                fontSize: 16,
-                background: "#f0f0f0",
-                padding: "8px 12px",
-                borderRadius: 6,
-                letterSpacing: 1,
-              }}
-            >
-              {data.temporaryPassword}
-            </p>
-            <p style={{ color: "#888", fontSize: 12 }}>
-              Share this password with the admin. They should change it on first
-              login.
-            </p>
-          </div>
-        ),
-      });
-
-      form.resetFields();
-      onClose();
-      onCreate?.(data); // ← notify parent if needed
-    } catch {
-      message.error("Network error. Please try again.");
-    } finally {
-      setLoading(false);
+    if (!result.success) {
+      message.error(result.error || "Failed to create admin.");
+      return;
     }
+
+    const data = result.data;
+
+    // عرض الـ temporary password للسوبر أدمن
+    Modal.success({
+      title: "Admin account created",
+      content: (
+        <div>
+          <p>
+            <strong>{data.fullName}</strong> ({data.email})
+          </p>
+          <p>Temporary password:</p>
+          <p
+            style={{
+              fontFamily: "monospace",
+              fontSize: 16,
+              background: "#f0f0f0",
+              padding: "8px 12px",
+              borderRadius: 6,
+              letterSpacing: 1,
+            }}
+          >
+            {data.temporaryPassword}
+          </p>
+          <p style={{ color: "#888", fontSize: 12 }}>
+            Share this password with the admin. They should change it on first
+            login.
+          </p>
+        </div>
+      ),
+    });
+
+    form.resetFields();
+    onClose();
+    onCreate?.(data); // ← notify parent if needed
   };
 
   return (

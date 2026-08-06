@@ -32,12 +32,12 @@ export default function EditAdminModal({ open, admin, onClose, onSave }) {
     onClose();
   };
 
-  const handleFinish = (values) => {
+  const handleFinish = async (values) => {
     const permissions = Object.fromEntries(
       PERMISSIONS.map((perm) => [perm.key, (values.permissions || []).includes(perm.key)])
     );
 
-    const result = onSave(admin.id, {
+    const result = await onSave(admin.id, {
       name: values.name,
       email: values.email,
       ...(values.password ? { password: values.password } : {}),

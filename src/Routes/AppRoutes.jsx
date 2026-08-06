@@ -1,9 +1,10 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import useAuthStore from "../store/useAuthStore";
+import { adminItems, superAdminItems } from "../MyComponents/sidebar/SidebarItem";
 
 import BlankLayout from "../layouts/BlankLayout";
-import MainLayout from "../layouts/MainLayout";
+import ProtectedRoute from "./ProtectedRoute";
 
 import Login from "../Pages/auth/Login";
 import Dashboard from "../Pages/dashboard/Dashboard";
@@ -18,22 +19,45 @@ import Roles from "../Pages/roles/Roles";
 import Settings from "../Pages/settings/Settings";
 import AuditLogs from "../Pages/auditLogs/AuditLogs";
 
-// Every path here mirrors a key in adminItems/superAdminItems (SidebarItem.jsx).
-// The Sidebar already filters which links are visible per permission; page-level
-// permission gating can be layered onto these routes once each page is built out.
-const PRIVATE_PAGES = [
-  { path: "/dashboard", element: <Dashboard /> },
-  { path: "/sessions", element: <Sessions /> },
-  { path: "/students", element: <Students /> },
-  { path: "/question-banks", element: <QuestionBanks /> },
-  { path: "/monitoring", element: <Monitoring /> },
-  { path: "/alerts", element: <Alerts /> },
-  { path: "/reports", element: <Reports /> },
-  { path: "/users", element: <Users /> },
-  { path: "/roles", element: <Roles /> },
-  { path: "/settings", element: <Settings /> },
-  { path: "/logs", element: <AuditLogs /> },
-];
+const PAGE_ELEMENTS = {
+  "/dashboard": <Dashboard />,
+  "/sessions": <Sessions />,
+  "/students": <Students />,
+  "/question-banks": <QuestionBanks />,
+  "/monitoring": <Monitoring />,
+  "/alerts": <Alerts />,
+  "/reports": <Reports />,
+  "/users": <Users />,
+  "/roles": <Roles />,
+  "/settings": <Settings />,
+  "/logs": <AuditLogs />,
+};
+
+// SidebarItem.jsx is the single source of truth for which permission(s) guard
+// each page — route protection is derived from it here rather than keeping a
+// second, hand-maintained permission map that could drift out of sync.
+const SIDEBAR_ITEMS_BY_PATH = new Map(
+  superAdminItems.map((item) => [item.key, item]),
+);
+const ADMIN_VISIBLE_PATHS = new Set(adminItems.map((item) => item.key));
+
+function accessRulesFor(path) {
+  const item = SIDEBAR_ITEMS_BY_PATH.get(path);
+  if (!item) return {};
+
+  // Present only in superAdminItems (not adminItems) → Super Admin-exclusive
+  // page (Users, Roles, Settings, Audit Logs), gated by role rather than a
+  // P01–P07 permission.
+  if (!ADMIN_VISIBLE_PATHS.has(path)) return { superAdminOnly: true };
+
+  return item.permission ? { permission: item.permission } : {};
+}
+
+const PRIVATE_PAGES = Object.entries(PAGE_ELEMENTS).map(([path, element]) => ({
+  path,
+  element,
+  ...accessRulesFor(path),
+}));
 
 export default function AppRoutes({ isDark, setIsDark }) {
   const user = useAuthStore((state) => state.user);
@@ -64,18 +88,18 @@ export default function AppRoutes({ isDark, setIsDark }) {
         }
       />
 
-      {PRIVATE_PAGES.map(({ path, element }) => (
+      {PRIVATE_PAGES.map(({ path, element, permission, superAdminOnly }) => (
         <Route
           key={path}
           path={path}
           element={
-            user ? (
-              <MainLayout isDark={isDark} setIsDark={setIsDark}>
-                {element}
-              </MainLayout>
-            ) : (
-              <Navigate to="/login" replace />
-            )
+            <ProtectedRoute
+              element={element}
+              permission={permission}
+              superAdminOnly={superAdminOnly}
+              isDark={isDark}
+              setIsDark={setIsDark}
+            />
           }
         />
       ))}

@@ -313,8 +313,11 @@ const useAuthStore = create((set, get) => ({
   },
 
   // Creates a real login account for a new admin (Users Management > New Admin).
-  // Returns { success, error } so the caller can surface a duplicate-email error inline.
-  registerAdmin: ({ name, email, password, permissions }) => {
+  // The duplicate-email check below is a fast-fail UX nicety only — the API
+  // response is still the source of truth for success/failure.
+  // Returns { success, error, data } so the caller can surface a duplicate-email
+  // error inline and show the API's temporary password on success.
+  registerAdminApi: async ({ name, email, roleIds }) => {
     const normalizedEmail = email.trim().toLowerCase();
     const emailTaken = get().users.some(
       (u) => u.email.toLowerCase() === normalizedEmail,
@@ -327,34 +330,46 @@ const useAuthStore = create((set, get) => ({
       };
     }
 
-    const newUser = {
-      id: `AD-${Date.now()}`,
-      name,
-      email: email.trim(),
-      password,
-      role: "ADMIN",
-      jobTitle: "Admin",
-      disabled: false,
-      permissions: {
-        P01: false,
-        P02: false,
-        P03: false,
-        P04: false,
-        P05: false,
-        P06: false,
-        P07: false,
-        ...permissions,
-      },
-    };
+    try {
+      const accessToken =
+        get().accessToken ?? sessionStorage.getItem("accessToken");
 
-    set((state) => ({ users: [...state.users, newUser] }));
+      const res = await apiFetch("/api/admins/create-admin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          fullName: name,
+          email: email.trim(),
+          roleIds,
+        }),
+      });
 
-    return { success: true, user: newUser };
+      const json = await res.json();
+
+      if (!res.ok || json.statusCode !== 200) {
+        return {
+          success: false,
+          error: json.message || "Failed to create admin.",
+        };
+      }
+
+      return { success: true, data: json.data };
+    } catch (err) {
+      console.error("registerAdminApi error:", err);
+      return { success: false, error: "Network error." };
+    }
   },
 
   // Edits an existing admin's profile/login/permissions from Users Management.
   // Returns { success, error } so the caller can surface a duplicate-email error inline.
-  updateAdmin: (userId, { name, email, password, permissions }) => {
+  // NOTE: no update-admin endpoint exists elsewhere in the codebase to copy —
+  // this follows the same `/api/admins/${id}` shape as deleteAdminApi /
+  // deactivateAdminApi. Confirm the exact path/payload with the backend once
+  // it's available.
+  updateAdminApi: async (userId, { name, email, password, permissions }) => {
     const normalizedEmail = email.trim().toLowerCase();
     const emailTaken = get().users.some(
       (u) => u.id !== userId && u.email.toLowerCase() === normalizedEmail,
@@ -367,24 +382,51 @@ const useAuthStore = create((set, get) => ({
       };
     }
 
-    set((state) => ({
-      users: state.users.map((u) =>
-        u.id === userId
-          ? {
-              ...u,
-              name,
-              email: email.trim(),
-              ...(password ? { password } : {}),
-              permissions:
-                u.role === "SUPER_ADMIN"
-                  ? u.permissions
-                  : { ...u.permissions, ...permissions },
-            }
-          : u,
-      ),
-    }));
+    try {
+      const accessToken =
+        get().accessToken ?? sessionStorage.getItem("accessToken");
 
-    return { success: true };
+      const res = await apiFetch(`/api/admins/${userId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          fullName: name,
+          email: email.trim(),
+          ...(password ? { password } : {}),
+          permissions,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || json.statusCode !== 200) {
+        return {
+          success: false,
+          error: json.message || "Failed to update admin.",
+        };
+      }
+
+      set((state) => ({
+        users: state.users.map((u) =>
+          u.id === userId
+            ? {
+                ...u,
+                name,
+                email: email.trim(),
+                permissions: u.role === "SUPER_ADMIN" ? u.permissions : permissions,
+              }
+            : u,
+        ),
+      }));
+
+      return { success: true };
+    } catch (err) {
+      console.error("updateAdminApi error:", err);
+      return { success: false, error: "Network error." };
+    }
   },
 
   deleteAdminApi: async (id) => {
