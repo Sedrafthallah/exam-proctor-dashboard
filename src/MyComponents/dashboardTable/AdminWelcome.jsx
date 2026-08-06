@@ -44,63 +44,6 @@ import useQuestionBankStore from "../../store/useQuestionBankStore";
 import { getSessionStatus } from "../../utils/sessionUtils";
 import { ALERT_TYPE_CONFIG } from "../../utils/alertUtils";
 
-// Every admin account sees the same fixed demo numbers on this dashboard,
-// independent of the backend — used to demo the frontend without needing
-// real sessions/students/alerts data to exist yet.
-const FULL_ADMIN_PERMISSIONS = {
-  P01: true,
-  P02: true,
-  P03: true,
-  P04: true,
-  P05: true,
-  P06: true,
-  P07: true,
-};
-
-const MOCK_ADMIN_DASHBOARD_DATA = {
-  sessions: [
-    { id: 1, status: "ACTIVE" },
-    { id: 2, status: "ACTIVE" },
-    { id: 3, status: "ACTIVE" },
-    { id: 4, status: "CLOSED" },
-    { id: 5, status: "CLOSED" },
-    { id: 6, status: "CLOSED" },
-    { id: 7, status: "CLOSED" },
-    { id: 8, status: "ARCHIVED" },
-  ],
-  students: Array.from({ length: 340 }, (_, i) => ({ id: i + 1 })),
-  questionBanks: [
-    { code: "CS101", questionCount: 45 },
-    { code: "MATH201", questionCount: 62 },
-    { code: "PHY150", questionCount: 38 },
-    { code: "ENG110", questionCount: 27 },
-    { code: "CHEM220", questionCount: 51 },
-  ],
-  alerts: [
-    { id: 1, type: "GAZE_DEVIATION", status: "OPEN" },
-    { id: 2, type: "GAZE_DEVIATION", status: "OPEN" },
-    { id: 3, type: "GAZE_DEVIATION", status: "RESOLVED" },
-    { id: 4, type: "FACE_ABSENCE", status: "OPEN" },
-    { id: 5, type: "FACE_ABSENCE", status: "ESCALATED" },
-    { id: 6, type: "MULTIPLE_FACES", status: "OPEN" },
-    { id: 7, type: "MULTIPLE_FACES", status: "ESCALATED" },
-    { id: 8, type: "APP_SWITCH", status: "OPEN" },
-    { id: 9, type: "APP_SWITCH", status: "RESOLVED" },
-    { id: 10, type: "AUDIO_THRESHOLD", status: "OPEN" },
-    { id: 11, type: "AUDIO_THRESHOLD", status: "RESOLVED" },
-    { id: 12, type: "FACE_ABSENCE", status: "RESOLVED" },
-  ],
-  weeklyStatistics: [
-    { day: "Mon", sessions: 4 },
-    { day: "Tue", sessions: 7 },
-    { day: "Wed", sessions: 5 },
-    { day: "Thu", sessions: 9 },
-    { day: "Fri", sessions: 6 },
-    { day: "Sat", sessions: 3 },
-    { day: "Sun", sessions: 8 },
-  ],
-};
-
 const ALERT_TYPES = [
   "GAZE_DEVIATION",
   "FACE_ABSENCE",
@@ -485,41 +428,27 @@ export default function AdminWelcome() {
 
   const user = useAuthStore((state) => state.user);
   const role = user?.role;
-  const isAdmin = role === "ADMIN";
 
-  const permissions = isAdmin ? FULL_ADMIN_PERMISSIONS : (user?.permissions ?? {});
+  const permissions = user?.permissions ?? {};
 
-  const sessionsStore = useSessionStore((state) => state.sessions);
+  const sessions = useSessionStore((state) => state.sessions);
   const fetchSessions = useSessionStore((state) => state.fetchSessions);
-  const weeklyStatisticsStore = useSessionStore((state) => state.weeklyStatistics);
+  const weeklyStatistics = useSessionStore((state) => state.weeklyStatistics);
   const fetchWeeklyStatistics = useSessionStore((state) => state.fetchWeeklyStatistics);
-  const alertsStore = useAlertsStore((state) => state.alerts);
+  const alerts = useAlertsStore((state) => state.alerts);
   const fetchAlerts = useAlertsStore((state) => state.fetchAlerts);
-  const studentsStore = useStudentStore((state) => state.students);
+  const students = useStudentStore((state) => state.students);
   const fetchStudents = useStudentStore((state) => state.fetchStudents);
-  const questionBanksStore = useQuestionBankStore((state) => state.questionBanks);
+  const questionBanks = useQuestionBankStore((state) => state.questionBanks);
   const fetchQuestionBanks = useQuestionBankStore((state) => state.fetchQuestionBanks);
 
-  // Admin dashboard shows fixed demo data instead of live data — no need to
-  // hit the backend for it.
   useEffect(() => {
-    if (isAdmin) return;
     fetchSessions();
     fetchStudents();
     fetchAlerts();
     fetchQuestionBanks();
     fetchWeeklyStatistics();
-  }, [isAdmin, fetchSessions, fetchStudents, fetchAlerts, fetchQuestionBanks, fetchWeeklyStatistics]);
-
-  const sessions = isAdmin ? MOCK_ADMIN_DASHBOARD_DATA.sessions : sessionsStore;
-  const students = isAdmin ? MOCK_ADMIN_DASHBOARD_DATA.students : studentsStore;
-  const alerts = isAdmin ? MOCK_ADMIN_DASHBOARD_DATA.alerts : alertsStore;
-  const questionBanks = isAdmin
-    ? MOCK_ADMIN_DASHBOARD_DATA.questionBanks
-    : questionBanksStore;
-  const weeklyStatistics = isAdmin
-    ? MOCK_ADMIN_DASHBOARD_DATA.weeklyStatistics
-    : weeklyStatisticsStore;
+  }, [fetchSessions, fetchStudents, fetchAlerts, fetchQuestionBanks, fetchWeeklyStatistics]);
 
   const cardStyle = {
     borderRadius: 14,
@@ -559,6 +488,10 @@ export default function AdminWelcome() {
     </MyCard>
   );
 
+  // TODO: this branch is keyed off role === "PROCTOR" rather than
+  // permissions.P04 / permissions.P07 individually. Fine while Proctor
+  // permissions are fixed; revisit if Proctor permissions ever become
+  // configurable like Admin's.
   if (role === "PROCTOR") {
     return (
       <Flex vertical gap={20}>
@@ -605,7 +538,7 @@ export default function AdminWelcome() {
   }
 
   // ADMIN — dynamic layout based on granted permissions:
-  // Header → Cards (permission-gated) → Chart (priority-based) → My Permissions table.
+  // Header → Cards (permission-gated) → Charts (permission-gated).
   const cards = [
     permissions.P03 && {
       key: "sessions",
@@ -657,18 +590,6 @@ export default function AdminWelcome() {
     },
   ].filter(Boolean);
 
-  // let chart;
-  // if (permissions.P04) {
-  //   chart = <AlertsByTypeChart alerts={alerts} token={token} />;
-  // } else if (permissions.P03) {
-  //   chart = <SessionsTrendChart token={token} />;
-  // } else if (permissions.P06) {
-  //   chart = <ReportsStatusPieChart sessions={sessions} token={token} />;
-  // } else if (permissions.P01 || permissions.P02) {
-  //   chart = <QuestionsPerBankChart questionBanks={questionBanks} token={token} />;
-  // } else {
-  //   chart = <NoChartCard token={token} />;
-  // }
   const activeCharts = [
     permissions.P04 && {
       key: "alerts-chart",
@@ -702,29 +623,6 @@ export default function AdminWelcome() {
         />
       )}
 
-      {/* {cards.length > 0 && (
-        <MyRow gutter={[16, 16]}>
-          {cards.map((card) => (
-            <MyCol
-              key={card.key}
-              xs={24}
-              sm={12}
-              md={8}
-              lg={{ flex: "1 1 180px" }}
-            >
-              <StatCard
-                token={token}
-                icon={card.icon}
-                color={card.color}
-                value={card.value}
-                label={card.title}
-                sub={card.sub}
-              />
-            </MyCol>
-          ))}
-        </MyRow>
-      )} */}
-
       {cards.length > 0 && (
         <MyRow gutter={[16, 16]}>
           {cards.map((card) => (
@@ -741,8 +639,6 @@ export default function AdminWelcome() {
           ))}
         </MyRow>
       )}
-      {/* {chart} */}
-      {/* عرض كل المخططات المتاحة للأدمن بجانب بعضها */}
       {activeCharts.length > 0 ? (
         <MyRow gutter={[16, 16]}>
           {activeCharts.map((chartItem, index) => {

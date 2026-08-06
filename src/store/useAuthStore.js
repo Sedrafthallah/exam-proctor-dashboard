@@ -207,42 +207,6 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
-  // Demo-only bypass: logs in locally as an Admin with every permission
-  // granted, without calling the real API. Use this to demo the frontend
-  // when the backend doesn't have a full-permission admin account ready.
-  loginAsMockAdmin: () => {
-    const user = {
-      id: "mock-admin",
-      name: "Demo Admin",
-      email: "demo.admin@vu.edu",
-      role: "ADMIN",
-      jobTitle: "Admin",
-      disabled: false,
-      permissions: {
-        P01: true,
-        P02: true,
-        P03: true,
-        P04: true,
-        P05: true,
-        P06: true,
-        P07: true,
-      },
-    };
-
-    sessionStorage.setItem("accessToken", "mock-access-token");
-    sessionStorage.setItem("refreshToken", "mock-refresh-token");
-    sessionStorage.setItem("user", JSON.stringify(user));
-
-    set({
-      user,
-      isAuthenticated: true,
-      accessToken: "mock-access-token",
-      refreshToken: "mock-refresh-token",
-      loading: false,
-      error: null,
-    });
-  },
-
   logout: async () => {
     try {
       const { refreshToken, accessToken } = get();
