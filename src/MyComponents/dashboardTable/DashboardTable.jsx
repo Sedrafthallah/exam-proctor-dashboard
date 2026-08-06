@@ -1,5 +1,5 @@
 import { Tag } from "antd";
-import { useLanguage } from "../../i18n";
+import { useLanguage } from "../../i18n-context";
 import MyTable from "../mytable/MyTable";
 
 const data = [

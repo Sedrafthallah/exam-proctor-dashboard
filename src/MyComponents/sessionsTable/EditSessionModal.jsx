@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Input, InputNumber, DatePicker, Select, Switch, Flex } from "antd";
 import { EditOutlined, EyeOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -28,8 +28,8 @@ export default function EditSessionModal({ open, session, status, onClose, onSav
   const canEdit = (field) => isEditable(field, status);
   const isReadOnly = !canEdit("sessionTitle") && !canEdit("proctor");
 
-  useEffect(() => {
-    if (open && session) {
+  const handleAfterOpenChange = (isOpen) => {
+    if (isOpen && session) {
       setDetailLoading(true);
       fetchSessionById(session.id).then((data) => {
         const s = data ?? session; // fallback to store data if API fails
@@ -51,7 +51,7 @@ export default function EditSessionModal({ open, session, status, onClose, onSav
         setDetailLoading(false);
       });
     }
-  }, [open, session, form]);
+  };
 
   const handleCancel = () => {
     form.resetFields();
@@ -77,6 +77,7 @@ export default function EditSessionModal({ open, session, status, onClose, onSav
     <MyModal
       open={open}
       onCancel={handleCancel}
+      afterOpenChange={handleAfterOpenChange}
       confirmLoading={detailLoading}
       title={
         <Flex align="center" gap={8}>

@@ -1,5 +1,5 @@
 import { Layout } from "antd";
-import { useLanguage } from "../i18n";
+import { useLanguage } from "../i18n-context";
 const { Content } = Layout;
 export default function BlankLayout({ children }) {
   const { dir } = useLanguage();

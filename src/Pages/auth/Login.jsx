@@ -3,7 +3,7 @@ import { Input, Alert, Checkbox, Flex, Form, theme } from "antd";
 import { UserOutlined, LockOutlined, LoginOutlined } from "@ant-design/icons";
 
 import useAuthStore from "../../store/useAuthStore";
-import { useLanguage } from "../../i18n";
+import { useLanguage } from "../../i18n-context";
 
 import MyCard from "../../MyComponents/myCard/MyCard";
 import MyButtonPrimary from "../../MyComponents/myButton/MyButtonPrimary";

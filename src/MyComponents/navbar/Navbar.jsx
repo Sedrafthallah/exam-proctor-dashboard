@@ -13,7 +13,7 @@ import {
   DownOutlined,
 } from "@ant-design/icons";
 import useAuthStore from "../../store/useAuthStore";
-import { useLanguage } from "../../i18n";
+import { useLanguage } from "../../i18n-context";
 import MyButtonSecondary from "../../MyComponents/myButton/MyButtonSecondary";
 import MyText from "../../MyComponents/myText/MyText";
 import ChangePasswordModal from "./ChangePasswordModal";

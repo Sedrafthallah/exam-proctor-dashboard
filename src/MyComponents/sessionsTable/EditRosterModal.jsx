@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Select, Avatar, Flex, Button, message, theme } from "antd";
 import { TeamOutlined, CloseOutlined } from "@ant-design/icons";
 import MyModal from "../myModal/MyModal";
@@ -24,8 +24,9 @@ export default function EditRosterModal({ open, session, onClose, onSave }) {
   const [proctor, setProctor] = useState(null);
   const [roster, setRoster] = useState([]);
   const [initialRoster, setInitialRoster] = useState([]);
-  useEffect(() => {
-    if (open && session) {
+
+  const handleAfterOpenChange = (isOpen) => {
+    if (isOpen && session) {
       const currentProctorId = session.assignedProctors?.[0]?.id ?? null;
 
       setProctor(currentProctorId);
@@ -37,7 +38,7 @@ export default function EditRosterModal({ open, session, onClose, onSave }) {
       setRoster(initial);
       setInitialRoster(initial);
     }
-  }, [open, session]);
+  };
 
   const proctorOptions = users
     .filter((u) => !u.disabled)
@@ -87,6 +88,7 @@ export default function EditRosterModal({ open, session, onClose, onSave }) {
     <MyModal
       open={open}
       onCancel={handleCancel}
+      afterOpenChange={handleAfterOpenChange}
       title={
         <Flex align="center" gap={8}>
           <TeamOutlined />

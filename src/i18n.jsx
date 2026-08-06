@@ -1,6 +1,5 @@
-import { createContext, useContext, useState, useEffect } from "react";
-
-const LanguageContext = createContext();
+import { useState, useEffect } from "react";
+import { LanguageContext, translations } from "./i18n-context";
 
 export function LanguageProvider({ children }) {
   const [locale, setLocale] = useState(localStorage.getItem("lang") || "en");
@@ -19,14 +18,3 @@ export function LanguageProvider({ children }) {
     </LanguageContext.Provider>
   );
 }
-
-export const useLanguage = () => useContext(LanguageContext);
-
-const translations = {
-  en: {
-    dashboard: "Dashboard",
-  },
-  ar: {
-    dashboard: "لوحة التحكم",
-  },
-};

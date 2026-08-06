@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { ConfigProvider, App as AntApp, theme as antTheme } from "antd";
-import { LanguageProvider, useLanguage } from "./i18n";
+import { LanguageProvider } from "./i18n";
+import { useLanguage } from "./i18n-context";
 import AppRoutes from "./Routes/AppRoutes";
 import lightToken from "./token/lightToken";
 import darkToken from "./token/darkToken";
