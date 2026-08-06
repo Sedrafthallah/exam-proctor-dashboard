@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { theme, Flex, Select, Tag, Tooltip, Divider, message } from "antd";
 import {
@@ -43,13 +43,15 @@ export default function Reports() {
 
   const [searchParams] = useSearchParams();
 
-  useEffect(() => {
+  const [prevSearchParams, setPrevSearchParams] = useState(searchParams);
+  if (searchParams !== prevSearchParams) {
+    setPrevSearchParams(searchParams);
     const sessionId = searchParams.get("sessionId");
     if (sessionId) {
       const found = reportableSessions.find((s) => s.id === sessionId);
       if (found) setSelectedSessionId(found.id);
     }
-  }, [searchParams]);
+  }
 
   const selectedSession =
     reportableSessions.find((s) => s.id === selectedSessionId) ?? null;

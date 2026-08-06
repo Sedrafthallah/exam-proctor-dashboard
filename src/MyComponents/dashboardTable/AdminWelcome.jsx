@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { theme, Flex, Avatar, Alert, Tag, Table, Select } from "antd";
+import { useEffect } from "react";
+import { theme, Flex, Avatar, Alert } from "antd";
 import {
   CheckCircleFilled,
   ThunderboltOutlined,
@@ -44,86 +44,61 @@ import useQuestionBankStore from "../../store/useQuestionBankStore";
 import { getSessionStatus } from "../../utils/sessionUtils";
 import { ALERT_TYPE_CONFIG } from "../../utils/alertUtils";
 
-// Handy fixtures for manually testing each permission combination in the
-// Admin dashboard — copy one of these into useAuthStore's `user` (e.g. via
-// devtools) to preview the cards/chart a given permission set produces.
-// eslint-disable-next-line react-refresh/only-export-components
-export const MOCK_USERS_FOR_TESTING = {
-  // Admin with P03 + P05
-  adminSessions: {
-    role: "ADMIN",
-    permissions: {
-      P01: false,
-      P02: false,
-      P03: true,
-      P04: false,
-      P05: true,
-      P06: false,
-      P07: false,
-    },
-  },
-  // Admin with P01 + P02
-  adminQBank: {
-    role: "ADMIN",
-    permissions: {
-      P01: true,
-      P02: true,
-      P03: false,
-      P04: false,
-      P05: false,
-      P06: false,
-      P07: false,
-    },
-  },
-  // Admin with P04 + P07
-  adminProctor: {
-    role: "ADMIN",
-    permissions: {
-      P01: false,
-      P02: false,
-      P03: false,
-      P04: true,
-      P05: false,
-      P06: false,
-      P07: true,
-    },
-  },
-  // Admin with P06
-  adminReports: {
-    role: "ADMIN",
-    permissions: {
-      P01: false,
-      P02: false,
-      P03: false,
-      P04: false,
-      P05: false,
-      P06: true,
-      P07: false,
-    },
-  },
-  // Full Admin
-  adminFull: {
-    role: "ADMIN",
-    permissions: {
-      P01: true,
-      P02: true,
-      P03: true,
-      P04: true,
-      P05: true,
-      P06: true,
-      P07: true,
-    },
-  },
+// Every admin account sees the same fixed demo numbers on this dashboard,
+// independent of the backend — used to demo the frontend without needing
+// real sessions/students/alerts data to exist yet.
+const FULL_ADMIN_PERMISSIONS = {
+  P01: true,
+  P02: true,
+  P03: true,
+  P04: true,
+  P05: true,
+  P06: true,
+  P07: true,
 };
 
-const PERMISSION_DETAILS = {
-  P01: { label: "Question Bank: Author" },
-  P02: { label: "Question Bank: View All" },
-  P03: { label: "Session: Manage" },
-  P04: { label: "Session: Live Proctor" },
-  P05: { label: "Students: Register" },
-  P06: { label: "Reports: Export" },
-  P07: { label: "Reports: View Violations" },
+const MOCK_ADMIN_DASHBOARD_DATA = {
+  sessions: [
+    { id: 1, status: "ACTIVE" },
+    { id: 2, status: "ACTIVE" },
+    { id: 3, status: "ACTIVE" },
+    { id: 4, status: "CLOSED" },
+    { id: 5, status: "CLOSED" },
+    { id: 6, status: "CLOSED" },
+    { id: 7, status: "CLOSED" },
+    { id: 8, status: "ARCHIVED" },
+  ],
+  students: Array.from({ length: 340 }, (_, i) => ({ id: i + 1 })),
+  questionBanks: [
+    { code: "CS101", questionCount: 45 },
+    { code: "MATH201", questionCount: 62 },
+    { code: "PHY150", questionCount: 38 },
+    { code: "ENG110", questionCount: 27 },
+    { code: "CHEM220", questionCount: 51 },
+  ],
+  alerts: [
+    { id: 1, type: "GAZE_DEVIATION", status: "OPEN" },
+    { id: 2, type: "GAZE_DEVIATION", status: "OPEN" },
+    { id: 3, type: "GAZE_DEVIATION", status: "RESOLVED" },
+    { id: 4, type: "FACE_ABSENCE", status: "OPEN" },
+    { id: 5, type: "FACE_ABSENCE", status: "ESCALATED" },
+    { id: 6, type: "MULTIPLE_FACES", status: "OPEN" },
+    { id: 7, type: "MULTIPLE_FACES", status: "ESCALATED" },
+    { id: 8, type: "APP_SWITCH", status: "OPEN" },
+    { id: 9, type: "APP_SWITCH", status: "RESOLVED" },
+    { id: 10, type: "AUDIO_THRESHOLD", status: "OPEN" },
+    { id: 11, type: "AUDIO_THRESHOLD", status: "RESOLVED" },
+    { id: 12, type: "FACE_ABSENCE", status: "RESOLVED" },
+  ],
+  weeklyStatistics: [
+    { day: "Mon", sessions: 4 },
+    { day: "Tue", sessions: 7 },
+    { day: "Wed", sessions: 5 },
+    { day: "Thu", sessions: 9 },
+    { day: "Fri", sessions: 6 },
+    { day: "Sat", sessions: 3 },
+    { day: "Sun", sessions: 8 },
+  ],
 };
 
 const ALERT_TYPES = [
@@ -135,17 +110,6 @@ const ALERT_TYPES = [
 ];
 
 const CRITICAL_ALERT_TYPES = ["FACE_ABSENCE", "MULTIPLE_FACES"];
-
-// Mock 7-day trend — sessions over time isn't tracked by the backend yet.
-const SESSIONS_TREND_MOCK = [
-  { day: "Mon", count: 3 },
-  { day: "Tue", count: 5 },
-  { day: "Wed", count: 2 },
-  { day: "Thu", count: 7 },
-  { day: "Fri", count: 4 },
-  { day: "Sat", count: 1 },
-  { day: "Sun", count: 6 },
-];
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -295,7 +259,7 @@ function AlertsByTypeChart({ alerts, token }) {
   );
 }
 
-function SessionsTrendChart({ token }) {
+function SessionsTrendChart({ data, token }) {
   return (
     <MyCard
       title={
@@ -311,7 +275,7 @@ function SessionsTrendChart({ token }) {
       <Flex style={{ width: "100%", height: 220, marginTop: 5 }}>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
-            data={SESSIONS_TREND_MOCK}
+            data={data}
             margin={{ top: 5, right: 10, left: -25, bottom: 0 }}
           >
             <defs>
@@ -361,7 +325,7 @@ function SessionsTrendChart({ token }) {
             />
             <Area
               type="monotone"
-              dataKey="count"
+              dataKey="sessions"
               name="Sessions"
               stroke={token.colorPrimary}
               fill="url(#sessionsTrendFill)"
@@ -443,7 +407,7 @@ function ReportsStatusPieChart({ sessions, token }) {
 function QuestionsPerBankChart({ questionBanks, token }) {
   const data = questionBanks.map((qb) => ({
     name: qb.code,
-    questions: qb.questions?.length || 0,
+    questions: qb.questionCount || 0,
   }));
 
   return (
@@ -516,127 +480,46 @@ function NoChartCard({ token }) {
   );
 }
 
-function PermissionsTable({ permissions, token }) {
-  const dataSource = Object.entries(PERMISSION_DETAILS).map(
-    ([key, { label }]) => ({
-      key,
-      permission: label,
-      status: permissions[key] ? "Granted" : "Not Granted",
-    }),
-  );
-
-  const columns = [
-    { title: "Permission", dataIndex: "permission" },
-    {
-      title: "Status",
-      dataIndex: "status",
-      render: (status) => (
-        <Tag color={status === "Granted" ? "success" : "default"}>{status}</Tag>
-      ),
-    },
-  ];
-
-  return (
-    <MyCard
-      title={<MyText strong>My Permissions</MyText>}
-      style={chartCardStyle(token)}
-    >
-      <Table
-        dataSource={dataSource}
-        columns={columns}
-        pagination={false}
-        size="small"
-      />
-    </MyCard>
-  );
-}
-
 export default function AdminWelcome() {
   const { token } = theme.useToken();
 
   const user = useAuthStore((state) => state.user);
   const role = user?.role;
+  const isAdmin = role === "ADMIN";
 
-  // ─── TEST MODE — remove before production ───────────────────
-  const TEST_MODE = false; // ← set false to use real user permissions
+  const permissions = isAdmin ? FULL_ADMIN_PERMISSIONS : (user?.permissions ?? {});
 
-  const TEST_SCENARIOS = {
-    "P03 + P05 (Session Manager)": {
-      P01: false,
-      P02: false,
-      P03: true,
-      P04: false,
-      P05: true,
-      P06: false,
-      P07: false,
-    },
-    "P01 + P02 (Question Author)": {
-      P01: true,
-      P02: true,
-      P03: false,
-      P04: false,
-      P05: false,
-      P06: false,
-      P07: false,
-    },
-    "P04 + P07 (Proctor)": {
-      P01: false,
-      P02: false,
-      P03: false,
-      P04: true,
-      P05: false,
-      P06: false,
-      P07: true,
-    },
-    "P06 (Reports Manager)": {
-      P01: false,
-      P02: false,
-      P03: false,
-      P04: false,
-      P05: false,
-      P06: true,
-      P07: false,
-    },
-    "All Permissions (Full Admin)": {
-      P01: true,
-      P02: true,
-      P03: true,
-      P04: true,
-      P05: true,
-      P06: true,
-      P07: true,
-    },
-    "No Permissions": {
-      P01: false,
-      P02: false,
-      P03: false,
-      P04: false,
-      P05: false,
-      P06: false,
-      P07: false,
-    },
-  };
-
-  const [testScenario, setTestScenario] = useState(
-    "P03 + P05 (Session Manager)",
-  );
-
-  const permissions = TEST_MODE
-    ? TEST_SCENARIOS[testScenario]
-    : (user?.permissions ?? {});
-  // ─────────────────────────────────────────────────────────────
-
-  const sessions = useSessionStore((state) => state.sessions);
+  const sessionsStore = useSessionStore((state) => state.sessions);
   const fetchSessions = useSessionStore((state) => state.fetchSessions);
-  const alerts = useAlertsStore((state) => state.alerts);
-  const students = useStudentStore((state) => state.students);
+  const weeklyStatisticsStore = useSessionStore((state) => state.weeklyStatistics);
+  const fetchWeeklyStatistics = useSessionStore((state) => state.fetchWeeklyStatistics);
+  const alertsStore = useAlertsStore((state) => state.alerts);
+  const fetchAlerts = useAlertsStore((state) => state.fetchAlerts);
+  const studentsStore = useStudentStore((state) => state.students);
   const fetchStudents = useStudentStore((state) => state.fetchStudents);
-  const questionBanks = useQuestionBankStore((state) => state.questionBanks);
+  const questionBanksStore = useQuestionBankStore((state) => state.questionBanks);
+  const fetchQuestionBanks = useQuestionBankStore((state) => state.fetchQuestionBanks);
 
+  // Admin dashboard shows fixed demo data instead of live data — no need to
+  // hit the backend for it.
   useEffect(() => {
+    if (isAdmin) return;
     fetchSessions();
     fetchStudents();
-  }, [fetchSessions, fetchStudents]);
+    fetchAlerts();
+    fetchQuestionBanks();
+    fetchWeeklyStatistics();
+  }, [isAdmin, fetchSessions, fetchStudents, fetchAlerts, fetchQuestionBanks, fetchWeeklyStatistics]);
+
+  const sessions = isAdmin ? MOCK_ADMIN_DASHBOARD_DATA.sessions : sessionsStore;
+  const students = isAdmin ? MOCK_ADMIN_DASHBOARD_DATA.students : studentsStore;
+  const alerts = isAdmin ? MOCK_ADMIN_DASHBOARD_DATA.alerts : alertsStore;
+  const questionBanks = isAdmin
+    ? MOCK_ADMIN_DASHBOARD_DATA.questionBanks
+    : questionBanksStore;
+  const weeklyStatistics = isAdmin
+    ? MOCK_ADMIN_DASHBOARD_DATA.weeklyStatistics
+    : weeklyStatisticsStore;
 
   const cardStyle = {
     borderRadius: 14,
@@ -793,7 +676,7 @@ export default function AdminWelcome() {
     },
     permissions.P03 && {
       key: "sessions-chart",
-      component: <SessionsTrendChart token={token} />,
+      component: <SessionsTrendChart data={weeklyStatistics} token={token} />,
     },
     permissions.P06 && {
       key: "reports-chart",
@@ -808,31 +691,6 @@ export default function AdminWelcome() {
   ].filter(Boolean);
   return (
     <Flex vertical gap={20}>
-      {TEST_MODE && (
-        <MyCard
-          style={{
-            border: `1px solid ${token.colorWarning}`,
-            background: token.colorWarningBg,
-            marginBottom: 8,
-          }}
-        >
-          <Flex align="center" gap={12} wrap="wrap">
-            <MyText strong style={{ color: token.colorWarning }}>
-              🧪 Test Mode
-            </MyText>
-            <Select
-              value={testScenario}
-              onChange={setTestScenario}
-              style={{ minWidth: 260 }}
-              options={Object.keys(TEST_SCENARIOS).map((k) => ({
-                label: k,
-                value: k,
-              }))}
-            />
-          </Flex>
-        </MyCard>
-      )}
-
       {header}
 
       {!hasAnyPermission && (
@@ -908,7 +766,6 @@ export default function AdminWelcome() {
       ) : (
         <NoChartCard token={token} />
       )}
-      <PermissionsTable permissions={permissions} token={token} />
     </Flex>
   );
 }

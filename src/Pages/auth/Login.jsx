@@ -16,7 +16,7 @@ import MyForm from "../../MyComponents/myForm/MyForm";
 export default function Login() {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { login, loading, error } = useAuthStore();
+  const { login, loginAsMockAdmin, loading, error } = useAuthStore();
   const { token } = theme.useToken();
 
   const [form] = Form.useForm();
@@ -24,6 +24,11 @@ export default function Login() {
   const onFinish = async ({ email, password }) => {
     const success = await login(email, password);
     if (success) navigate("/dashboard");
+  };
+
+  const onMockAdminLogin = () => {
+    loginAsMockAdmin();
+    navigate("/dashboard");
   };
 
   const cardBg = "#0F172A";
