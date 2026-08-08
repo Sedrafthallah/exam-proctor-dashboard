@@ -290,33 +290,47 @@ const useSessionStore = create((set, get) => ({
       ],
     })),
 
+  // Confirmed via a working Postman request against POST /api/exam-sessions:
+  // this endpoint expects multipart/form-data (PascalCase field names), not
+  // JSON — sending JSON was the root cause of the previous 400 "Invalid
+  // session settings" on every attempt. Do NOT set a Content-Type header
+  // below; the browser must set it itself so it can include the multipart
+  // boundary string.
   createSessionApi: async (fields) => {
     try {
       const accessToken =
         useAuthStore.getState().accessToken ??
         sessionStorage.getItem("accessToken");
 
+      const formData = new FormData();
+      formData.append("Title", fields.sessionTitle);
+      formData.append("CourseCode", fields.courseCode);
+      formData.append("ScheduledStart", fields.scheduledStartUTC);
+      formData.append("DurationMinutes", fields.duration);
+      formData.append("GracePeriodMinutes", fields.gracePeriod);
+      formData.append("LoginWindowMinutes", fields.loginWindow);
+      if (fields.questionBankId != null) {
+        formData.append("QuestionBankId", fields.questionBankId);
+      }
+      formData.append("EyeGazeThresholdSec", fields.gazeThreshold ?? 3);
+      formData.append("FaceAlertSensitivity", fields.faceAlertSensitivity ?? "Medium");
+      formData.append("QuestionRandomisation", fields.questionRandomisation ?? true);
+      formData.append("OptionShuffle", fields.optionShuffle ?? true);
+      formData.append("AudioMonitoring", fields.audioMonitoring ?? true);
+      // Single append today since the UI only selects one proctor; if
+      // fields.proctorId ever becomes an array, loop and append once per id
+      // — that's the standard way to send an array via form-data.
+      if (fields.proctorId) {
+        formData.append("AssignedProctorIds", fields.proctorId);
+      }
+      // StudentsCsvFile intentionally omitted — bulk CSV-at-creation isn't
+      // wired up yet (see student-enrollment note below for select-based
+      // enrollment instead).
+
       const res = await apiFetch("/api/exam-sessions", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          title: fields.sessionTitle,
-          courseTag: fields.courseCode,
-          startTime: fields.scheduledStartUTC,
-          durationMinutes: fields.duration,
-          gracePeriodMinutes: fields.gracePeriod,
-          loginWindowMinutes: fields.loginWindow,
-          questionBankId: fields.questionBankId ?? null,
-
-          assignedProctorIds: fields.proctorId ? [fields.proctorId] : [],
-          randomization: fields.questionRandomisation ?? true,
-          optionShuffle: fields.optionShuffle ?? true,
-          eyeGazeThresholdSec: fields.gazeThreshold ?? 3,
-          faceAlertSensitivity: fields.faceAlertSensitivity ?? "Medium",
-        }),
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: formData,
       });
 
       const json = await res.json();
@@ -349,6 +363,18 @@ const useSessionStore = create((set, get) => ({
         published: false,
         archived: false,
       };
+
+      // The creation endpoint only accepts a StudentsCsvFile, not a list of
+      // ids — so students picked via the select-based enrollment UI are
+      // enrolled right after creation via the existing, working roster
+      // endpoint instead of being sent in the creation request itself.
+      if (fields.studentIds?.length > 0) {
+        await get().editRestoreSessionApi(String(s.id), {
+          assignedProctorIds: fields.proctorId ? [fields.proctorId] : [],
+          studentIdsToAdd: fields.studentIds,
+          studentIdsToRemove: [],
+        });
+      }
 
       set((state) => ({
         sessions: [newSession, ...state.sessions],

@@ -6,7 +6,7 @@ import MyText from "../myText/MyText";
 import MyTable from "../mytable/MyTable";
 import { getInitials } from "../usersTable/adminsData";
 
-export default function StudentsRoster({ students, loading }) {
+export default function StudentsRoster({ students, loading, pagination }) {
   const { token } = theme.useToken();
   const [search, setSearch] = useState("");
 
@@ -112,7 +112,7 @@ export default function StudentsRoster({ students, loading }) {
         dataSource={filteredStudents}
         rowKey="id"
         loading={loading}
-        pagination={false}
+        pagination={pagination ?? false}
         locale={{ emptyText: "No students match your search" }}
       />
     </MyCard>

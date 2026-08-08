@@ -4,7 +4,6 @@ import {
   CheckOutlined,
   LockOutlined,
   DeleteOutlined,
-  EditOutlined,
 } from "@ant-design/icons";
 import MyCard from "../myCard/MyCard";
 import MyText from "../myText/MyText";
@@ -38,7 +37,6 @@ export default function PermissionMatrix({
   pagination,
   onToggleStatus,
   onDeleteAdmin,
-  onEditAdmin,
 }) {
   const { token } = theme.useToken();
 
@@ -142,29 +140,11 @@ export default function PermissionMatrix({
       width: 160,
       render: (_, admin) => {
         if (admin.role === "SUPER_ADMIN") {
-          return (
-            <Tooltip title="Edit account">
-              <Button
-                type="text"
-                size="small"
-                icon={<EditOutlined />}
-                onClick={() => onEditAdmin(admin.id)}
-              />
-            </Tooltip>
-          );
+          return null;
         }
 
         return (
           <Flex align="center" gap={10}>
-            <Tooltip title="Edit account">
-              <Button
-                type="text"
-                size="small"
-                icon={<EditOutlined />}
-                onClick={() => onEditAdmin(admin.id)}
-              />
-            </Tooltip>
-
             <Tooltip title={admin.disabled ? "Enable account" : "Disable account"}>
               <Switch
                 size="small"

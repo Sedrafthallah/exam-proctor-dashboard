@@ -17,6 +17,9 @@ export default function Students() {
   const { token } = theme.useToken();
   const students = useStudentStore((state) => state.students);
   const loading = useStudentStore((state) => state.loading);
+  const page = useStudentStore((state) => state.page);
+  const pageSize = useStudentStore((state) => state.pageSize);
+  const total = useStudentStore((state) => state.total);
   const importing = useStudentStore((state) => state.importing);
   const fetchStudents = useStudentStore((state) => state.fetchStudents);
   const importStudents = useStudentStore((state) => state.importStudents);
@@ -94,7 +97,17 @@ export default function Students() {
         </Flex>
       </Flex>
 
-      <StudentsRoster students={students} loading={loading} />
+      <StudentsRoster
+        students={students}
+        loading={loading}
+        pagination={{
+          current: page,
+          pageSize,
+          total,
+          onChange: (newPage, newPageSize) => fetchStudents(newPage, newPageSize),
+          showSizeChanger: true,
+        }}
+      />
     </Flex>
   );
 }

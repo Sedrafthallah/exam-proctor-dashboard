@@ -199,6 +199,16 @@ const useAuthStore = create((set, get) => ({
     set({ accessToken, refreshToken });
   },
 
+  // Patches the logged-in user's own profile fields locally after a
+  // successful self-service update (My Account modal), so the UI reflects
+  // the change immediately without requiring a re-login.
+  updateOwnProfile: (updates) =>
+    set((state) => {
+      const user = { ...state.user, ...updates };
+      sessionStorage.setItem("user", JSON.stringify(user));
+      return { user };
+    }),
+
   fetchAdmins: async (page = 1, pageSize = 10) => {
     try {
       const accessToken =

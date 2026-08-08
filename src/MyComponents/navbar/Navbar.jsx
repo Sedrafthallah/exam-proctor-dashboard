@@ -8,7 +8,6 @@ import {
   UserOutlined,
   MoonOutlined,
   SunOutlined,
-  LockOutlined,
   LogoutOutlined,
   DownOutlined,
 } from "@ant-design/icons";
@@ -16,7 +15,7 @@ import useAuthStore from "../../store/useAuthStore";
 import { useLanguage } from "../../i18n-context";
 import MyButtonSecondary from "../../MyComponents/myButton/MyButtonSecondary";
 import MyText from "../../MyComponents/myText/MyText";
-import ChangePasswordModal from "./ChangePasswordModal";
+import MyAccountModal from "./MyAccountModal";
 const { Header } = Layout;
 const { useToken } = theme;
 
@@ -30,7 +29,7 @@ export default function Navbar({ isDark, setIsDark }) {
   const { locale, setLocale } = useLanguage();
   const navigate = useNavigate();
   const { modal } = App.useApp();
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
 
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
@@ -72,10 +71,10 @@ export default function Navbar({ isDark, setIsDark }) {
     },
     { type: "divider" },
     {
-      key: "change-password",
-      icon: <LockOutlined />,
-      label: "Change Password",
-      onClick: () => setIsPasswordModalOpen(true),
+      key: "my-account",
+      icon: <UserOutlined />,
+      label: "My Account",
+      onClick: () => setIsAccountModalOpen(true),
     },
     { type: "divider" },
     {
@@ -245,9 +244,9 @@ export default function Navbar({ isDark, setIsDark }) {
         </Dropdown>
       </Space>
 
-      <ChangePasswordModal
-        open={isPasswordModalOpen}
-        onClose={() => setIsPasswordModalOpen(false)}
+      <MyAccountModal
+        open={isAccountModalOpen}
+        onClose={() => setIsAccountModalOpen(false)}
       />
     </Header>
   );

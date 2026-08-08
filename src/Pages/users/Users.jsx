@@ -11,25 +11,20 @@ import MyButtonPrimary from "../../MyComponents/myButton/MyButtonPrimary";
 import PermissionMatrix from "../../MyComponents/usersTable/PermissionMatrix";
 import PermissionReference from "../../MyComponents/usersTable/PermissionReference";
 import NewAdminModal from "../../MyComponents/usersTable/NewAdminModal";
-import EditAdminModal from "../../MyComponents/usersTable/EditAdminModal";
 
 export default function Users() {
   const { token } = theme.useToken();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingAdminId, setEditingAdminId] = useState(null);
 
   const admins = useAuthStore((state) => state.users);
   const page = useAuthStore((state) => state.page);
   const pageSize = useAuthStore((state) => state.pageSize);
   const total = useAuthStore((state) => state.total);
   const fetchAdmins = useAuthStore((state) => state.fetchAdmins);
-  const updateAdminApi = useAuthStore((state) => state.updateAdminApi);
   const deactivateAdminApi = useAuthStore((state) => state.deactivateAdminApi);
 
   const reactivateAdminApi = useAuthStore((state) => state.reactivateAdminApi);
   const deleteAdminApi = useAuthStore((state) => state.deleteAdminApi);
-
-  const editingAdmin = admins.find((a) => a.id === editingAdminId) || null;
 
   useEffect(() => {
     fetchAdmins();
@@ -38,17 +33,6 @@ export default function Users() {
   const handleCreate = () => {
     fetchAdmins(); // ← بيجيب القائمة الحديثة من الـ API
     setIsModalOpen(false);
-  };
-
-  const handleSaveEdit = async (adminId, values) => {
-    const result = await updateAdminApi(adminId, values);
-
-    if (result.success) {
-      setEditingAdminId(null);
-      message.success(`${values.name}'s account was updated.`);
-    }
-
-    return result;
   };
 
   const handleToggleStatus = async (adminId) => {
@@ -117,7 +101,6 @@ export default function Users() {
         admins={admins}
         onToggleStatus={handleToggleStatus}
         onDeleteAdmin={handleDeleteAdmin}
-        onEditAdmin={setEditingAdminId}
       />
       <PermissionReference />
 
@@ -125,13 +108,6 @@ export default function Users() {
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onCreate={handleCreate}
-      />
-
-      <EditAdminModal
-        open={!!editingAdmin}
-        admin={editingAdmin}
-        onClose={() => setEditingAdminId(null)}
-        onSave={handleSaveEdit}
       />
     </Flex>
   );

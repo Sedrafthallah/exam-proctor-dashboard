@@ -80,20 +80,25 @@ export const INITIAL_STUDENTS = [
 ];
 
 const useStudentStore = create((set, get) => ({
-  students: INITIAL_STUDENTS,
+  students: [],
+  page: 1,
+  pageSize: 1000,
+  total: 0,
   loading: false,
   importing: false,
 
   // GET /api/students?Page=&PgeSize= (the "PgeSize" spelling is the backend's
-  // actual query param, not a typo on our side).
-  fetchStudents: async () => {
+  // actual query param, not a typo on our side). Response is wrapped under
+  // data.items alongside pagination metadata, matching the same shape
+  // Sessions/Admins/Alerts/Audit Logs already use.
+  fetchStudents: async (page = get().page ?? 1, pageSize = get().pageSize ?? 1000) => {
     set({ loading: true });
     try {
       const accessToken =
         useAuthStore.getState().accessToken ??
         sessionStorage.getItem("accessToken");
 
-      const res = await apiFetch("/api/students?Page=1&PgeSize=1000", {
+      const res = await apiFetch(`/api/students?Page=${page}&PgeSize=${pageSize}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
@@ -103,7 +108,7 @@ const useStudentStore = create((set, get) => ({
         throw new Error(json.message || "Failed to fetch students");
       }
 
-      const students = json.data.map((s) => ({
+      const students = json.data.items.map((s) => ({
         id: s.universityNumber,
         userId: s.id,
         userName: s.userName,
@@ -113,16 +118,22 @@ const useStudentStore = create((set, get) => ({
         phoneNumber: s.phoneNumber,
       }));
 
-      set({ students, loading: false });
+      set({
+        students,
+        page: json.data.page,
+        pageSize: json.data.pageSize,
+        total: json.data.totalCount,
+        loading: false,
+      });
     } catch (error) {
       console.error("fetchStudents error:", error);
       set({ loading: false });
     }
   },
 
-  // POST /api/students/import — multipart/form-data with a "file" field,
-  // a ZIP containing students.csv plus one {university_number}.jpg per
-  // student. No frontend validation or parsing — the backend handles all
+  // POST /api/students/import — multipart/form-data with an "importZip"
+  // field, a ZIP containing students.csv plus one {university_number}.jpg
+  // per student. No frontend validation or parsing — the backend handles all
   // of it and returns { totalRecords, successfulImports, failedImports,
   // results[] }; the roster is re-fetched after.
   importStudents: async (file) => {
@@ -133,7 +144,7 @@ const useStudentStore = create((set, get) => ({
         sessionStorage.getItem("accessToken");
 
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("importZip", file);
 
       const res = await apiFetch("/api/students/import", {
         method: "POST",
