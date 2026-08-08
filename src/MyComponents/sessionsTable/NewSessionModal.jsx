@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Form, Input, InputNumber, DatePicker, Select, Switch, Segmented, Upload, Flex, message } from "antd";
+import { Form, Input, InputNumber, DatePicker, Select, Switch, Upload, Flex, message } from "antd";
 import { PlusCircleOutlined, UploadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import MyModal from "../myModal/MyModal";
@@ -10,7 +10,6 @@ import MyButtonPrimary from "../myButton/MyButtonPrimary";
 import MyButtonSecondary from "../myButton/MyButtonSecondary";
 import MyText from "../myText/MyText";
 import useSessionStore from "../../store/useSessionStore";
-import useStudentStore from "../../store/useStudentStore";
 import useQuestionBankStore from "../../store/useQuestionBankStore";
 import QuestionBankField from "./QuestionBankField";
 
@@ -19,10 +18,8 @@ const API_DATETIME_FORMAT = "YYYY-MM-DDTHH:mm:ss";
 
 export default function NewSessionModal({ open, onClose, onCreate }) {
   const [form] = MyForm.useForm();
-  const [enrollMode, setEnrollMode] = useState("select");
   const [availableProctors, setAvailableProctors] = useState([]);
   const [proctorsLoading, setProctorsLoading] = useState(false);
-  const students = useStudentStore((state) => state.students);
   const fetchQuestionBanks = useQuestionBankStore((state) => state.fetchQuestionBanks);
   const fetchAvailableProctors = useSessionStore((state) => state.fetchAvailableProctors);
 
@@ -63,14 +60,8 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
       ? availableProctors.map((p) => ({ value: p.id, label: p.fullName }))
       : [];
 
-  const studentOptions = students.map((student) => ({
-    value: student.id,
-    label: `${student.name} (${student.id})`,
-  }));
-
   const handleCancel = () => {
     form.resetFields();
-    setEnrollMode("select");
     onClose();
   };
 
@@ -117,7 +108,6 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
     });
 
     form.resetFields();
-    setEnrollMode("select");
   };
 
   return (
@@ -262,50 +252,30 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
         <QuestionBankField form={form} />
 
         <MyText strong style={{ display: "block", margin: "4px 0 8px", fontSize: 12.5 }}>
-          ENROLLED STUDENTS
+          ENROLL STUDENTS (OPTIONAL)
         </MyText>
 
-        <Segmented
-          value={enrollMode}
-          onChange={setEnrollMode}
-          block
-          style={{ marginBottom: 12 }}
-          options={[
-            { label: "Select from roster", value: "select" },
-            { label: "Upload CSV", value: "csv" },
-          ]}
-        />
-
-        <MyForm.Item name="studentIds" hidden={enrollMode !== "select"} label="Students">
-          <Select
-            mode="multiple"
-            allowClear
-            placeholder="Select students to enroll"
-            options={studentOptions}
-            optionFilterProp="label"
-            maxTagCount="responsive"
-          />
+        <MyForm.Item name="studentIds" hidden label="Students">
+          <Select mode="multiple" />
         </MyForm.Item>
 
-        {enrollMode === "csv" && (
-          <Flex vertical gap={8} style={{ marginBottom: 16 }}>
-            <Upload accept=".csv" showUploadList={false} beforeUpload={handleImportRosterCsv}>
-              <MyButtonSecondary icon={<UploadOutlined />}>Upload roster CSV</MyButtonSecondary>
-            </Upload>
-            <MyForm.Item shouldUpdate noStyle>
-              {() => {
-                const count = (form.getFieldValue("studentIds") || []).length;
-                return (
-                  <MyText type="secondary" style={{ fontSize: 12 }}>
-                    {count > 0
-                      ? `${count} student${count === 1 ? "" : "s"} enrolled from file.`
-                      : "New IDs from the file are also added to the student roster."}
-                  </MyText>
-                );
-              }}
-            </MyForm.Item>
-          </Flex>
-        )}
+        <Flex vertical gap={8} style={{ marginBottom: 16 }}>
+          <Upload accept=".csv" showUploadList={false} beforeUpload={handleImportRosterCsv}>
+            <MyButtonSecondary icon={<UploadOutlined />}>Upload roster CSV</MyButtonSecondary>
+          </Upload>
+          <MyForm.Item shouldUpdate noStyle>
+            {() => {
+              const count = (form.getFieldValue("studentIds") || []).length;
+              return (
+                <MyText type="secondary" style={{ fontSize: 12 }}>
+                  {count > 0
+                    ? `${count} student${count === 1 ? "" : "s"} enrolled from file.`
+                    : "New IDs from the file are also added to the student roster."}
+                </MyText>
+              );
+            }}
+          </MyForm.Item>
+        </Flex>
 
         <MyText strong style={{ display: "block", margin: "4px 0 12px", fontSize: 12.5 }}>
           MONITORING SETTINGS
