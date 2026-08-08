@@ -243,7 +243,10 @@ function SuperAdminDashboard() {
         <MyCol xs={24} lg={8}>
           <Flex vertical gap={20}>
             <LiveAlerts alerts={recentAlerts} />
-            <RecentAuditActivity audits={logs.slice(0, 5)} />
+            <RecentAuditActivity
+              audits={logs.slice(0, 5)}
+              onViewAuditLogs={() => navigate("/logs")}
+            />
           </Flex>
         </MyCol>
       </MyRow>

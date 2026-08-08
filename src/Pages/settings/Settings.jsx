@@ -1,6 +1,20 @@
 import { useEffect } from "react";
-import { theme, Flex, Slider, Segmented, Switch, InputNumber, message, Spin } from "antd";
-import { VideoCameraOutlined, ClockCircleOutlined, SaveOutlined, SettingOutlined } from "@ant-design/icons";
+import {
+  theme,
+  Flex,
+  Slider,
+  Segmented,
+  Switch,
+  InputNumber,
+  message,
+  Spin,
+} from "antd";
+import {
+  VideoCameraOutlined,
+  ClockCircleOutlined,
+  SaveOutlined,
+  SettingOutlined,
+} from "@ant-design/icons";
 import MyTitle from "../../MyComponents/MyTitle/MyTitle";
 import MyText from "../../MyComponents/myText/MyText";
 import MyCard from "../../MyComponents/myCard/MyCard";
@@ -86,124 +100,187 @@ export default function Settings() {
       </Flex>
 
       <Spin spinning={loading}>
-      <MyForm form={form} layout="vertical" initialValues={settings} onFinish={handleSave}>
-        <Flex vertical gap={20}>
-          <SectionCard
-            token={token}
-            icon={<VideoCameraOutlined style={{ fontSize: 16, color: token.colorPrimary }} />}
-            title="Default Monitoring Thresholds"
-          >
-            <MyRow gutter={[24, 16]}>
-              <MyCol xs={24} md={10}>
-                <MyText style={{ fontSize: 13, display: "block", marginBottom: 8 }}>
-                  Gaze alert threshold
-                </MyText>
-                <Flex align="center" gap={12}>
-                  <MyForm.Item name="gazeAlertThresholdSec" noStyle>
-                    <Slider min={1} max={10} style={{ flex: 1 }} />
-                  </MyForm.Item>
-                  <MyForm.Item shouldUpdate noStyle>
-                    {() => (
-                      <MyText strong style={{ fontSize: 13, minWidth: 24 }}>
-                        {form.getFieldValue("gazeAlertThresholdSec")}s
-                      </MyText>
-                    )}
-                  </MyForm.Item>
-                </Flex>
-              </MyCol>
+        <MyForm
+          form={form}
+          layout="vertical"
+          initialValues={settings}
+          onFinish={handleSave}
+        >
+          <Flex vertical gap={20}>
+            <SectionCard
+              token={token}
+              icon={
+                <VideoCameraOutlined
+                  style={{ fontSize: 16, color: token.colorPrimary }}
+                />
+              }
+              title="Default Monitoring Thresholds"
+            >
+              <MyRow gutter={[24, 16]}>
+                <MyCol xs={24} md={10}>
+                  <MyText
+                    style={{ fontSize: 13, display: "block", marginBottom: 8 }}
+                  >
+                    Gaze alert threshold
+                  </MyText>
+                  <Flex align="center" gap={12}>
+                    <MyForm.Item name="gazeAlertThresholdSec" noStyle>
+                      <Slider min={1} max={10} style={{ flex: 1 }} />
+                    </MyForm.Item>
+                    <MyForm.Item shouldUpdate noStyle>
+                      {() => (
+                        <MyText strong style={{ fontSize: 13, minWidth: 24 }}>
+                          {form.getFieldValue("gazeAlertThresholdSec")}s
+                        </MyText>
+                      )}
+                    </MyForm.Item>
+                  </Flex>
+                </MyCol>
 
-              <MyCol xs={24} md={9}>
-                <MyText style={{ fontSize: 13, display: "block", marginBottom: 8 }}>
-                  Face sensitivity
-                </MyText>
-                <MyForm.Item name="faceSensitivity" noStyle>
-                  <Segmented
-                    block
-                    options={FACE_ALERT_OPTIONS}
-                  />
-                </MyForm.Item>
-              </MyCol>
-
-              <MyCol xs={24} md={5}>
-                <MyText style={{ fontSize: 13, display: "block", marginBottom: 8 }}>
-                  Ambient audio monitoring
-                </MyText>
-                <MyForm.Item name="ambientAudioMonitoring" valuePropName="checked" noStyle>
-                  <Switch checkedChildren="Enabled" unCheckedChildren="Disabled" />
-                </MyForm.Item>
-              </MyCol>
-            </MyRow>
-          </SectionCard>
-
-          <SectionCard
-            token={token}
-            icon={<ClockCircleOutlined style={{ fontSize: 16, color: token.colorPrimary }} />}
-            title="Default Session Settings"
-          >
-            <MyRow gutter={[24, 16]}>
-              <MyCol xs={24} sm={12} md={8}>
-                <MyForm.Item name="gracePeriodMinutes" label="Grace period (min)">
-                  <InputNumber min={0} style={{ width: "100%" }} />
-                </MyForm.Item>
-              </MyCol>
-              <MyCol xs={24} sm={12} md={8}>
-                <MyForm.Item name="loginWindowMinutes" label="Login window (min)">
-                  <InputNumber min={0} style={{ width: "100%" }} />
-                </MyForm.Item>
-              </MyCol>
-              <MyCol xs={24} sm={12} md={8}>
-                <MyForm.Item name="maxLivenessAttempts" label="Max liveness attempts">
-                  <InputNumber min={1} max={5} style={{ width: "100%" }} />
-                </MyForm.Item>
-              </MyCol>
-
-              <MyCol xs={24} md={12}>
-                <MyText style={{ fontSize: 13, display: "block", marginBottom: 8 }}>
-                  Face match threshold
-                </MyText>
-                <Flex align="center" gap={12}>
-                  <MyForm.Item name="faceMatchThreshold" noStyle>
-                    <Slider min={80} max={99} style={{ flex: 1 }} />
+                <MyCol xs={24} md={9}>
+                  <MyText
+                    style={{ fontSize: 13, display: "block", marginBottom: 8 }}
+                  >
+                    Face sensitivity
+                  </MyText>
+                  <MyForm.Item name="faceSensitivity" noStyle>
+                    <Segmented block options={FACE_ALERT_OPTIONS} />
                   </MyForm.Item>
-                  <MyForm.Item shouldUpdate noStyle>
-                    {() => (
-                      <MyText strong style={{ fontSize: 13, minWidth: 32 }}>
-                        {form.getFieldValue("faceMatchThreshold")}%
-                      </MyText>
-                    )}
-                  </MyForm.Item>
-                </Flex>
-              </MyCol>
+                </MyCol>
 
-              <MyCol xs={24} sm={12} md={6}>
-                <Flex justify="space-between" align="center" style={{ height: "100%" }}>
-                  <MyText style={{ fontSize: 13 }}>Question randomisation</MyText>
-                  <MyForm.Item name="questionRandomisation" valuePropName="checked" noStyle>
-                    <Switch />
+                <MyCol xs={24} md={5}>
+                  <MyText
+                    style={{ fontSize: 13, display: "block", marginBottom: 8 }}
+                  >
+                    Ambient audio monitoring
+                  </MyText>
+                  <MyForm.Item
+                    name="ambientAudioMonitoring"
+                    valuePropName="checked"
+                    noStyle
+                  >
+                    <Switch
+                      checkedChildren="Enabled"
+                      unCheckedChildren="Disabled"
+                    />
                   </MyForm.Item>
-                </Flex>
-              </MyCol>
-              <MyCol xs={24} sm={12} md={6}>
-                <Flex justify="space-between" align="center" style={{ height: "100%" }}>
-                  <MyText style={{ fontSize: 13 }}>Option shuffle</MyText>
-                  <MyForm.Item name="optionShuffle" valuePropName="checked" noStyle>
-                    <Switch />
-                  </MyForm.Item>
-                </Flex>
-              </MyCol>
-            </MyRow>
-          </SectionCard>
+                </MyCol>
+              </MyRow>
+            </SectionCard>
 
-          <Flex justify="space-between" align="center" wrap="wrap" gap={12}>
-            <MyText type="secondary" style={{ fontSize: 12.5 }}>
-              These defaults apply to new sessions. Existing sessions are not affected.
-            </MyText>
-            <MyButtonPrimary icon={<SaveOutlined />} htmlType="submit">
-              Save Changes
-            </MyButtonPrimary>
+            <SectionCard
+              token={token}
+              icon={
+                <ClockCircleOutlined
+                  style={{ fontSize: 16, color: token.colorPrimary }}
+                />
+              }
+              title="Default Session Settings"
+            >
+              <MyRow gutter={[24, 16]}>
+                <MyCol xs={24} sm={12}>
+                  <MyForm.Item
+                    name="gracePeriodMinutes"
+                    label="Grace period (min)"
+                  >
+                    <InputNumber min={0} style={{ width: "100%" }} />
+                  </MyForm.Item>
+                </MyCol>
+                <MyCol xs={24} sm={12}>
+                  <MyForm.Item
+                    name="loginWindowMinutes"
+                    label="Login window (min)"
+                  >
+                    <InputNumber min={0} style={{ width: "100%" }} />
+                  </MyForm.Item>
+                </MyCol>
+
+                <MyCol xs={24} sm={12}>
+                  <MyForm.Item
+                    name="maxLivenessAttempts"
+                    label="Max liveness attempts"
+                  >
+                    <InputNumber min={1} max={5} style={{ width: "100%" }} />
+                  </MyForm.Item>
+                </MyCol>
+                <MyCol xs={24} sm={12}>
+                  <MyForm.Item
+                    name="maxWarningsBeforeTermination"
+                    label="Max warnings before session termination"
+                    extra="After this many warnings in one session, the student is automatically removed."
+                  >
+                    <InputNumber min={1} max={10} style={{ width: "100%" }} />
+                  </MyForm.Item>
+                </MyCol>
+
+                <MyCol xs={24} md={12}>
+                  <MyText
+                    style={{ fontSize: 13, display: "block", marginBottom: 8 }}
+                  >
+                    Face match threshold
+                  </MyText>
+                  <Flex align="center" gap={12}>
+                    <MyForm.Item name="faceMatchThreshold" noStyle>
+                      <Slider min={80} max={99} style={{ flex: 1 }} />
+                    </MyForm.Item>
+                    <MyForm.Item shouldUpdate noStyle>
+                      {() => (
+                        <MyText strong style={{ fontSize: 13, minWidth: 32 }}>
+                          {form.getFieldValue("faceMatchThreshold")}%
+                        </MyText>
+                      )}
+                    </MyForm.Item>
+                  </Flex>
+                </MyCol>
+
+                <MyCol xs={24} sm={12} md={6}>
+                  <Flex
+                    justify="space-between"
+                    align="center"
+                    style={{ height: "100%" }}
+                  >
+                    <MyText style={{ fontSize: 13 }}>
+                      Question randomisation
+                    </MyText>
+                    <MyForm.Item
+                      name="questionRandomisation"
+                      valuePropName="checked"
+                      noStyle
+                    >
+                      <Switch />
+                    </MyForm.Item>
+                  </Flex>
+                </MyCol>
+                <MyCol xs={24} sm={12} md={6}>
+                  <Flex
+                    justify="space-between"
+                    align="center"
+                    style={{ height: "100%" }}
+                  >
+                    <MyText style={{ fontSize: 13 }}>Option shuffle</MyText>
+                    <MyForm.Item
+                      name="optionShuffle"
+                      valuePropName="checked"
+                      noStyle
+                    >
+                      <Switch />
+                    </MyForm.Item>
+                  </Flex>
+                </MyCol>
+              </MyRow>
+            </SectionCard>
+
+            <Flex justify="space-between" align="center" wrap="wrap" gap={12}>
+              <MyText type="secondary" style={{ fontSize: 12.5 }}>
+                These defaults apply to new sessions. Existing sessions are not
+                affected.
+              </MyText>
+              <MyButtonPrimary icon={<SaveOutlined />} htmlType="submit">
+                Save Changes
+              </MyButtonPrimary>
+            </Flex>
           </Flex>
-        </Flex>
-      </MyForm>
+        </MyForm>
       </Spin>
     </Flex>
   );

@@ -12,6 +12,7 @@ const DEFAULT_SETTINGS = {
   optionShuffle: false,
   maxLivenessAttempts: 3,
   faceMatchThreshold: 95,
+  maxWarningsBeforeTermination: 3,
 };
 
 const useSettingsStore = create((set, get) => ({
