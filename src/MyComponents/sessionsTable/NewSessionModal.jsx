@@ -1,5 +1,14 @@
 import { useState, useEffect } from "react";
-import { Form, Input, InputNumber, DatePicker, Select, Switch, Upload, Flex, message } from "antd";
+import {
+  Form,
+  Input,
+  InputNumber,
+  DatePicker,
+  Select,
+  Switch,
+  Upload,
+  Flex,
+} from "antd";
 import { PlusCircleOutlined, UploadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import MyModal from "../myModal/MyModal";
@@ -20,8 +29,13 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
   const [form] = MyForm.useForm();
   const [availableProctors, setAvailableProctors] = useState([]);
   const [proctorsLoading, setProctorsLoading] = useState(false);
-  const fetchQuestionBanks = useQuestionBankStore((state) => state.fetchQuestionBanks);
-  const fetchAvailableProctors = useSessionStore((state) => state.fetchAvailableProctors);
+  const [studentsFile, setStudentsFile] = useState(null);
+  const fetchQuestionBanks = useQuestionBankStore(
+    (state) => state.fetchQuestionBanks,
+  );
+  const fetchAvailableProctors = useSessionStore(
+    (state) => state.fetchAvailableProctors,
+  );
 
   const scheduledStartUTC = Form.useWatch("scheduledStartUTC", form);
   const duration = Form.useWatch("duration", form);
@@ -38,7 +52,9 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
     }
 
     const startTime = scheduledStartUTC.format(API_DATETIME_FORMAT);
-    const endTime = scheduledStartUTC.add(duration, "minute").format(API_DATETIME_FORMAT);
+    const endTime = scheduledStartUTC
+      .add(duration, "minute")
+      .format(API_DATETIME_FORMAT);
 
     let cancelled = false;
 
@@ -65,26 +81,8 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
     onClose();
   };
 
-  const handleImportRosterCsv = async (file) => {
-    try {
-      const text = await file.text();
-      const lines = text.trim().split("\n").slice(1); // skip header row
-      const ids = lines
-        .map((line) => line.split(",")[0]?.trim())
-        .filter(Boolean);
-
-      if (ids.length === 0) {
-        message.error("No valid rows found in the file.");
-        return false;
-      }
-
-      const previousIds = form.getFieldValue("studentIds") || [];
-      form.setFieldValue("studentIds", [...new Set([...previousIds, ...ids])]);
-      message.success(`${ids.length} student ID(s) loaded from file.`);
-    } catch {
-      message.error("Couldn't read that file.");
-    }
-
+  const handleFileSelect = (file) => {
+    setStudentsFile(file);
     return false; // prevent antd's default auto-upload
   };
 
@@ -98,8 +96,7 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
       loginWindow: values.loginWindow,
       questionBankId: values.questionBank ? Number(values.questionBank) : null,
       proctorId: values.proctor || null,
-      studentIds: values.studentIds || [],
-      enrolledStudents: (values.studentIds || []).length,
+      studentsFile: studentsFile ?? null,
       gazeThreshold: values.gazeThreshold,
       faceAlertSensitivity: values.faceAlertSensitivity,
       questionRandomisation: values.questionRandomisation,
@@ -108,6 +105,7 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
     });
 
     form.resetFields();
+    setStudentsFile(null);
   };
 
   return (
@@ -133,7 +131,6 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
           duration: 60,
           gracePeriod: 5,
           loginWindow: 15,
-          studentIds: [],
           gazeThreshold: 3,
           faceAlertSensitivity: "Medium",
           questionRandomisation: true,
@@ -146,7 +143,9 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
             <MyForm.Item
               name="sessionTitle"
               label="Session title"
-              rules={[{ required: true, message: "Please enter a session title" }]}
+              rules={[
+                { required: true, message: "Please enter a session title" },
+              ]}
             >
               <Input placeholder="e.g. CS301 Final — Spring 2025" />
             </MyForm.Item>
@@ -155,7 +154,9 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
             <MyForm.Item
               name="courseCode"
               label="Course code"
-              rules={[{ required: true, message: "Please enter the course code" }]}
+              rules={[
+                { required: true, message: "Please enter the course code" },
+              ]}
             >
               <Input placeholder="e.g. CS301" />
             </MyForm.Item>
@@ -166,12 +167,17 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
               name="scheduledStartUTC"
               label="Scheduled start (UTC)"
               rules={[
-                { required: true, message: "Please pick a start date and time" },
+                {
+                  required: true,
+                  message: "Please pick a start date and time",
+                },
                 {
                   validator: (_, value) =>
                     !value || value.isAfter(dayjs())
                       ? Promise.resolve()
-                      : Promise.reject(new Error("Start time must be in the future")),
+                      : Promise.reject(
+                          new Error("Start time must be in the future"),
+                        ),
                 },
               ]}
             >
@@ -179,7 +185,9 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
                 showTime
                 format="YYYY-MM-DD HH:mm"
                 style={{ width: "100%" }}
-                disabledDate={(current) => current && current.isBefore(dayjs(), "day")}
+                disabledDate={(current) =>
+                  current && current.isBefore(dayjs(), "day")
+                }
                 disabledTime={(current) => {
                   if (!current || !current.isSame(dayjs(), "day")) return {};
                   const now = dayjs();
@@ -209,7 +217,9 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
             <MyForm.Item
               name="gracePeriod"
               label="Grace period (min)"
-              rules={[{ required: true, message: "Please enter the grace period" }]}
+              rules={[
+                { required: true, message: "Please enter the grace period" },
+              ]}
             >
               <InputNumber min={0} style={{ width: "100%" }} />
             </MyForm.Item>
@@ -218,7 +228,9 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
             <MyForm.Item
               name="loginWindow"
               label="Login window (min)"
-              rules={[{ required: true, message: "Please enter the login window" }]}
+              rules={[
+                { required: true, message: "Please enter the login window" },
+              ]}
             >
               <InputNumber min={0} style={{ width: "100%" }} />
             </MyForm.Item>
@@ -245,39 +257,48 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
           </MyCol>
         </MyRow>
 
-        <MyText strong style={{ display: "block", margin: "4px 0 8px", fontSize: 12.5 }}>
+        <MyText
+          strong
+          style={{ display: "block", margin: "4px 0 8px", fontSize: 12.5 }}
+        >
           QUESTION BANK
         </MyText>
 
         <QuestionBankField form={form} />
 
-        <MyText strong style={{ display: "block", margin: "4px 0 8px", fontSize: 12.5 }}>
+        <MyText
+          strong
+          style={{ display: "block", margin: "4px 0 8px", fontSize: 12.5 }}
+        >
           ENROLL STUDENTS (OPTIONAL)
         </MyText>
 
-        <MyForm.Item name="studentIds" hidden label="Students">
-          <Select mode="multiple" />
-        </MyForm.Item>
+        <Upload
+          accept=".csv,.zip"
+          showUploadList={false}
+          beforeUpload={handleFileSelect}
+          onRemove={() => setStudentsFile(null)}
+        >
+          <MyButtonSecondary icon={<UploadOutlined />}>
+            {studentsFile
+              ? `Selected: ${studentsFile.name}`
+              : "Attach student roster file"}
+          </MyButtonSecondary>
+        </Upload>
+        {studentsFile && (
+          <MyButtonSecondary
+            type="text"
+            onClick={() => setStudentsFile(null)}
+            style={{ marginTop: 4 }}
+          >
+            Remove file
+          </MyButtonSecondary>
+        )}
 
-        <Flex vertical gap={8} style={{ marginBottom: 16 }}>
-          <Upload accept=".csv" showUploadList={false} beforeUpload={handleImportRosterCsv}>
-            <MyButtonSecondary icon={<UploadOutlined />}>Upload roster CSV</MyButtonSecondary>
-          </Upload>
-          <MyForm.Item shouldUpdate noStyle>
-            {() => {
-              const count = (form.getFieldValue("studentIds") || []).length;
-              return (
-                <MyText type="secondary" style={{ fontSize: 12 }}>
-                  {count > 0
-                    ? `${count} student${count === 1 ? "" : "s"} enrolled from file.`
-                    : "New IDs from the file are also added to the student roster."}
-                </MyText>
-              );
-            }}
-          </MyForm.Item>
-        </Flex>
-
-        <MyText strong style={{ display: "block", margin: "4px 0 12px", fontSize: 12.5 }}>
+        <MyText
+          strong
+          style={{ display: "block", margin: "4px 0 12px", fontSize: 12.5 }}
+        >
           MONITORING SETTINGS
         </MyText>
 
@@ -295,10 +316,15 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
             <MyForm.Item
               name="faceAlertSensitivity"
               label="Face alert sensitivity"
-              rules={[{ required: true, message: "Please select a sensitivity" }]}
+              rules={[
+                { required: true, message: "Please select a sensitivity" },
+              ]}
             >
               <Select
-                options={FACE_ALERT_OPTIONS.map((level) => ({ value: level, label: level }))}
+                options={FACE_ALERT_OPTIONS.map((level) => ({
+                  value: level,
+                  label: level,
+                }))}
               />
             </MyForm.Item>
           </MyCol>
@@ -307,7 +333,11 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
         <Flex vertical gap={10} style={{ marginBottom: 8 }}>
           <Flex justify="space-between" align="center">
             <MyText style={{ fontSize: 13 }}>Question randomisation</MyText>
-            <MyForm.Item name="questionRandomisation" valuePropName="checked" noStyle>
+            <MyForm.Item
+              name="questionRandomisation"
+              valuePropName="checked"
+              noStyle
+            >
               <Switch />
             </MyForm.Item>
           </Flex>

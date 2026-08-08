@@ -323,9 +323,9 @@ const useSessionStore = create((set, get) => ({
       if (fields.proctorId) {
         formData.append("AssignedProctorIds", fields.proctorId);
       }
-      // StudentsCsvFile intentionally omitted — bulk CSV-at-creation isn't
-      // wired up yet (see student-enrollment note below for select-based
-      // enrollment instead).
+      if (fields.studentsFile) {
+        formData.append("StudentsCsvFile", fields.studentsFile);
+      }
 
       const res = await apiFetch("/api/exam-sessions", {
         method: "POST",
@@ -363,18 +363,6 @@ const useSessionStore = create((set, get) => ({
         published: false,
         archived: false,
       };
-
-      // The creation endpoint only accepts a StudentsCsvFile, not a list of
-      // ids — so students picked via the select-based enrollment UI are
-      // enrolled right after creation via the existing, working roster
-      // endpoint instead of being sent in the creation request itself.
-      if (fields.studentIds?.length > 0) {
-        await get().editRestoreSessionApi(String(s.id), {
-          assignedProctorIds: fields.proctorId ? [fields.proctorId] : [],
-          studentIdsToAdd: fields.studentIds,
-          studentIdsToRemove: [],
-        });
-      }
 
       set((state) => ({
         sessions: [newSession, ...state.sessions],
