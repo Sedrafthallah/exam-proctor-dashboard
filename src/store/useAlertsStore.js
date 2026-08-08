@@ -33,6 +33,7 @@ const SEVERITY_LABELS = {
 const mapAlert = (a) => ({
   id: String(a.id),
   type: ALERT_TYPE_MAP[a.alertType] ?? a.alertType.toUpperCase(),
+  typeCode: a.alertType, // raw PascalCase backend code (e.g. "GazeDeviation"), for matching against GET /api/alerts/types
   description: a.alertDescription ?? "",
   status: STATUS_LABELS[a.status] ?? `UNKNOWN_STATUS_${a.status}`,
   statusCode: a.status, // raw backend code, kept in case exact-match filtering needs it later
@@ -87,6 +88,8 @@ const useAlertsStore = create((set) => ({
   page: 1,
   pageSize: 7,
   total: 0,
+  summary: { total: 0, critical: 0, warnings: 0, resolved: 0, lastUpdated: null },
+  alertTypes: [],
 
   fetchAlerts: async (page = 1, pageSize = 7) => {
     set({ loading: true });
@@ -120,6 +123,50 @@ const useAlertsStore = create((set) => ({
       pageSize,
     );
     set({ alerts, total, page: p, pageSize: ps, loading: false });
+  },
+
+  fetchAlertsSummary: async () => {
+    try {
+      const accessToken =
+        useAuthStore.getState().accessToken ?? sessionStorage.getItem("accessToken");
+
+      const res = await apiFetch("/api/alerts/Cards", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      const json = await res.json();
+      if (!res.ok || json.statusCode !== 200) return;
+
+      set({
+        summary: {
+          total: json.data.totalAlerts,
+          critical: json.data.criticalAlerts,
+          warnings: json.data.warningAlerts,
+          resolved: json.data.resolvedAlerts,
+          lastUpdated: json.data.lastUpdated,
+        },
+      });
+    } catch (err) {
+      console.error("fetchAlertsSummary error:", err);
+    }
+  },
+
+  fetchAlertTypes: async () => {
+    try {
+      const accessToken =
+        useAuthStore.getState().accessToken ?? sessionStorage.getItem("accessToken");
+
+      const res = await apiFetch("/api/alerts/types", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      const json = await res.json();
+      if (!res.ok || json.statusCode !== 200) return;
+
+      set({ alertTypes: json.data });
+    } catch (err) {
+      console.error("fetchAlertTypes error:", err);
+    }
   },
 
   updateAlertStatus: (id, status) =>

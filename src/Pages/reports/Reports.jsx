@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { theme, Flex, Select, Tag, Tooltip, Divider, message } from "antd";
 import {
@@ -26,9 +26,14 @@ import { apiFetch } from "../../api/apiClient";
 export default function Reports() {
   const { token } = theme.useToken();
   const sessions = useSessionStore((state) => state.sessions);
+  const fetchSessions = useSessionStore((state) => state.fetchSessions);
   const hasPermission = useAuthStore((state) => state.hasPermission);
 
   const canExport = hasPermission("ExportData");
+
+  useEffect(() => {
+    fetchSessions();
+  }, [fetchSessions]);
 
   const reportableSessions = sessions.filter((session) =>
     ["CLOSED", "ARCHIVED"].includes(getSessionStatus(session)),

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { theme, Flex, Badge, Select, message } from "antd";
 import { VideoCameraOutlined } from "@ant-design/icons";
 import MyTitle from "../../MyComponents/MyTitle/MyTitle";
@@ -30,12 +30,21 @@ const MONITORING_STATUS = {
 export default function Monitoring() {
   const { token } = theme.useToken();
   const sessions = useSessionStore((state) => state.sessions);
+  const fetchSessions = useSessionStore((state) => state.fetchSessions);
   const students = useStudentStore((state) => state.students);
+  const fetchStudents = useStudentStore((state) => state.fetchStudents);
   const alerts = useAlertsStore((state) => state.alerts);
+  const fetchAlerts = useAlertsStore((state) => state.fetchAlerts);
   const updateAlertStatus = useAlertsStore((state) => state.updateAlertStatus);
   const hasPermission = useAuthStore((state) => state.hasPermission);
 
   const canAct = hasPermission("MonitorExamSession");
+
+  useEffect(() => {
+    fetchSessions();
+    fetchStudents();
+    fetchAlerts();
+  }, [fetchSessions, fetchStudents, fetchAlerts]);
 
   const activeSessions = sessions.filter((session) => getSessionStatus(session) === "ACTIVE");
   const [selectedSessionId, setSelectedSessionId] = useState(activeSessions[0]?.id ?? null);

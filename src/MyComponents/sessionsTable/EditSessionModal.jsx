@@ -11,6 +11,7 @@ import MyButtonSecondary from "../myButton/MyButtonSecondary";
 import MyText from "../myText/MyText";
 import useAuthStore from "../../store/useAuthStore";
 import useSessionStore from "../../store/useSessionStore";
+import useQuestionBankStore from "../../store/useQuestionBankStore";
 import { isEditable } from "../../utils/sessionUtils";
 import QuestionBankField from "./QuestionBankField";
 
@@ -20,6 +21,7 @@ export default function EditSessionModal({ open, session, status, onClose, onSav
   const [form] = MyForm.useForm();
   const admins = useAuthStore((state) => state.users);
   const fetchSessionById = useSessionStore((state) => state.fetchSessionById);
+  const fetchQuestionBanks = useQuestionBankStore((state) => state.fetchQuestionBanks);
   const [detailLoading, setDetailLoading] = useState(false);
   const proctorOptions = admins
     .filter((admin) => !admin.disabled && admin.role === "PROCTOR")
@@ -30,6 +32,8 @@ export default function EditSessionModal({ open, session, status, onClose, onSav
 
   const handleAfterOpenChange = (isOpen) => {
     if (isOpen && session) {
+      fetchQuestionBanks();
+
       setDetailLoading(true);
       fetchSessionById(session.id).then((data) => {
         const s = data ?? session; // fallback to store data if API fails

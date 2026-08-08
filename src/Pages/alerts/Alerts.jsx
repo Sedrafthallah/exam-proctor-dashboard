@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
-import { theme, Flex, Badge, Segmented, Select, message } from "antd";
+import { theme, Flex, Badge, Segmented, Select, Tooltip, message } from "antd";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
 import {
   AlertOutlined,
   FireOutlined,
@@ -15,19 +17,9 @@ import AlertsTable from "../../MyComponents/alertsTable/AlertsTable";
 import useAlertsStore from "../../store/useAlertsStore";
 import useAuthStore from "../../store/useAuthStore";
 
-const CRITICAL_TYPES = ["FACE_ABSENCE", "MULTIPLE_FACES"];
-const WARNING_TYPES = ["GAZE_DEVIATION", "APP_SWITCH", "AUDIO_THRESHOLD"];
+dayjs.extend(relativeTime);
 
 const STATUS_FILTERS = ["All", "Open", "Resolved", "Escalated"];
-
-const TYPE_FILTER_OPTIONS = [
-  { value: "ALL", label: "All Types" },
-  { value: "GAZE_DEVIATION", label: "Gaze Deviation" },
-  { value: "FACE_ABSENCE", label: "Face Absence" },
-  { value: "MULTIPLE_FACES", label: "Multiple Faces" },
-  { value: "APP_SWITCH", label: "App Switch" },
-  { value: "AUDIO_THRESHOLD", label: "Audio Threshold" },
-];
 
 function StatCard({ icon, color, bg, value, label, token }) {
   return (
@@ -67,13 +59,22 @@ export default function Alerts() {
   const page = useAlertsStore((state) => state.page);
   const pageSize = useAlertsStore((state) => state.pageSize);
   const total = useAlertsStore((state) => state.total);
+  const summary = useAlertsStore((state) => state.summary);
   const updateAlertStatus = useAlertsStore((state) => state.updateAlertStatus);
   const fetchAlerts = useAlertsStore((state) => state.fetchAlerts);
   const fetchOpenAlerts = useAlertsStore((state) => state.fetchOpenAlerts);
   const fetchResolvedAlerts = useAlertsStore((state) => state.fetchResolvedAlerts);
   const fetchEscalatedAlerts = useAlertsStore((state) => state.fetchEscalatedAlerts);
   const fetchAlertsByType = useAlertsStore((state) => state.fetchAlertsByType);
+  const fetchAlertsSummary = useAlertsStore((state) => state.fetchAlertsSummary);
+  const alertTypes = useAlertsStore((state) => state.alertTypes);
+  const fetchAlertTypes = useAlertsStore((state) => state.fetchAlertTypes);
   const hasPermission = useAuthStore((state) => state.hasPermission);
+
+  const typeFilterOptions = [
+    { value: "ALL", label: "All Types" },
+    ...alertTypes.map((t) => ({ value: t.code, label: t.label })),
+  ];
 
   const [statusFilter, setStatusFilter] = useState("All");
   const [typeFilter, setTypeFilter] = useState("ALL");
@@ -100,17 +101,17 @@ export default function Alerts() {
 
   useEffect(() => {
     refetchAlerts(1, 7);
+    fetchAlertsSummary();
+    fetchAlertTypes();
   }, [statusFilter, typeFilter]);
 
   const canAct = hasPermission("TakeProctorAction");
 
-  const critical = alerts.filter((a) => CRITICAL_TYPES.includes(a.type)).length;
-  const warnings = alerts.filter((a) => WARNING_TYPES.includes(a.type)).length;
-  const resolved = alerts.filter((a) => a.status === "RESOLVED").length;
+  const { critical, warnings, resolved } = summary;
 
   const filteredAlerts = alerts.filter((alert) => {
     if (statusFilter !== "All" && alert.status !== statusFilter.toUpperCase()) return false;
-    if (typeFilter !== "ALL" && alert.type !== typeFilter) return false;
+    if (typeFilter !== "ALL" && alert.typeCode !== typeFilter) return false;
     return true;
   });
 
@@ -155,14 +156,21 @@ export default function Alerts() {
             </MyText>
           </Flex>
         </Flex>
-        <Flex align="center" gap={6}>
-          <Badge status="processing" color={token.colorSuccess} />
-          <MyText
-            type="secondary"
-            style={{ fontSize: 11, fontWeight: 500, fontFamily: "monospace" }}
-          >
-            WSS live
-          </MyText>
+        <Flex align="center" gap={12}>
+          {summary.lastUpdated && (
+            <MyText type="secondary" style={{ fontSize: 11.5 }}>
+              Updated {dayjs(summary.lastUpdated).fromNow()}
+            </MyText>
+          )}
+          <Flex align="center" gap={6}>
+            <Badge status="processing" color={token.colorSuccess} />
+            <MyText
+              type="secondary"
+              style={{ fontSize: 11, fontWeight: 500, fontFamily: "monospace" }}
+            >
+              WSS live
+            </MyText>
+          </Flex>
         </Flex>
       </Flex>
 
@@ -218,7 +226,17 @@ export default function Alerts() {
         <Select
           value={typeFilter}
           onChange={setTypeFilter}
-          options={TYPE_FILTER_OPTIONS}
+          options={typeFilterOptions}
+          optionRender={(option) => {
+            const description = alertTypes.find((t) => t.code === option.value)?.description;
+            return description ? (
+              <Tooltip title={description} placement="right">
+                <span>{option.label}</span>
+              </Tooltip>
+            ) : (
+              option.label
+            );
+          }}
           style={{ minWidth: 200 }}
         />
       </Flex>

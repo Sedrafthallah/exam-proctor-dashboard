@@ -1,4 +1,5 @@
-import { theme, Flex, Slider, Segmented, Switch, InputNumber, message } from "antd";
+import { useEffect } from "react";
+import { theme, Flex, Slider, Segmented, Switch, InputNumber, message, Spin } from "antd";
 import { VideoCameraOutlined, ClockCircleOutlined, SaveOutlined, SettingOutlined } from "@ant-design/icons";
 import MyTitle from "../../MyComponents/MyTitle/MyTitle";
 import MyText from "../../MyComponents/myText/MyText";
@@ -35,12 +36,26 @@ function SectionCard({ icon, title, children, token }) {
 export default function Settings() {
   const { token } = theme.useToken();
   const settings = useSettingsStore((state) => state.settings);
+  const loading = useSettingsStore((state) => state.loading);
+  const fetchSettings = useSettingsStore((state) => state.fetchSettings);
   const updateSettings = useSettingsStore((state) => state.updateSettings);
   const [form] = MyForm.useForm();
 
-  const handleSave = (values) => {
-    updateSettings(values);
-    message.success("Settings saved.");
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  useEffect(() => {
+    form.setFieldsValue(settings);
+  }, [settings, form]);
+
+  const handleSave = async (values) => {
+    const { success, error } = await updateSettings(values);
+    if (success) {
+      message.success("Settings saved.");
+    } else {
+      message.error(error || "Failed to save settings.");
+    }
   };
 
   return (
@@ -70,6 +85,7 @@ export default function Settings() {
         </Flex>
       </Flex>
 
+      <Spin spinning={loading}>
       <MyForm form={form} layout="vertical" initialValues={settings} onFinish={handleSave}>
         <Flex vertical gap={20}>
           <SectionCard
@@ -83,13 +99,13 @@ export default function Settings() {
                   Gaze alert threshold
                 </MyText>
                 <Flex align="center" gap={12}>
-                  <MyForm.Item name="gazeThreshold" noStyle>
+                  <MyForm.Item name="gazeAlertThresholdSec" noStyle>
                     <Slider min={1} max={10} style={{ flex: 1 }} />
                   </MyForm.Item>
                   <MyForm.Item shouldUpdate noStyle>
                     {() => (
                       <MyText strong style={{ fontSize: 13, minWidth: 24 }}>
-                        {form.getFieldValue("gazeThreshold")}s
+                        {form.getFieldValue("gazeAlertThresholdSec")}s
                       </MyText>
                     )}
                   </MyForm.Item>
@@ -100,7 +116,7 @@ export default function Settings() {
                 <MyText style={{ fontSize: 13, display: "block", marginBottom: 8 }}>
                   Face sensitivity
                 </MyText>
-                <MyForm.Item name="faceAlertSensitivity" noStyle>
+                <MyForm.Item name="faceSensitivity" noStyle>
                   <Segmented
                     block
                     options={FACE_ALERT_OPTIONS}
@@ -112,7 +128,7 @@ export default function Settings() {
                 <MyText style={{ fontSize: 13, display: "block", marginBottom: 8 }}>
                   Ambient audio monitoring
                 </MyText>
-                <MyForm.Item name="audioMonitoring" valuePropName="checked" noStyle>
+                <MyForm.Item name="ambientAudioMonitoring" valuePropName="checked" noStyle>
                   <Switch checkedChildren="Enabled" unCheckedChildren="Disabled" />
                 </MyForm.Item>
               </MyCol>
@@ -126,12 +142,12 @@ export default function Settings() {
           >
             <MyRow gutter={[24, 16]}>
               <MyCol xs={24} sm={12} md={8}>
-                <MyForm.Item name="gracePeriod" label="Grace period (min)">
+                <MyForm.Item name="gracePeriodMinutes" label="Grace period (min)">
                   <InputNumber min={0} style={{ width: "100%" }} />
                 </MyForm.Item>
               </MyCol>
               <MyCol xs={24} sm={12} md={8}>
-                <MyForm.Item name="loginWindow" label="Login window (min)">
+                <MyForm.Item name="loginWindowMinutes" label="Login window (min)">
                   <InputNumber min={0} style={{ width: "100%" }} />
                 </MyForm.Item>
               </MyCol>
@@ -188,6 +204,7 @@ export default function Settings() {
           </Flex>
         </Flex>
       </MyForm>
+      </Spin>
     </Flex>
   );
 }

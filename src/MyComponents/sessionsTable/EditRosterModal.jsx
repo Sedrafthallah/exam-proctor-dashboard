@@ -22,6 +22,8 @@ const getInitials = (name) =>
 export default function EditRosterModal({ open, session, onClose, onSave }) {
   const { token } = theme.useToken();
   const students = useStudentStore((state) => state.students);
+  const studentsLoading = useStudentStore((state) => state.loading);
+  const fetchStudents = useStudentStore((state) => state.fetchStudents);
   const fetchAvailableProctors = useSessionStore((state) => state.fetchAvailableProctors);
 
   const [proctor, setProctor] = useState(null);
@@ -42,6 +44,8 @@ export default function EditRosterModal({ open, session, onClose, onSave }) {
 
       setRoster(initial);
       setInitialRoster(initial);
+
+      fetchStudents();
 
       if (session.scheduledStartUTC && session.duration) {
         const start = dayjs(session.scheduledStartUTC);
@@ -211,6 +215,8 @@ export default function EditRosterModal({ open, session, onClose, onSave }) {
         style={{ width: "100%" }}
         placeholder="Search and add a student..."
         value={null}
+        loading={studentsLoading}
+        notFoundContent={studentsLoading ? "Loading students..." : "No students found"}
         options={addStudentOptions}
         filterOption={(input, option) =>
           String(option.label).toLowerCase().includes(input.toLowerCase())
