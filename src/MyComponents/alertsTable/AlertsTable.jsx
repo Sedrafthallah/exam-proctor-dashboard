@@ -1,4 +1,4 @@
-import { theme, Flex, Badge, Avatar, Popconfirm } from "antd";
+import { theme, Flex, Badge, Avatar, Popconfirm, Tag, Tooltip } from "antd";
 import { CheckOutlined, NotificationOutlined, ArrowUpOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -12,7 +12,7 @@ import { ALERT_TYPE_CONFIG, ALERT_STATUS_CONFIG, DEFAULT_ALERT_TYPE_CONFIG } fro
 
 dayjs.extend(relativeTime);
 
-export default function AlertsTable({ alerts, canAct, onDismiss, onWarn, onEscalate }) {
+export default function AlertsTable({ alerts, pagination, canAct, onDismiss, onWarn, onEscalate }) {
   const { token } = theme.useToken();
 
   const columns = [
@@ -35,7 +35,7 @@ export default function AlertsTable({ alerts, canAct, onDismiss, onWarn, onEscal
                 {config.label}
               </MyText>
               <MyText type="secondary" style={{ fontSize: 12 }}>
-                {config.description}
+                {record.description || config.description}
               </MyText>
             </Flex>
           </Flex>
@@ -63,6 +63,15 @@ export default function AlertsTable({ alerts, canAct, onDismiss, onWarn, onEscal
       render: (title) => <MyText style={{ fontSize: 13 }}>{title}</MyText>,
     },
     {
+      title: "Severity",
+      dataIndex: "severity",
+      key: "severity",
+      width: 100,
+      render: (severity) => (
+        <Tag style={{ margin: 0 }}>{severity}</Tag>
+      ),
+    },
+    {
       title: "Time",
       dataIndex: "timestamp",
       key: "timestamp",
@@ -79,8 +88,14 @@ export default function AlertsTable({ alerts, canAct, onDismiss, onWarn, onEscal
       key: "status",
       width: 110,
       render: (status) => {
-        const { status: badgeStatus, label } = ALERT_STATUS_CONFIG[status] ?? ALERT_STATUS_CONFIG.OPEN;
-        return <Badge status={badgeStatus} text={<MyText style={{ fontSize: 12.5 }}>{label}</MyText>} />;
+        const config = ALERT_STATUS_CONFIG[status];
+        // Unmapped/unconfirmed status codes (see STATUS_LABELS TODO in
+        // useAlertsStore.js) fall back to showing the raw token instead of
+        // silently mislabeling as "Open".
+        if (!config) {
+          return <Badge status="default" text={<MyText style={{ fontSize: 12.5 }}>{status}</MyText>} />;
+        }
+        return <Badge status={config.status} text={<MyText style={{ fontSize: 12.5 }}>{config.label}</MyText>} />;
       },
     },
     {
@@ -89,6 +104,19 @@ export default function AlertsTable({ alerts, canAct, onDismiss, onWarn, onEscal
       fixed: "right",
       width: canAct ? 230 : 90,
       render: (_, record) => {
+        // A moderator action was already recorded on this alert elsewhere —
+        // show it read-only rather than offering the buttons again.
+        if (record.actionTaken) {
+          return (
+            <Tooltip title={record.actionNote || undefined}>
+              <Tag style={{ margin: 0 }}>
+                {record.actionTaken}
+                {record.actionAt ? ` · ${dayjs(record.actionAt).fromNow()}` : ""}
+              </Tag>
+            </Tooltip>
+          );
+        }
+
         if (!canAct) {
           return (
             <MyText type="secondary" style={{ fontSize: 12.5 }}>
@@ -148,7 +176,7 @@ export default function AlertsTable({ alerts, canAct, onDismiss, onWarn, onEscal
         columns={columns}
         dataSource={alerts}
         rowKey="id"
-        pagination={false}
+        pagination={pagination ?? false}
         locale={{ emptyText: "No alerts match this filter" }}
       />
     </MyCard>

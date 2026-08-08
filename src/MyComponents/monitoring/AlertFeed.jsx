@@ -70,7 +70,7 @@ export default function AlertFeed({ alerts, canAct, onDismiss, onWarn, onEscalat
                       {config.label}
                     </MyText>
                     <MyText type="secondary" style={{ fontSize: 11.5 }}>
-                      {alert.studentName}
+                      {alert.student}
                     </MyText>
                   </Flex>
                 </Flex>

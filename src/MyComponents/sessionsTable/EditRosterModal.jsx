@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { Select, Avatar, Flex, Button, message, theme } from "antd";
 import { TeamOutlined, CloseOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
 import MyModal from "../myModal/MyModal";
 import MyText from "../myText/MyText";
 import MyButtonPrimary from "../myButton/MyButtonPrimary";
 import MyButtonSecondary from "../myButton/MyButtonSecondary";
-import useAuthStore from "../../store/useAuthStore";
+import useSessionStore from "../../store/useSessionStore";
 import useStudentStore from "../../store/useStudentStore";
+
+const API_DATETIME_FORMAT = "YYYY-MM-DDTHH:mm:ss";
 
 const getInitials = (name) =>
   name
@@ -18,12 +21,14 @@ const getInitials = (name) =>
 
 export default function EditRosterModal({ open, session, onClose, onSave }) {
   const { token } = theme.useToken();
-  const users = useAuthStore((state) => state.users);
   const students = useStudentStore((state) => state.students);
+  const fetchAvailableProctors = useSessionStore((state) => state.fetchAvailableProctors);
 
   const [proctor, setProctor] = useState(null);
   const [roster, setRoster] = useState([]);
   const [initialRoster, setInitialRoster] = useState([]);
+  const [proctorOptions, setProctorOptions] = useState([]);
+  const [proctorsLoading, setProctorsLoading] = useState(false);
 
   const handleAfterOpenChange = (isOpen) => {
     if (isOpen && session) {
@@ -37,15 +42,25 @@ export default function EditRosterModal({ open, session, onClose, onSave }) {
 
       setRoster(initial);
       setInitialRoster(initial);
+
+      if (session.scheduledStartUTC && session.duration) {
+        const start = dayjs(session.scheduledStartUTC);
+        const startTime = start.format(API_DATETIME_FORMAT);
+        const endTime = start.add(session.duration, "minute").format(API_DATETIME_FORMAT);
+
+        setProctorsLoading(true);
+        fetchAvailableProctors(startTime, endTime).then((proctors) => {
+          setProctorOptions(
+            proctors.map((p) => ({ value: p.id, label: p.fullName })),
+          );
+          setProctorsLoading(false);
+        });
+      } else {
+        setProctorOptions([]);
+      }
     }
   };
 
-  const proctorOptions = users
-    .filter((u) => !u.disabled && u.role === "PROCTOR")
-    .map((u) => ({
-      value: u.id,
-      label: u.name,
-    }));
   const rosterIds = new Set(roster.map((s) => s.id));
   const addStudentOptions = students
     .filter((s) => !rosterIds.has(s.id))
@@ -116,6 +131,12 @@ export default function EditRosterModal({ open, session, onClose, onSave }) {
         allowClear
         style={{ width: "100%", marginBottom: 20 }}
         placeholder="Select a proctor"
+        loading={proctorsLoading}
+        notFoundContent={
+          proctorsLoading
+            ? "Loading proctors..."
+            : "No proctors available for this time slot"
+        }
         options={proctorOptions}
         value={proctor}
         onChange={setProctor}

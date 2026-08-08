@@ -159,6 +159,12 @@ export default function SessionsTable({ sessions }) {
 
   const currentUser = useAuthStore((state) => state.user);
 
+  const loading = useSessionStore((state) => state.loading);
+  const page = useSessionStore((state) => state.page);
+  const pageSize = useSessionStore((state) => state.pageSize);
+  const total = useSessionStore((state) => state.total);
+  const fetchSessions = useSessionStore((state) => state.fetchSessions);
+
   const deleteSessionApi = useSessionStore((state) => state.deleteSessionApi);
   const publishSessionApi = useSessionStore((state) => state.publishSessionApi);
   const emergencyOverrideSession = useSessionStore(
@@ -346,7 +352,14 @@ export default function SessionsTable({ sessions }) {
         columns={columns}
         dataSource={sessions}
         rowKey="id"
-        pagination={false}
+        loading={loading}
+        pagination={{
+          current: page,
+          pageSize,
+          total,
+          onChange: (newPage, newPageSize) => fetchSessions(newPage, newPageSize),
+          showSizeChanger: true,
+        }}
         locale={{ emptyText: "No sessions in this filter" }}
       />
 

@@ -158,8 +158,11 @@ export const INITIAL_SESSIONS = [
   },
 ];
 
-const useSessionStore = create((set) => ({
+const useSessionStore = create((set, get) => ({
   sessions: [],
+  page: 1,
+  pageSize: 100,
+  total: 0,
   weeklyStatistics: [],
   weeklyStatisticsLoading: false,
   loading: false,
@@ -189,12 +192,12 @@ const useSessionStore = create((set) => ({
     }
   },
 
-  fetchSessions: async () => {
+  fetchSessions: async (page = get().page, pageSize = get().pageSize) => {
     set({ loading: true });
     try {
       const accessToken = useAuthStore.getState().accessToken;
 
-      const res = await apiFetch("/api/exam-sessions?pageSize=100&page=1", {
+      const res = await apiFetch(`/api/exam-sessions?pageSize=${pageSize}&page=${page}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
@@ -204,7 +207,7 @@ const useSessionStore = create((set) => ({
         throw new Error(json.message || "Failed to fetch sessions");
       }
 
-      const sessions = json.data.map((s) => ({
+      const sessions = json.data.items.map((s) => ({
         id: String(s.id),
         sessionTitle: s.title,
         courseCode: s.courseTag,
@@ -220,9 +223,10 @@ const useSessionStore = create((set) => ({
         closedAt: s.closedAt ?? null,
         createdAt: s.createdAt ?? null,
         createdBy: s.createdBy ?? null,
-        // حقول ناقصة من الباك — رح تتضاف لاحقاً
-        enrolledStudents: s.enrolledStudents ?? 0,
-        proctor: s.assignedProctor ?? null,
+        updatedAt: s.updatedAt ?? null,
+        updatedBy: s.updatedBy ?? null,
+        enrolledStudents: s.studentCount ?? 0,
+        proctor: s.proctorName ?? null,
         published: s.status !== "DRAFT",
         archived: s.status === "ARCHIVED",
         // monitoring defaults
@@ -232,10 +236,41 @@ const useSessionStore = create((set) => ({
         optionShuffle: s.optionShuffle ?? true,
       }));
 
-      set({ sessions, loading: false });
+      set({
+        sessions,
+        page: json.data.page,
+        pageSize: json.data.pageSize,
+        total: json.data.totalCount,
+        loading: false,
+      });
     } catch (error) {
       console.error("fetchSessions error:", error);
       set({ loading: false });
+    }
+  },
+
+  // Time-range-aware lookup used by the proctor pickers in NewSessionModal /
+  // EditRosterModal — only returns proctors actually free during the window,
+  // so no client-side role filtering of the full admins list is needed.
+  fetchAvailableProctors: async (startTime, endTime) => {
+    try {
+      const accessToken =
+        useAuthStore.getState().accessToken ??
+        sessionStorage.getItem("accessToken");
+
+      const res = await apiFetch(
+        `/api/exam-sessions/available-proctors?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } },
+      );
+
+      const json = await res.json();
+
+      if (!res.ok || json.statusCode !== 200) return [];
+
+      return json.data; // [{ id, fullName, email }]
+    } catch (err) {
+      console.error("fetchAvailableProctors error:", err);
+      return [];
     }
   },
 

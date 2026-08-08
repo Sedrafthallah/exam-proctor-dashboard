@@ -326,10 +326,34 @@ const useQuestionBankStore = create((set, get) => ({
     return bank;
   },
 
-  deleteBank: (code) =>
-    set((state) => ({
-      questionBanks: state.questionBanks.filter((b) => b.code !== code),
-    })),
+  deleteQuestionBankApi: async (id) => {
+    const accessToken =
+      useAuthStore.getState().accessToken ?? sessionStorage.getItem("accessToken");
+
+    try {
+      const res = await apiFetch(`/api/question-banks/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || json.statusCode !== 200) {
+        message.error(json.message || "Failed to delete question bank.");
+        return false;
+      }
+
+      set((state) => ({
+        questionBanks: state.questionBanks.filter((b) => b.id !== id),
+      }));
+
+      message.success("Question bank deleted.");
+      return true;
+    } catch {
+      message.error("Failed to delete question bank.");
+      return false;
+    }
+  },
 }));
 
 export default useQuestionBankStore;

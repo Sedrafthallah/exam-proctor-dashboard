@@ -35,6 +35,7 @@ function PermissionCell({ active, token }) {
 
 export default function PermissionMatrix({
   admins,
+  pagination,
   onToggleStatus,
   onDeleteAdmin,
   onEditAdmin,
@@ -209,7 +210,7 @@ export default function PermissionMatrix({
         columns={columns}
         dataSource={admins}
         rowKey="id"
-        pagination={false}
+        pagination={pagination ?? false}
         onRow={(admin) => ({
           style: admin.disabled ? { opacity: 0.6 } : undefined,
         })}

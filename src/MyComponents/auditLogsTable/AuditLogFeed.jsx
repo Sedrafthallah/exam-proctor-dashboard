@@ -1,4 +1,4 @@
-import { theme, Flex } from "antd";
+import { theme, Flex, Pagination, Spin } from "antd";
 import {
   SafetyCertificateFilled,
   UploadOutlined,
@@ -75,7 +75,7 @@ function ActionIcon({ type, token }) {
   );
 }
 
-export default function AuditLogFeed({ logs }) {
+export default function AuditLogFeed({ logs, loading, pagination }) {
   const { token } = theme.useToken();
 
   return (
@@ -109,40 +109,61 @@ export default function AuditLogFeed({ logs }) {
         </Flex>
       </Flex>
 
-      <Flex vertical style={{ padding: "8px 12px" }}>
-        {logs.map((log) => (
-          <Flex
-            key={log.id}
-            align="center"
-            gap={12}
-            style={{
-              padding: "12px 8px",
-              borderBottom: `1px solid ${token.colorBorderSecondary}`,
-            }}
-          >
-            <ActionIcon type={log.type} token={token} />
+      <Spin spinning={!!loading}>
+        <Flex vertical style={{ padding: "8px 12px", minHeight: 80 }}>
+          {logs.map((log) => (
+            <Flex
+              key={log.id}
+              align="center"
+              gap={12}
+              style={{
+                padding: "12px 8px",
+                borderBottom: `1px solid ${token.colorBorderSecondary}`,
+              }}
+            >
+              <ActionIcon type={log.type} token={token} />
 
-            <Flex vertical gap={0} flex={1} style={{ minWidth: 0 }}>
-              <MyText style={{ fontSize: 13.5 }}>
-                <MyText strong style={{ fontSize: 13.5 }}>
-                  {log.actor}
-                </MyText>{" "}
-                {log.action}
-              </MyText>
-              <MyText type="secondary" style={{ fontSize: 12 }}>
-                {log.target}
+              <Flex vertical gap={0} flex={1} style={{ minWidth: 0 }}>
+                <MyText style={{ fontSize: 13.5 }}>
+                  <MyText strong style={{ fontSize: 13.5 }}>
+                    {log.actor}
+                  </MyText>{" "}
+                  {log.action}
+                </MyText>
+                <MyText type="secondary" style={{ fontSize: 12 }}>
+                  {log.target}
+                </MyText>
+              </Flex>
+
+              <MyText
+                type="secondary"
+                style={{ fontSize: 12, whiteSpace: "nowrap" }}
+              >
+                {formatRelativeTime(log.timestamp)}
               </MyText>
             </Flex>
+          ))}
+        </Flex>
+      </Spin>
 
-            <MyText
-              type="secondary"
-              style={{ fontSize: 12, whiteSpace: "nowrap" }}
-            >
-              {formatRelativeTime(log.timestamp)}
-            </MyText>
-          </Flex>
-        ))}
-      </Flex>
+      {pagination && (
+        <Flex
+          justify="end"
+          style={{
+            padding: "12px 20px",
+            borderTop: `1px solid ${token.colorBorderSecondary}`,
+          }}
+        >
+          <Pagination
+            current={pagination.current}
+            pageSize={pagination.pageSize}
+            total={pagination.total}
+            onChange={pagination.onChange}
+            showSizeChanger={pagination.showSizeChanger}
+            size="small"
+          />
+        </Flex>
+      )}
     </MyCard>
   );
 }

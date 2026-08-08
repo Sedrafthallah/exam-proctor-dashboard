@@ -120,11 +120,12 @@ const useStudentStore = create((set, get) => ({
     }
   },
 
-  // POST /api/students/import-csv — multipart/form-data with a "file" field.
-  // No frontend validation or parsing — the backend handles all of it and
-  // returns { totalRecords, successfulImports, failedImports, results[] };
-  // the roster is re-fetched after.
-  importStudentsCsv: async (file) => {
+  // POST /api/students/import — multipart/form-data with a "file" field,
+  // a ZIP containing students.csv plus one {university_number}.jpg per
+  // student. No frontend validation or parsing — the backend handles all
+  // of it and returns { totalRecords, successfulImports, failedImports,
+  // results[] }; the roster is re-fetched after.
+  importStudents: async (file) => {
     set({ importing: true });
     try {
       const accessToken =
@@ -132,9 +133,9 @@ const useStudentStore = create((set, get) => ({
         sessionStorage.getItem("accessToken");
 
       const formData = new FormData();
-      formData.append("csvFile", file);
+      formData.append("file", file);
 
-      const res = await apiFetch("/api/students/import-csv", {
+      const res = await apiFetch("/api/students/import", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -168,7 +169,7 @@ const useStudentStore = create((set, get) => ({
           .map((r) => r.message),
       };
     } catch (err) {
-      console.error("importStudentsCsv error:", err);
+      console.error("importStudents error:", err);
       set({ importing: false });
       return {
         success: false,

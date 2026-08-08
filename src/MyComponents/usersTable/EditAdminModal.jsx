@@ -19,7 +19,6 @@ export default function EditAdminModal({ open, admin, onClose, onSave }) {
       form.setFieldsValue({
         name: admin.name,
         email: admin.email,
-        password: "",
         permissions: admin.permissions || [],
       });
     }
@@ -36,7 +35,6 @@ export default function EditAdminModal({ open, admin, onClose, onSave }) {
     const result = await onSave(admin.id, {
       name: values.name,
       email: values.email,
-      ...(values.password ? { password: values.password } : {}),
       permissions,
     });
 

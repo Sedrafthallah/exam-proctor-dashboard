@@ -64,6 +64,9 @@ function StatCard({ icon, color, bg, value, label, token }) {
 export default function Alerts() {
   const { token } = theme.useToken();
   const alerts = useAlertsStore((state) => state.alerts);
+  const page = useAlertsStore((state) => state.page);
+  const pageSize = useAlertsStore((state) => state.pageSize);
+  const total = useAlertsStore((state) => state.total);
   const updateAlertStatus = useAlertsStore((state) => state.updateAlertStatus);
   const fetchAlerts = useAlertsStore((state) => state.fetchAlerts);
   const fetchOpenAlerts = useAlertsStore((state) => state.fetchOpenAlerts);
@@ -75,25 +78,32 @@ export default function Alerts() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [typeFilter, setTypeFilter] = useState("ALL");
 
-  useEffect(() => {
+  // Type filter takes priority over status filter for the server-side fetch
+  // (the two only ever combine on the client via filteredAlerts below) —
+  // kept as a single function so pagination's onChange can re-request
+  // whichever endpoint is currently active with a new page.
+  const refetchAlerts = (newPage, newPageSize) => {
     const status = statusFilter.toUpperCase();
-    if (status === "OPEN") fetchOpenAlerts();
-    else if (status === "RESOLVED") fetchResolvedAlerts();
-    else if (status === "ESCALATED") fetchEscalatedAlerts();
-    else fetchAlerts(); // ALL
-  }, [statusFilter]);
+
+    if (typeFilter && typeFilter !== "ALL") {
+      fetchAlertsByType(typeFilter, newPage, newPageSize);
+    } else if (status === "OPEN") {
+      fetchOpenAlerts(newPage, newPageSize);
+    } else if (status === "RESOLVED") {
+      fetchResolvedAlerts(newPage, newPageSize);
+    } else if (status === "ESCALATED") {
+      fetchEscalatedAlerts(newPage, newPageSize);
+    } else {
+      fetchAlerts(newPage, newPageSize); // ALL
+    }
+  };
 
   useEffect(() => {
-    if (typeFilter && typeFilter !== "ALL") {
-      fetchAlertsByType(typeFilter);
-    } else {
-      fetchAlerts();
-    }
-  }, [typeFilter]);
+    refetchAlerts(1, 7);
+  }, [statusFilter, typeFilter]);
 
   const canAct = hasPermission("TakeProctorAction");
 
-  const total = alerts.length;
   const critical = alerts.filter((a) => CRITICAL_TYPES.includes(a.type)).length;
   const warnings = alerts.filter((a) => WARNING_TYPES.includes(a.type)).length;
   const resolved = alerts.filter((a) => a.status === "RESOLVED").length;
@@ -106,16 +116,16 @@ export default function Alerts() {
 
   const handleDismiss = (alert) => {
     updateAlertStatus(alert.id, "RESOLVED");
-    message.success(`Alert dismissed for ${alert.studentName}.`);
+    message.success(`Alert dismissed for ${alert.student}.`);
   };
 
   const handleWarn = (alert) => {
-    message.success(`Warning sent to ${alert.studentName}.`);
+    message.success(`Warning sent to ${alert.student}.`);
   };
 
   const handleEscalate = (alert) => {
     updateAlertStatus(alert.id, "ESCALATED");
-    message.success(`Alert escalated for ${alert.studentName}.`);
+    message.success(`Alert escalated for ${alert.student}.`);
   };
 
   return (
@@ -215,6 +225,13 @@ export default function Alerts() {
 
       <AlertsTable
         alerts={filteredAlerts}
+        pagination={{
+          current: page,
+          pageSize,
+          total,
+          onChange: refetchAlerts,
+          showSizeChanger: true,
+        }}
         canAct={canAct}
         onDismiss={handleDismiss}
         onWarn={handleWarn}

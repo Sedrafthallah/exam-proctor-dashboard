@@ -19,6 +19,9 @@ export default function Users() {
   const [editingAdminId, setEditingAdminId] = useState(null);
 
   const admins = useAuthStore((state) => state.users);
+  const page = useAuthStore((state) => state.page);
+  const pageSize = useAuthStore((state) => state.pageSize);
+  const total = useAuthStore((state) => state.total);
   const fetchAdmins = useAuthStore((state) => state.fetchAdmins);
   const updateAdminApi = useAuthStore((state) => state.updateAdminApi);
   const deactivateAdminApi = useAuthStore((state) => state.deactivateAdminApi);

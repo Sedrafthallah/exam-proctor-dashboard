@@ -80,6 +80,9 @@ const useAuthStore = create((set, get) => ({
   accessToken: savedToken ?? null,
   refreshToken: savedRefreshToken ?? null,
   users: INITIAL_USERS,
+  page: 1,
+  pageSize: 10,
+  total: 0,
   loading: false,
   error: null,
 
@@ -196,13 +199,13 @@ const useAuthStore = create((set, get) => ({
     set({ accessToken, refreshToken });
   },
 
-  fetchAdmins: async () => {
+  fetchAdmins: async (page = 1, pageSize = 10) => {
     try {
       const accessToken =
         get().accessToken ?? sessionStorage.getItem("accessToken");
 
       const res = await apiFetch(
-        "/api/admins/with-permissions?Page=1&PageSize=100",
+        `/api/admins/with-permissions?Page=${page}&PageSize=${pageSize}`,
         {
           headers: { Authorization: `Bearer ${accessToken}` },
         },
@@ -212,7 +215,7 @@ const useAuthStore = create((set, get) => ({
 
       if (!res.ok || json.statusCode !== 200) return;
 
-      const admins = json.data.map((a) => {
+      const admins = json.data.items.map((a) => {
         // Confirmed API shape: array of granted permission-name strings.
         // Fallback only applies if the backend returns an empty array here.
         const permissions =
@@ -221,7 +224,7 @@ const useAuthStore = create((set, get) => ({
             : fallbackPermissionsForRole(a.role ?? "Admin"); // ← last-resort fallback
 
         return {
-          id: String(a.userId ?? a.userName),
+          id: String(a.id),
           name: a.fullName ?? a.userName,
           email: a.email ?? "—",
           role: a.role === "Proctor" ? "PROCTOR" : "ADMIN",
@@ -231,7 +234,12 @@ const useAuthStore = create((set, get) => ({
         };
       });
 
-      set({ users: admins });
+      set({
+        users: admins,
+        page: json.data.page,
+        pageSize: json.data.pageSize,
+        total: json.data.totalCount,
+      });
     } catch (err) {
       console.error("fetchAdmins error:", err);
     }

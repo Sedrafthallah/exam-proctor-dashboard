@@ -70,16 +70,16 @@ export default function Monitoring() {
 
   const handleDismiss = (alert) => {
     updateAlertStatus(alert.id, "RESOLVED");
-    message.success(`Alert dismissed for ${alert.studentName}.`);
+    message.success(`Alert dismissed for ${alert.student}.`);
   };
 
   const handleWarn = (alert) => {
-    message.success(`Warning sent to ${alert.studentName}.`);
+    message.success(`Warning sent to ${alert.student}.`);
   };
 
   const handleEscalate = (alert) => {
     updateAlertStatus(alert.id, "ESCALATED");
-    message.success(`Alert escalated for ${alert.studentName}.`);
+    message.success(`Alert escalated for ${alert.student}.`);
   };
 
   return (

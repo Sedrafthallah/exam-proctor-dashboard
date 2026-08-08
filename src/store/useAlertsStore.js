@@ -11,31 +11,71 @@ const ALERT_TYPE_MAP = {
   ConnectivityLost: "CONNECTIVITY_LOST",
 };
 
+// Backend now sends `status` as a numeric-string code instead of the
+// previously-guessed `isDelivered` boolean. Only "0" has been observed in
+// practice so far (an alert with no actionTaken yet), so it's mapped onto
+// the OPEN/RESOLVED/ESCALATED vocabulary the rest of the app already
+// filters/gates action buttons on (see AlertsTable, AlertFeed, Alerts.jsx,
+// AdminWelcome.jsx, Dashboard.jsx). TODO: confirm the remaining status codes
+// with the backend once alerts in other states are observed. Unmapped codes
+// deliberately fail closed to a synthetic, non-matching token — this hides
+// action buttons rather than guessing they mean "open".
+const STATUS_LABELS = {
+  "0": "OPEN",
+};
+
+// TODO: confirm the full severity code mapping with the backend once other
+// values are observed — only "0" has been seen so far.
+const SEVERITY_LABELS = {
+  "0": "Low",
+};
+
 const mapAlert = (a) => ({
   id: String(a.id),
   type: ALERT_TYPE_MAP[a.alertType] ?? a.alertType.toUpperCase(),
-  status: a.isDelivered ? "RESOLVED" : "OPEN",
-  student: a.studentFullName || "Unknown",
-  session: a.eventName || "—",
+  description: a.alertDescription ?? "",
+  status: STATUS_LABELS[a.status] ?? `UNKNOWN_STATUS_${a.status}`,
+  statusCode: a.status, // raw backend code, kept in case exact-match filtering needs it later
+  severity: SEVERITY_LABELS[a.severity] ?? `Severity ${a.severity}`,
+  severityCode: a.severity,
+  student: a.studentName || "Unknown",
+  studentNumber: a.studentNumber ?? null,
+  studentId: a.studentId ?? null,
+  session: a.sessionName || "—",
+  sessionId: a.sessionId ?? null,
   timestamp: a.triggeredAt,
+  actionTaken: a.actionTaken ?? null,
+  actionNote: a.actionNote ?? null,
+  actionAt: a.actionAt ?? null,
 });
 
-const fetchAlertsWithParams = async (params = "") => {
+const fetchAlertsWithParams = async (params = "", page = 1, pageSize = 7) => {
   try {
     const accessToken =
       useAuthStore.getState().accessToken ??
       sessionStorage.getItem("accessToken");
 
-    const res = await apiFetch(`/api/alerts${params}`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
+    const separator = params ? "&" : "?";
+    const res = await apiFetch(
+      `/api/alerts${params}${separator}Page=${page}&PageSize=${pageSize}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
 
     const json = await res.json();
-    if (!res.ok || json.statusCode !== 200) return [];
-    return json.data.map(mapAlert);
+
+    if (!res.ok || json.statusCode !== 200) {
+      return { alerts: [], total: 0, page, pageSize };
+    }
+
+    return {
+      alerts: json.data.items.map(mapAlert),
+      total: json.data.totalCount,
+      page: json.data.page,
+      pageSize: json.data.pageSize,
+    };
   } catch (err) {
     console.error("fetchAlerts error:", err);
-    return [];
+    return { alerts: [], total: 0, page, pageSize };
   }
 };
 
@@ -44,35 +84,42 @@ const fetchAlertsWithParams = async (params = "") => {
 const useAlertsStore = create((set) => ({
   alerts: [],
   loading: false,
+  page: 1,
+  pageSize: 7,
+  total: 0,
 
-  fetchAlerts: async () => {
+  fetchAlerts: async (page = 1, pageSize = 7) => {
     set({ loading: true });
-    const alerts = await fetchAlertsWithParams("");
-    set({ alerts, loading: false });
+    const { alerts, total, page: p, pageSize: ps } = await fetchAlertsWithParams("", page, pageSize);
+    set({ alerts, total, page: p, pageSize: ps, loading: false });
   },
 
-  fetchOpenAlerts: async () => {
+  fetchOpenAlerts: async (page = 1, pageSize = 7) => {
     set({ loading: true });
-    const alerts = await fetchAlertsWithParams("?status=Open");
-    set({ alerts, loading: false });
+    const { alerts, total, page: p, pageSize: ps } = await fetchAlertsWithParams("?status=Open", page, pageSize);
+    set({ alerts, total, page: p, pageSize: ps, loading: false });
   },
 
-  fetchResolvedAlerts: async () => {
+  fetchResolvedAlerts: async (page = 1, pageSize = 7) => {
     set({ loading: true });
-    const alerts = await fetchAlertsWithParams("?status=Resolved");
-    set({ alerts, loading: false });
+    const { alerts, total, page: p, pageSize: ps } = await fetchAlertsWithParams("?status=Resolved", page, pageSize);
+    set({ alerts, total, page: p, pageSize: ps, loading: false });
   },
 
-  fetchEscalatedAlerts: async () => {
+  fetchEscalatedAlerts: async (page = 1, pageSize = 7) => {
     set({ loading: true });
-    const alerts = await fetchAlertsWithParams("?status=Escalated");
-    set({ alerts, loading: false });
+    const { alerts, total, page: p, pageSize: ps } = await fetchAlertsWithParams("?status=Escalated", page, pageSize);
+    set({ alerts, total, page: p, pageSize: ps, loading: false });
   },
 
-  fetchAlertsByType: async (type) => {
+  fetchAlertsByType: async (type, page = 1, pageSize = 7) => {
     set({ loading: true });
-    const alerts = await fetchAlertsWithParams(`?alertType=${encodeURIComponent(type)}`);
-    set({ alerts, loading: false });
+    const { alerts, total, page: p, pageSize: ps } = await fetchAlertsWithParams(
+      `?alertType=${encodeURIComponent(type)}`,
+      page,
+      pageSize,
+    );
+    set({ alerts, total, page: p, pageSize: ps, loading: false });
   },
 
   updateAlertStatus: (id, status) =>

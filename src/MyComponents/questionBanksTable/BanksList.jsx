@@ -1,4 +1,4 @@
-import { theme, Tag, Button, Popconfirm, message } from "antd";
+import { theme, Tag, Button, Popconfirm } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import MyCard from "../myCard/MyCard";
 import MyText from "../myText/MyText";
@@ -8,11 +8,10 @@ import { getBankStatus, getStatusConfig } from "../../utils/questionBankUtils";
 
 export default function BanksList({ questionBanks, onSelectBank, canAuthor }) {
   const { token } = theme.useToken();
-  const deleteBank = useQuestionBankStore((state) => state.deleteBank);
+  const deleteQuestionBankApi = useQuestionBankStore((state) => state.deleteQuestionBankApi);
 
-  const handleDelete = (bank) => {
-    deleteBank(bank.code);
-    message.success(`"${bank.code}" was deleted.`);
+  const handleDelete = async (bank) => {
+    await deleteQuestionBankApi(bank.id);
   };
 
   const columns = [

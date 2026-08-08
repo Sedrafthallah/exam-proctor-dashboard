@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Input, InputNumber, DatePicker, Select, Switch, Segmented, Upload, Flex, message } from "antd";
+import { Form, Input, InputNumber, DatePicker, Select, Switch, Segmented, Upload, Flex, message } from "antd";
 import { PlusCircleOutlined, UploadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import MyModal from "../myModal/MyModal";
@@ -9,19 +9,25 @@ import MyCol from "../myCol/MyCol";
 import MyButtonPrimary from "../myButton/MyButtonPrimary";
 import MyButtonSecondary from "../myButton/MyButtonSecondary";
 import MyText from "../myText/MyText";
-import useAuthStore from "../../store/useAuthStore";
+import useSessionStore from "../../store/useSessionStore";
 import useStudentStore from "../../store/useStudentStore";
 import useQuestionBankStore from "../../store/useQuestionBankStore";
 import QuestionBankField from "./QuestionBankField";
 
 const FACE_ALERT_OPTIONS = ["Low", "Medium", "High"];
+const API_DATETIME_FORMAT = "YYYY-MM-DDTHH:mm:ss";
 
 export default function NewSessionModal({ open, onClose, onCreate }) {
   const [form] = MyForm.useForm();
   const [enrollMode, setEnrollMode] = useState("select");
-  const admins = useAuthStore((state) => state.users);
+  const [availableProctors, setAvailableProctors] = useState([]);
+  const [proctorsLoading, setProctorsLoading] = useState(false);
   const students = useStudentStore((state) => state.students);
   const fetchQuestionBanks = useQuestionBankStore((state) => state.fetchQuestionBanks);
+  const fetchAvailableProctors = useSessionStore((state) => state.fetchAvailableProctors);
+
+  const scheduledStartUTC = Form.useWatch("scheduledStartUTC", form);
+  const duration = Form.useWatch("duration", form);
 
   useEffect(() => {
     if (open) {
@@ -29,9 +35,33 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
     }
   }, [open]);
 
-  const proctorOptions = admins
-    .filter((admin) => !admin.disabled && admin.role === "PROCTOR")
-    .map((admin) => ({ value: admin.id, label: admin.name }));
+  useEffect(() => {
+    if (!open || !scheduledStartUTC || !duration) {
+      return;
+    }
+
+    const startTime = scheduledStartUTC.format(API_DATETIME_FORMAT);
+    const endTime = scheduledStartUTC.add(duration, "minute").format(API_DATETIME_FORMAT);
+
+    let cancelled = false;
+
+    (async () => {
+      setProctorsLoading(true);
+      const proctors = await fetchAvailableProctors(startTime, endTime);
+      if (cancelled) return;
+      setAvailableProctors(proctors);
+      setProctorsLoading(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, scheduledStartUTC, duration, fetchAvailableProctors]);
+
+  const proctorOptions =
+    scheduledStartUTC && duration
+      ? availableProctors.map((p) => ({ value: p.id, label: p.fullName }))
+      : [];
 
   const studentOptions = students.map((student) => ({
     value: student.id,
@@ -208,7 +238,17 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
             <MyForm.Item name="proctor" label="Assigned proctor">
               <Select
                 allowClear
-                placeholder="Select a proctor"
+                loading={proctorsLoading}
+                placeholder={
+                  !scheduledStartUTC || !duration
+                    ? "Pick a start time and duration first"
+                    : "Select a proctor"
+                }
+                notFoundContent={
+                  proctorsLoading
+                    ? "Loading proctors..."
+                    : "No proctors available for this time slot"
+                }
                 options={proctorOptions}
               />
             </MyForm.Item>

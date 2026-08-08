@@ -99,9 +99,9 @@ export default function LiveAlerts({ alerts = [], title = "Live Alerts" }) {
                       {config.label}
                     </MyText>
                     <MyText type="secondary" style={{ fontSize: 11 }}>
-                      {alert.studentName}{" "}
+                      {alert.student}{" "}
                       <MyText type="secondary" style={{ fontSize: 11 }}>
-                        • {alert.studentId}
+                        • {alert.studentNumber ?? alert.studentId}
                       </MyText>
                     </MyText>
                   </Flex>

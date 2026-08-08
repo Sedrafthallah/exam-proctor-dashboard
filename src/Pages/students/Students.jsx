@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { theme, Flex, message, Upload } from "antd";
-import { UploadOutlined, TeamOutlined } from "@ant-design/icons";
+import { theme, Flex, message, Upload, Tooltip } from "antd";
+import { UploadOutlined, TeamOutlined, InfoCircleOutlined } from "@ant-design/icons";
 
 import useStudentStore from "../../store/useStudentStore";
 
@@ -10,21 +10,24 @@ import MyButtonPrimary from "../../MyComponents/myButton/MyButtonPrimary";
 
 import StudentsRoster from "../../MyComponents/studentsTable/StudentsRoster";
 
+const IMPORT_ZIP_HELP =
+  "Upload a .zip file containing a students.csv (columns: university_number, first_name, middle_name, last_name, email, phone_number) and one photo per student named {university_number}.jpg at the root of the zip.";
+
 export default function Students() {
   const { token } = theme.useToken();
   const students = useStudentStore((state) => state.students);
   const loading = useStudentStore((state) => state.loading);
   const importing = useStudentStore((state) => state.importing);
   const fetchStudents = useStudentStore((state) => state.fetchStudents);
-  const importStudentsCsv = useStudentStore((state) => state.importStudentsCsv);
+  const importStudents = useStudentStore((state) => state.importStudents);
 
   useEffect(() => {
     fetchStudents();
   }, [fetchStudents]);
 
-  const handleImportCsv = async (file) => {
+  const handleImportZip = async (file) => {
     try {
-      const result = await importStudentsCsv(file);
+      const result = await importStudents(file);
 
       if (!result.success) {
         message.error(result.error || "Import failed.");
@@ -44,8 +47,8 @@ export default function Students() {
         message.warning(`${result.errors.length} row(s) had errors.`);
       }
     } catch (err) {
-      console.error("handleImportCsv error:", err);
-      message.error("Couldn't import that CSV file.");
+      console.error("handleImportZip error:", err);
+      message.error("Couldn't import that ZIP file.");
     }
 
     return false; // prevent antd's default auto-upload
@@ -79,12 +82,15 @@ export default function Students() {
           </Flex>
         </Flex>
 
-        <Flex gap={10}>
-          <Upload accept=".csv" showUploadList={false} beforeUpload={handleImportCsv}>
+        <Flex align="center" gap={8}>
+          <Upload accept=".zip" showUploadList={false} beforeUpload={handleImportZip}>
             <MyButtonPrimary icon={<UploadOutlined />} loading={importing}>
-              Import Roster CSV
+              Import Students (ZIP)
             </MyButtonPrimary>
           </Upload>
+          <Tooltip title={IMPORT_ZIP_HELP}>
+            <InfoCircleOutlined style={{ color: token.colorTextSecondary, fontSize: 16 }} />
+          </Tooltip>
         </Flex>
       </Flex>
 

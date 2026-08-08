@@ -18,18 +18,21 @@ const ACTION_LABELS = {
   LockedQuestionBank:   "locked question bank",
 };
 
-const useAuditLogStore = create((set) => ({
+const useAuditLogStore = create((set, get) => ({
   logs: [],
   loading: false,
+  page: 1,
+  pageSize: 50,
+  total: 0,
 
-  fetchAuditLogs: async () => {
+  fetchAuditLogs: async (page = get().page, pageSize = get().pageSize) => {
     set({ loading: true });
     try {
       const accessToken =
         useAuthStore.getState().accessToken ??
         sessionStorage.getItem("accessToken");
 
-      const res = await apiFetch("/api/audits?Page=1&PageSize=50", {
+      const res = await apiFetch(`/api/audits?Page=${page}&PageSize=${pageSize}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
@@ -39,7 +42,7 @@ const useAuditLogStore = create((set) => ({
         throw new Error(json.message || "Failed to fetch audit logs");
       }
 
-      const logs = json.data.map((a) => ({
+      const logs = json.data.items.map((a) => ({
         id: String(a.id),
         actor: a.actorName || a.actorType || "System",
         action: ACTION_LABELS[a.action] ?? a.action,
@@ -50,7 +53,13 @@ const useAuditLogStore = create((set) => ({
         examSessionId: a.examSessionId,
       }));
 
-      set({ logs, loading: false });
+      set({
+        logs,
+        page: json.data.page,
+        pageSize: json.data.pageSize,
+        total: json.data.totalCount,
+        loading: false,
+      });
     } catch (err) {
       console.error("fetchAuditLogs error:", err);
       set({ loading: false });
