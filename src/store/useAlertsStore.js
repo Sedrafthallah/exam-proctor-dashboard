@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { message } from "antd";
 import { apiFetch } from "../api/apiClient";
 import useAuthStore from "./useAuthStore";
 
@@ -173,6 +174,30 @@ const useAlertsStore = create((set) => ({
     set((state) => ({
       alerts: state.alerts.map((alert) => (alert.id === id ? { ...alert, status } : alert)),
     })),
+
+  dismissAlertApi: async (id) => {
+    try {
+      const accessToken =
+        useAuthStore.getState().accessToken ?? sessionStorage.getItem("accessToken");
+
+      const res = await apiFetch(`/api/alerts/${id}/dismiss`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      const json = await res.json();
+      if (!res.ok || json.statusCode !== 200) {
+        message.error(json.message || "Failed to dismiss alert.");
+        return false;
+      }
+
+      return true;
+    } catch (err) {
+      console.error("dismissAlertApi error:", err);
+      message.error("Network error.");
+      return false;
+    }
+  },
 }));
 
 export default useAlertsStore;

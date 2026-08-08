@@ -61,6 +61,7 @@ export default function Alerts() {
   const total = useAlertsStore((state) => state.total);
   const summary = useAlertsStore((state) => state.summary);
   const updateAlertStatus = useAlertsStore((state) => state.updateAlertStatus);
+  const dismissAlertApi = useAlertsStore((state) => state.dismissAlertApi);
   const fetchAlerts = useAlertsStore((state) => state.fetchAlerts);
   const fetchOpenAlerts = useAlertsStore((state) => state.fetchOpenAlerts);
   const fetchResolvedAlerts = useAlertsStore((state) => state.fetchResolvedAlerts);
@@ -115,9 +116,12 @@ export default function Alerts() {
     return true;
   });
 
-  const handleDismiss = (alert) => {
-    updateAlertStatus(alert.id, "RESOLVED");
-    message.success(`Alert dismissed for ${alert.student}.`);
+  const handleDismiss = async (alert) => {
+    const success = await dismissAlertApi(alert.id);
+    if (success) {
+      message.success(`Alert dismissed for ${alert.student}.`);
+      refetchAlerts(page, pageSize);
+    }
   };
 
   const handleWarn = (alert) => {

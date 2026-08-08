@@ -20,6 +20,7 @@ import MyButtonSecondary from "../myButton/MyButtonSecondary";
 import MyText from "../myText/MyText";
 import useSessionStore from "../../store/useSessionStore";
 import useQuestionBankStore from "../../store/useQuestionBankStore";
+import useSettingsStore from "../../store/useSettingsStore";
 import QuestionBankField from "./QuestionBankField";
 
 const FACE_ALERT_OPTIONS = ["Low", "Medium", "High"];
@@ -36,6 +37,8 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
   const fetchAvailableProctors = useSessionStore(
     (state) => state.fetchAvailableProctors,
   );
+  const settings = useSettingsStore((state) => state.settings);
+  const fetchSettings = useSettingsStore((state) => state.fetchSettings);
 
   const scheduledStartUTC = Form.useWatch("scheduledStartUTC", form);
   const duration = Form.useWatch("duration", form);
@@ -45,6 +48,24 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
       fetchQuestionBanks();
     }
   }, [open]);
+
+  useEffect(() => {
+    if (open) fetchSettings();
+  }, [open, fetchSettings]);
+
+  useEffect(() => {
+    if (open && settings) {
+      form.setFieldsValue({
+        gracePeriod: settings.gracePeriodMinutes,
+        loginWindow: settings.loginWindowMinutes,
+        gazeThreshold: settings.gazeAlertThresholdSec,
+        faceAlertSensitivity: settings.faceSensitivity,
+        questionRandomisation: settings.questionRandomisation,
+        optionShuffle: settings.optionShuffle,
+        audioMonitoring: settings.ambientAudioMonitoring,
+      });
+    }
+  }, [open, settings, form]);
 
   useEffect(() => {
     if (!open || !scheduledStartUTC || !duration) {

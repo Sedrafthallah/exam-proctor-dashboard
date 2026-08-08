@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { Input, Alert, Checkbox, Flex, Form, theme } from "antd";
 import { UserOutlined, LockOutlined, LoginOutlined } from "@ant-design/icons";
 
@@ -12,6 +13,7 @@ import MyTitle from "../../MyComponents/MyTitle/MyTitle";
 import MyText from "../../MyComponents/myText/MyText";
 import MyLink from "../../MyComponents/myLink/MyLink";
 import MyForm from "../../MyComponents/myForm/MyForm";
+import ForgotPasswordModal from "../../MyComponents/auth/ForgotPasswordModal";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -20,6 +22,7 @@ export default function Login() {
   const { token } = theme.useToken();
 
   const [form] = Form.useForm();
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
 
   const onFinish = async ({ email, password }) => {
     const success = await login(email, password);
@@ -188,7 +191,7 @@ export default function Login() {
           >
             <Checkbox style={{ color: textColor }}>Remember me</Checkbox>
             <MyLink
-              href="#forgot"
+              onClick={() => setForgotPasswordOpen(true)}
               style={{ color: token.colorPrimaryHover, fontWeight: 500 }}
             >
               Forgot password?
@@ -229,6 +232,11 @@ export default function Login() {
           </Flex>
         </div>
       </MyCard>
+
+      <ForgotPasswordModal
+        open={forgotPasswordOpen}
+        onClose={() => setForgotPasswordOpen(false)}
+      />
     </Flex>
   );
 }

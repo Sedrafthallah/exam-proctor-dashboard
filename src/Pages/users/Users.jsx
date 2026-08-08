@@ -101,6 +101,13 @@ export default function Users() {
         admins={admins}
         onToggleStatus={handleToggleStatus}
         onDeleteAdmin={handleDeleteAdmin}
+        pagination={{
+          current: page,
+          pageSize,
+          total,
+          onChange: (newPage, newPageSize) => fetchAdmins(newPage, newPageSize),
+          showSizeChanger: true,
+        }}
       />
       <PermissionReference />
 
