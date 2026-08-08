@@ -7,7 +7,8 @@ import MyTitle from "../../MyComponents/MyTitle/MyTitle";
 import MyText from "../../MyComponents/myText/MyText";
 import MyButtonPrimary from "../../MyComponents/myButton/MyButtonPrimary";
 
-import useRolesStore, { PERMISSION_LABELS } from "../../store/useRolesStore";
+import useRolesStore from "../../store/useRolesStore";
+import { PERMISSION_CATEGORIES } from "../../MyComponents/usersTable/adminsData";
 
 export default function Roles() {
   const { token } = theme.useToken();
@@ -76,27 +77,30 @@ export default function Roles() {
         />
       )}
 
-      <Flex vertical gap={12}>
-        {Object.entries(PERMISSION_LABELS).map(([permId, { label, desc }]) => (
-          <MyCard key={permId} style={{ padding: "14px 18px" }}>
-            <Flex align="center" gap={14}>
-              <Checkbox
-                checked={selectedRole?.permissions[permId]}
-                disabled={selectedRole?.isFixed}
-                onChange={(e) =>
-                  updateRolePermission(selectedRole.id, permId, e.target.checked)
-                }
-              />
-              <Flex vertical gap={2}>
-                <MyText strong>
-                  {permId} — {label}
-                </MyText>
-                <MyText type="secondary" style={{ fontSize: 12 }}>
-                  {desc}
-                </MyText>
-              </Flex>
+      <Flex vertical gap={20}>
+        {PERMISSION_CATEGORIES.map((group) => (
+          <Flex key={group.category} vertical gap={10}>
+            <MyText type="secondary" style={{ fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4 }}>
+              {group.category}
+            </MyText>
+
+            <Flex vertical gap={12}>
+              {group.permissions.map(({ key, label }) => (
+                <MyCard key={key} style={{ padding: "14px 18px" }}>
+                  <Flex align="center" gap={14}>
+                    <Checkbox
+                      checked={selectedRole?.permissions.includes(key)}
+                      disabled={selectedRole?.isFixed}
+                      onChange={(e) =>
+                        updateRolePermission(selectedRole.id, key, e.target.checked)
+                      }
+                    />
+                    <MyText strong>{label}</MyText>
+                  </Flex>
+                </MyCard>
+              ))}
             </Flex>
-          </MyCard>
+          </Flex>
         ))}
       </Flex>
     </Flex>

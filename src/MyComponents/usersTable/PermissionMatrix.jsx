@@ -9,7 +9,7 @@ import {
 import MyCard from "../myCard/MyCard";
 import MyText from "../myText/MyText";
 import MyTable from "../mytable/MyTable";
-import { PERMISSIONS, getInitials } from "./adminsData";
+import { PERMISSION_CATEGORIES, getInitials } from "./adminsData";
 
 function PermissionCell({ active, token }) {
   return (
@@ -92,40 +92,47 @@ export default function PermissionMatrix({
         return <Tag color={color}>{label}</Tag>;
       },
     },
-    ...PERMISSIONS.map((perm) => ({
-      title: (
-        <Tooltip title={perm.title}>
-          <span>{perm.code}</span>
-        </Tooltip>
-      ),
-      dataIndex: perm.key,
-      key: perm.key,
-      align: "center",
-      width: 90,
-      render: (_, admin) => {
-        const isSuperAdmin = admin.role === "SUPER_ADMIN";
-        return isSuperAdmin ? (
-          <Tooltip title="Super Admin always has full access">
-            <Flex justify="center">
-              <Flex
-                justify="center"
-                align="center"
-                style={{
-                  width: 26,
-                  height: 26,
-                  borderRadius: 6,
-                  background: token.colorSuccess,
-                  color: "#fff",
-                }}
-              >
-                <LockOutlined style={{ fontSize: 11 }} />
-              </Flex>
-            </Flex>
+    ...PERMISSION_CATEGORIES.map((group) => ({
+      title: group.category,
+      key: group.category,
+      children: group.permissions.map((perm) => ({
+        title: (
+          <Tooltip title={perm.label}>
+            <span>{perm.label}</span>
           </Tooltip>
-        ) : (
-          <PermissionCell active={!!admin.permissions[perm.key]} token={token} />
-        );
-      },
+        ),
+        dataIndex: perm.key,
+        key: perm.key,
+        align: "center",
+        width: 90,
+        render: (_, admin) => {
+          const isSuperAdmin = admin.role === "SUPER_ADMIN";
+          return isSuperAdmin ? (
+            <Tooltip title="Super Admin always has full access">
+              <Flex justify="center">
+                <Flex
+                  justify="center"
+                  align="center"
+                  style={{
+                    width: 26,
+                    height: 26,
+                    borderRadius: 6,
+                    background: token.colorSuccess,
+                    color: "#fff",
+                  }}
+                >
+                  <LockOutlined style={{ fontSize: 11 }} />
+                </Flex>
+              </Flex>
+            </Tooltip>
+          ) : (
+            <PermissionCell
+              active={admin.permissions?.includes(perm.key)}
+              token={token}
+            />
+          );
+        },
+      })),
     })),
     {
       title: "Actions",

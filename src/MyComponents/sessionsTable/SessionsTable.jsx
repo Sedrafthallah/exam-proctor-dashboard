@@ -104,7 +104,7 @@ function SessionActions({
             Extend Time
           </Button>
         )}
-        {!isSuperAdmin && hasPermission("P04") && (
+        {!isSuperAdmin && hasPermission("MonitorExamSession") && (
           <Popconfirm
             title="Terminate this session now?"
             okText="Terminate"
@@ -124,7 +124,7 @@ function SessionActions({
   }
 
   if (status === "CLOSED") {
-    const canExport = isSuperAdmin || hasPermission("P06");
+    const canExport = isSuperAdmin || hasPermission("ExportData");
 
     if (!canExport) {
       return (
@@ -170,8 +170,7 @@ export default function SessionsTable({ sessions }) {
   const terminateSession = useSessionStore((state) => state.terminateSession);
 
   const isSuperAdmin = currentUser?.role === "SUPER_ADMIN";
-  const hasPermission = (perm) =>
-    isSuperAdmin || currentUser?.permissions?.[perm] === true;
+  const hasPermission = useAuthStore((state) => state.hasPermission);
 
   const updateSessionApi = useSessionStore((state) => state.updateSessionApi);
   const editRestoreSessionApi = useSessionStore(
@@ -217,6 +216,8 @@ export default function SessionsTable({ sessions }) {
     if (success) {
       setRosterSession(null);
     }
+
+    return success;
   };
   const columns = [
     {

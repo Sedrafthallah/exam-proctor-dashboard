@@ -22,8 +22,8 @@ export default function EditSessionModal({ open, session, status, onClose, onSav
   const fetchSessionById = useSessionStore((state) => state.fetchSessionById);
   const [detailLoading, setDetailLoading] = useState(false);
   const proctorOptions = admins
-    .filter((admin) => !admin.disabled)
-    .map((admin) => ({ value: admin.name, label: admin.name }));
+    .filter((admin) => !admin.disabled && admin.role === "PROCTOR")
+    .map((admin) => ({ value: admin.id, label: admin.name }));
 
   const canEdit = (field) => isEditable(field, status);
   const isReadOnly = !canEdit("sessionTitle") && !canEdit("proctor");
@@ -41,7 +41,9 @@ export default function EditSessionModal({ open, session, status, onClose, onSav
           gracePeriod: s.gracePeriod,
           loginWindow: s.loginWindow,
           questionBank: s.questionBank,
-          proctor: s.proctor,
+          // s.proctor is a display name (from the sessions API) — resolve it
+          // to the matching admin's id so it matches proctorOptions' values.
+          proctor: admins.find((admin) => admin.name === s.proctor)?.id ?? null,
           gazeThreshold: s.gazeThreshold,
           faceAlertSensitivity: s.faceAlertSensitivity,
           questionRandomisation: s.questionRandomisation,
@@ -67,6 +69,9 @@ export default function EditSessionModal({ open, session, status, onClose, onSav
       ...Object.fromEntries(editableEntries),
       ...(editableEntries.some(([field]) => field === "scheduledStartUTC")
         ? { scheduledStartUTC: values.scheduledStartUTC.toISOString() }
+        : {}),
+      ...(editableEntries.some(([field]) => field === "proctor")
+        ? { proctorId: values.proctor || null }
         : {}),
     });
 

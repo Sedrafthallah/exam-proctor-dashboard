@@ -482,6 +482,15 @@ const useSessionStore = create((set) => ({
           gracePeriodMinutes: fields.gracePeriod,
           loginWindowMinutes: fields.loginWindow,
           eyeGazeThresholdSec: fields.gazeThreshold,
+          // Only included when the proctor field was actually part of this
+          // edit (see EditSessionModal's handleFinish) — previously omitted
+          // entirely, so reassigning a proctor from "Edit Session" silently
+          // never reached the backend. NOTE: assumed to follow the same
+          // assignedProctorIds shape createSessionApi/editRestoreSessionApi
+          // use for this same resource — confirm with the backend if wrong.
+          ...(fields.proctorId !== undefined
+            ? { assignedProctorIds: fields.proctorId ? [fields.proctorId] : [] }
+            : {}),
         }),
       });
 
@@ -504,6 +513,7 @@ const useSessionStore = create((set) => ({
                 gracePeriod: json.data.gracePeriodMinutes,
                 loginWindow: json.data.loginWindowMinutes,
                 gazeThreshold: json.data.eyeGazeThresholdSec,
+                proctor: json.data.assignedProctors?.[0]?.fullName ?? s.proctor,
               }
             : s,
         ),
@@ -577,7 +587,7 @@ const useSessionStore = create((set) => ({
       ),
     })),
 
-  // P-04 (Live Proctor) only: force-ends a running session early.
+  // MonitorExamSession permission only: force-ends a running session early.
   terminateSession: (sessionId) =>
     set((state) => ({
       sessions: state.sessions.map((s) =>

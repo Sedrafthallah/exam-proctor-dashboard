@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { message } from "antd";
 import { apiFetch } from "../api/apiClient";
+import useRolesStore from "./useRolesStore";
 
 const INITIAL_USERS = [
   {
@@ -11,15 +12,7 @@ const INITIAL_USERS = [
     role: "ADMIN",
     jobTitle: "Admin",
     disabled: false,
-    permissions: {
-      P01: false,
-      P02: false,
-      P03: true,
-      P04: true,
-      P05: false,
-      P06: true,
-      P07: true,
-    },
+    permissions: ["CreateExamSession", "ViewExamSession", "EditExamSession", "ExportData", "ViewAlerts"],
   },
   {
     id: 3,
@@ -29,15 +22,7 @@ const INITIAL_USERS = [
     role: "PROCTOR",
     jobTitle: "Proctor",
     disabled: false,
-    permissions: {
-      P01: false,
-      P02: false,
-      P03: true,
-      P04: true,
-      P05: false,
-      P06: false,
-      P07: true,
-    },
+    permissions: ["CreateExamSession", "ViewExamSession", "EditExamSession"],
   },
   {
     id: 4,
@@ -47,15 +32,7 @@ const INITIAL_USERS = [
     role: "ADMIN",
     jobTitle: "Question Author",
     disabled: false,
-    permissions: {
-      P01: true,
-      P02: false,
-      P03: false,
-      P04: false,
-      P05: false,
-      P06: false,
-      P07: false,
-    },
+    permissions: ["ManageQuestionBanks", "ViewQuestionBanks"],
   },
   {
     id: 5,
@@ -65,15 +42,7 @@ const INITIAL_USERS = [
     role: "ADMIN",
     jobTitle: "Proctor",
     disabled: false,
-    permissions: {
-      P01: false,
-      P02: false,
-      P03: false,
-      P04: true,
-      P05: false,
-      P06: false,
-      P07: true,
-    },
+    permissions: ["MonitorExamSession", "ViewAlerts"],
   },
   {
     id: 6,
@@ -83,17 +52,23 @@ const INITIAL_USERS = [
     role: "ADMIN",
     jobTitle: "Registrar",
     disabled: false,
-    permissions: {
-      P01: false,
-      P02: false,
-      P03: false,
-      P04: false,
-      P05: true,
-      P06: true,
-      P07: false,
-    },
+    permissions: ["ViewStudents", "EnrollStudents", "ExportData"],
   },
 ];
+
+// Last-resort fallback for when the backend returns an empty permissions
+// array for a specific user despite their role having real permissions
+// defined. Reuses whatever useRolesStore currently has (either the real
+// role→permissions data fetched from GET /api/roles, or its own last-resort
+// INITIAL_ROLES if that fetch hasn't happened/succeeded yet) rather than
+// duplicating another hand-guessed mock map here.
+function fallbackPermissionsForRole(roleName) {
+  const roles = useRolesStore.getState().roles;
+  const match = roles.find(
+    (r) => r.name?.toLowerCase() === String(roleName ?? "").toLowerCase(),
+  );
+  return match?.permissions ?? [];
+}
 
 const savedUser = sessionStorage.getItem("user");
 const savedToken = sessionStorage.getItem("accessToken");
@@ -134,37 +109,6 @@ const useAuthStore = create((set, get) => ({
 
       const data = json.data;
 
-      // Temporary mock permissions for testing dashboards
-      const mockPermissions = {
-        SuperAdmin: {
-          P01: true,
-          P02: true,
-          P03: true,
-          P04: true,
-          P05: true,
-          P06: true,
-          P07: true,
-        },
-        Admin: {
-          P01: true,
-          P02: true,
-          P03: true,
-          P04: false,
-          P05: true,
-          P06: true,
-          P07: false,
-        },
-        Proctor: {
-          P01: false,
-          P02: false,
-          P03: false,
-          P04: true,
-          P05: false,
-          P06: false,
-          P07: true,
-        },
-      };
-
       const user = {
         id: String(data.userId),
         name: data.fullName,
@@ -177,10 +121,12 @@ const useAuthStore = create((set, get) => ({
               : "ADMIN",
         jobTitle: data.roles?.[0] ?? "Admin",
         disabled: false,
+        // Confirmed API shape: array of granted permission-name strings.
+        // Fallback only applies if the backend returns an empty array here.
         permissions:
           data.permissions?.length > 0
             ? data.permissions
-            : (mockPermissions[data.roles?.[0]] ?? mockPermissions.Admin),
+            : fallbackPermissionsForRole(data.roles?.[0]),
       };
 
       sessionStorage.setItem("accessToken", data.accessToken);
@@ -267,33 +213,12 @@ const useAuthStore = create((set, get) => ({
       if (!res.ok || json.statusCode !== 200) return;
 
       const admins = json.data.map((a) => {
-        // Temporary mock permissions for testing dashboards
-        const mockPermissions = {
-          admin: {
-            P01: true,
-            P02: true,
-            P03: true,
-            P04: false,
-            P05: true,
-            P06: true,
-            P07: false,
-          },
-          proctor: {
-            P01: false,
-            P02: false,
-            P03: false,
-            P04: true,
-            P05: false,
-            P06: false,
-            P07: true,
-          },
-        };
-
-        const roleName = (a.role ?? "admin").toLowerCase();
+        // Confirmed API shape: array of granted permission-name strings.
+        // Fallback only applies if the backend returns an empty array here.
         const permissions =
           a.permissions?.length > 0
             ? a.permissions // ← real permissions if available
-            : (mockPermissions[roleName] ?? mockPermissions.admin); // ← mock fallback
+            : fallbackPermissionsForRole(a.role ?? "Admin"); // ← last-resort fallback
 
         return {
           id: String(a.userId ?? a.userName),
@@ -540,7 +465,9 @@ const useAuthStore = create((set, get) => ({
       return true;
     }
 
-    return user.permissions?.[permission] === true;
+    const perms = user.permissions;
+    if (Array.isArray(perms)) return perms.includes(permission);
+    return perms?.[permission] === true; // defensive fallback, shouldn't normally hit
   },
 
   isSuperAdmin: () => {

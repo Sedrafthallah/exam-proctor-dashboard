@@ -5,9 +5,9 @@ import MainLayout from "../layouts/MainLayout";
 
 // Gates a private route behind login and (optionally) a permission check.
 // `permission` mirrors SidebarItem.jsx's "any of" pattern: pass a single
-// P01–P07 code or an array, and the user needs at least one of them.
+// real permission name or an array, and the user needs at least one of them.
 // `superAdminOnly` gates Super Admin-exclusive pages (Users, Roles, Settings,
-// Audit Logs) that aren't granted via the P01–P07 permission set.
+// Audit Logs) that aren't granted via a named permission.
 export default function ProtectedRoute({
   element,
   permission,

@@ -33,11 +33,9 @@ export default function Monitoring() {
   const students = useStudentStore((state) => state.students);
   const alerts = useAlertsStore((state) => state.alerts);
   const updateAlertStatus = useAlertsStore((state) => state.updateAlertStatus);
-  const currentUser = useAuthStore((state) => state.user);
+  const hasPermission = useAuthStore((state) => state.hasPermission);
 
-  const isSuperAdmin = currentUser?.role === "SUPER_ADMIN";
-  const hasPermission = (perm) => isSuperAdmin || currentUser?.permissions?.[perm] === true;
-  const canAct = isSuperAdmin || hasPermission("P04");
+  const canAct = hasPermission("MonitorExamSession");
 
   const activeSessions = sessions.filter((session) => getSessionStatus(session) === "ACTIVE");
   const [selectedSessionId, setSelectedSessionId] = useState(activeSessions[0]?.id ?? null);

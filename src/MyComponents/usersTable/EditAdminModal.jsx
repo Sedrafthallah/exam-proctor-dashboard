@@ -8,7 +8,7 @@ import MyCol from "../myCol/MyCol";
 import MyButtonPrimary from "../myButton/MyButtonPrimary";
 import MyButtonSecondary from "../myButton/MyButtonSecondary";
 import MyText from "../myText/MyText";
-import { PERMISSIONS } from "./adminsData";
+import { PERMISSION_CATEGORIES } from "./adminsData";
 
 export default function EditAdminModal({ open, admin, onClose, onSave }) {
   const [form] = MyForm.useForm();
@@ -20,9 +20,7 @@ export default function EditAdminModal({ open, admin, onClose, onSave }) {
         name: admin.name,
         email: admin.email,
         password: "",
-        permissions: Object.entries(admin.permissions || {})
-          .filter(([, granted]) => granted)
-          .map(([key]) => key),
+        permissions: admin.permissions || [],
       });
     }
   }, [open, admin, form]);
@@ -33,9 +31,7 @@ export default function EditAdminModal({ open, admin, onClose, onSave }) {
   };
 
   const handleFinish = async (values) => {
-    const permissions = Object.fromEntries(
-      PERMISSIONS.map((perm) => [perm.key, (values.permissions || []).includes(perm.key)])
-    );
+    const permissions = values.permissions || [];
 
     const result = await onSave(admin.id, {
       name: values.name,
@@ -96,20 +92,24 @@ export default function EditAdminModal({ open, admin, onClose, onSave }) {
 
         <MyForm.Item name="permissions" label="Permissions" initialValue={[]}>
           <Checkbox.Group style={{ width: "100%" }} disabled={isSuperAdmin}>
-            <MyRow gutter={[8, 10]}>
-              {PERMISSIONS.map((perm) => (
-                <MyCol key={perm.key} xs={24} sm={12}>
-                  <Checkbox value={perm.key}>
-                    <MyText style={{ fontSize: 12.5 }}>
-                      <MyText strong style={{ fontSize: 12.5 }}>
-                        {perm.code}
-                      </MyText>{" "}
-                      — {perm.title}
-                    </MyText>
-                  </Checkbox>
-                </MyCol>
+            <Flex vertical gap={14}>
+              {PERMISSION_CATEGORIES.map((group) => (
+                <Flex key={group.category} vertical gap={6}>
+                  <MyText type="secondary" style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase" }}>
+                    {group.category}
+                  </MyText>
+                  <MyRow gutter={[8, 10]}>
+                    {group.permissions.map((perm) => (
+                      <MyCol key={perm.key} xs={24} sm={12}>
+                        <Checkbox value={perm.key}>
+                          <MyText style={{ fontSize: 12.5 }}>{perm.label}</MyText>
+                        </Checkbox>
+                      </MyCol>
+                    ))}
+                  </MyRow>
+                </Flex>
               ))}
-            </MyRow>
+            </Flex>
           </Checkbox.Group>
         </MyForm.Item>
         {isSuperAdmin && (

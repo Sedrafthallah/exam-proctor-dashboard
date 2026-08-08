@@ -19,9 +19,8 @@ export default function QuestionBanks() {
   const [selectedBankId, setSelectedBankId] = useState(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
-  const currentUser = useAuthStore((state) => state.user);
-  const isSuperAdmin = currentUser?.role === "SUPER_ADMIN";
-  const canAuthor = isSuperAdmin || currentUser?.permissions?.P01 === true;
+  const hasPermission = useAuthStore((state) => state.hasPermission);
+  const canAuthor = hasPermission("ManageQuestionBanks");
 
   const questionBanks = useQuestionBankStore((state) => state.questionBanks);
   const fetchQuestionBanks = useQuestionBankStore((state) => state.fetchQuestionBanks);

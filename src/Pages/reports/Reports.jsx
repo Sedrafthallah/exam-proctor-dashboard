@@ -26,12 +26,9 @@ import { apiFetch } from "../../api/apiClient";
 export default function Reports() {
   const { token } = theme.useToken();
   const sessions = useSessionStore((state) => state.sessions);
-  const currentUser = useAuthStore((state) => state.user);
+  const hasPermission = useAuthStore((state) => state.hasPermission);
 
-  const isSuperAdmin = currentUser?.role === "SUPER_ADMIN";
-  const hasPermission = (perm) =>
-    isSuperAdmin || currentUser?.permissions?.[perm] === true;
-  const canExport = isSuperAdmin || hasPermission("P06");
+  const canExport = hasPermission("ExportData");
 
   const reportableSessions = sessions.filter((session) =>
     ["CLOSED", "ARCHIVED"].includes(getSessionStatus(session)),
@@ -289,7 +286,7 @@ export default function Reports() {
                     <Flex gap={12} justify="center" style={{ width: "100%" }}>
                       <Tooltip
                         title={
-                          !canExport ? "Requires export permission (P-06)." : ""
+                          !canExport ? "Requires the Export Data permission." : ""
                         }
                       >
                         <MyButtonPrimary
@@ -304,13 +301,13 @@ export default function Reports() {
                       </Tooltip>
                       <Tooltip
                         title={
-                          !canExport ? "Requires export permission (P-06)." : ""
+                          !canExport ? "Requires the Export Data permission." : ""
                         }
                       ></Tooltip>
                     </Flex>
                     {!canExport && (
                       <MyText type="secondary" style={{ fontSize: 12 }}>
-                        Export requires P06 permission.
+                        Export requires the Export Data permission.
                       </MyText>
                     )}
                   </Flex>
@@ -368,8 +365,8 @@ export default function Reports() {
                       }}
                     >
                       Cryptographically signed incident log for disciplinary
-                      use, kept separate from grading. Requires export
-                      permission (P-06).
+                      use, kept separate from grading. Requires the Export
+                      Data permission.
                     </MyText>
                   </Flex>
 
@@ -383,7 +380,7 @@ export default function Reports() {
                   >
                     <Tooltip
                       title={
-                        !canExport ? "Requires export permission (P-06)." : ""
+                        !canExport ? "Requires the Export Data permission." : ""
                       }
                       style={{ width: "100%" }}
                     >
@@ -399,7 +396,7 @@ export default function Reports() {
                     </Tooltip>
                     {!canExport && (
                       <MyText type="secondary" style={{ fontSize: 12 }}>
-                        Requires P06 permission.
+                        Requires the Export Data permission.
                       </MyText>
                     )}
                   </Flex>

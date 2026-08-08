@@ -136,9 +136,7 @@ export default function NewAdminModal({ open, onClose, onCreate }) {
             const role = assignableRoles.find(
               (r) => r.name === form.getFieldValue("role"),
             );
-            const granted = Object.entries(role?.permissions || {})
-              .filter(([, value]) => value)
-              .map(([key]) => key);
+            const granted = role?.permissions || [];
 
             return (
               <Flex vertical gap={6} style={{ marginBottom: 16 }}>

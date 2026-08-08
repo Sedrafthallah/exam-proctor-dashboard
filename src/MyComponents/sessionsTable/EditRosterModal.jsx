@@ -41,7 +41,7 @@ export default function EditRosterModal({ open, session, onClose, onSave }) {
   };
 
   const proctorOptions = users
-    .filter((u) => !u.disabled)
+    .filter((u) => !u.disabled && u.role === "PROCTOR")
     .map((u) => ({
       value: u.id,
       label: u.name,
@@ -64,7 +64,7 @@ export default function EditRosterModal({ open, session, onClose, onSave }) {
     onClose();
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const addedStudents = roster
       .filter(
         (student) =>
@@ -76,13 +76,19 @@ export default function EditRosterModal({ open, session, onClose, onSave }) {
         (student) => !roster.some((newStudent) => newStudent.id === student.id),
       )
       .map((student) => student.userId);
-    onSave(session.id, {
+
+    const success = await onSave(session.id, {
       assignedProctorIds: proctor ? [proctor] : [],
       studentIdsToAdd: addedStudents,
       studentIdsToRemove: removedStudents,
     });
 
-    message.success("Roster updated successfully.");
+    if (success) {
+      message.success("Roster updated successfully.");
+      onClose();
+    }
+    // On failure, editRestoreSessionApi (in useSessionStore.js) already calls
+    // message.error(...) itself — don't duplicate an error toast here.
   };
   return (
     <MyModal

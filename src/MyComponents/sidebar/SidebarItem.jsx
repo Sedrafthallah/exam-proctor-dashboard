@@ -12,9 +12,9 @@ import {
   SafetyCertificateOutlined,
 } from "@ant-design/icons";
 
-// Permission codes follow the Admin Permission Set (P-01..P-07) in the
-// Engineering Analysis spec. An array means the item is visible if the
-// Admin holds ANY one of the listed permissions.
+// Permission values are the real permission-name strings from the backend's
+// roles-and-permissions endpoint (26 total). An array means the item is
+// visible if the Admin holds ANY one of the listed permissions.
 export const adminItems = [
   {
     key: "/dashboard",
@@ -25,37 +25,37 @@ export const adminItems = [
     key: "/sessions",
     label: "Sessions",
     icon: <BookOutlined />,
-    permission: "P03", // Session: Manage
+    permission: "ViewExamSession",
   },
   {
     key: "/students",
     label: "Students",
     icon: <TeamOutlined />,
-    permission: "P05", // Students: Register
+    permission: "ViewStudents",
   },
   {
     key: "/question-banks",
     label: "Question Banks",
     icon: <FileTextOutlined />,
-    permission: ["P01", "P02"], // Question Bank: Author / View All
+    permission: ["ManageQuestionBanks", "ViewQuestionBanks"],
   },
   {
     key: "/monitoring",
     label: "Live Monitoring",
     icon: <EyeOutlined />,
-    permission: "P04", // Session: Live Proctor
+    permission: "MonitorExamSession",
   },
   {
     key: "/alerts",
     label: "Alerts",
     icon: <AlertOutlined />,
-    permission: ["P04", "P07"], // Session: Live Proctor / Reports: View Violations (read-only)
+    permission: ["ViewAlerts", "TakeProctorAction"],
   },
   {
     key: "/reports",
     label: "Reports",
     icon: <BarChartOutlined />,
-    permission: ["P06", "P07"], // Reports: Export / View Violations
+    permission: ["ViewReports", "ExportData"],
   },
 ];
 

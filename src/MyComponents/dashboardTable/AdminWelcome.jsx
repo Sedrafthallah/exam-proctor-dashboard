@@ -429,7 +429,8 @@ export default function AdminWelcome() {
   const user = useAuthStore((state) => state.user);
   const role = user?.role;
 
-  const permissions = user?.permissions ?? {};
+  const permissions = user?.permissions ?? [];
+  const has = (perm) => permissions.includes(perm);
 
   const sessions = useSessionStore((state) => state.sessions);
   const fetchSessions = useSessionStore((state) => state.fetchSessions);
@@ -461,7 +462,7 @@ export default function AdminWelcome() {
   const resolvedAlerts = alerts.filter((a) => a.status === "RESOLVED");
   const activeSessions = sessions.filter((s) => sessionStatus(s) === "ACTIVE");
   const recentOpenAlerts = openAlerts.slice(0, 5);
-  const hasAnyPermission = Object.values(permissions).some(Boolean);
+  const hasAnyPermission = permissions.length > 0;
 
   const header = (
     <MyCard style={cardStyle}>
@@ -488,10 +489,9 @@ export default function AdminWelcome() {
     </MyCard>
   );
 
-  // TODO: this branch is keyed off role === "PROCTOR" rather than
-  // permissions.P04 / permissions.P07 individually. Fine while Proctor
-  // permissions are fixed; revisit if Proctor permissions ever become
-  // configurable like Admin's.
+  // TODO: this branch is keyed off role === "PROCTOR" rather than checking
+  // individual permissions. Fine while Proctor permissions are fixed;
+  // revisit if Proctor permissions ever become configurable like Admin's.
   if (role === "PROCTOR") {
     return (
       <Flex vertical gap={20}>
@@ -540,7 +540,7 @@ export default function AdminWelcome() {
   // ADMIN — dynamic layout based on granted permissions:
   // Header → Cards (permission-gated) → Charts (permission-gated).
   const cards = [
-    permissions.P03 && {
+    has("ViewExamSession") && {
       key: "sessions",
       title: "Sessions",
       value: sessions.length,
@@ -548,7 +548,7 @@ export default function AdminWelcome() {
       icon: <CalendarOutlined />,
       color: token.colorPrimary,
     },
-    permissions.P05 && {
+    has("ViewStudents") && {
       key: "students",
       title: "Students",
       value: students.length,
@@ -556,7 +556,7 @@ export default function AdminWelcome() {
       icon: <TeamOutlined />,
       color: token.colorSuccess,
     },
-    (permissions.P01 || permissions.P02) && {
+    (has("ManageQuestionBanks") || has("ViewQuestionBanks")) && {
       key: "question-banks",
       title: "Question Banks",
       value: questionBanks.length,
@@ -564,7 +564,7 @@ export default function AdminWelcome() {
       icon: <FileTextOutlined />,
       color: token.colorWarning,
     },
-    permissions.P04 && {
+    has("MonitorExamSession") && {
       key: "open-alerts",
       title: "Open Alerts",
       value: openAlerts.length,
@@ -572,7 +572,7 @@ export default function AdminWelcome() {
       icon: <BellOutlined />,
       color: token.colorError,
     },
-    permissions.P06 && {
+    has("ExportData") && {
       key: "ready-to-export",
       title: "Ready to Export",
       value: sessions.filter((s) => sessionStatus(s) === "CLOSED").length,
@@ -580,7 +580,7 @@ export default function AdminWelcome() {
       icon: <BarChartOutlined />,
       color: token.colorInfo,
     },
-    permissions.P07 && {
+    has("ViewAlerts") && {
       key: "escalated",
       title: "Escalated",
       value: alerts.filter((a) => a.status === "ESCALATED").length,
@@ -591,19 +591,19 @@ export default function AdminWelcome() {
   ].filter(Boolean);
 
   const activeCharts = [
-    permissions.P04 && {
+    has("MonitorExamSession") && {
       key: "alerts-chart",
       component: <AlertsByTypeChart alerts={alerts} token={token} />,
     },
-    permissions.P03 && {
+    has("ViewExamSession") && {
       key: "sessions-chart",
       component: <SessionsTrendChart data={weeklyStatistics} token={token} />,
     },
-    permissions.P06 && {
+    has("ExportData") && {
       key: "reports-chart",
       component: <ReportsStatusPieChart sessions={sessions} token={token} />,
     },
-    (permissions.P01 || permissions.P02) && {
+    (has("ManageQuestionBanks") || has("ViewQuestionBanks")) && {
       key: "qbank-chart",
       component: (
         <QuestionsPerBankChart questionBanks={questionBanks} token={token} />

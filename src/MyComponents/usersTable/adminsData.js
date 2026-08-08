@@ -1,54 +1,58 @@
-// Keys match the permission keys stored on each user in useAuthStore (P01..P07).
-export const PERMISSIONS = [
-  {
-    code: "P-01",
-    key: "P01",
-    title: "Question Bank: Author",
-    description:
-      "Create, edit and delete question banks up to T-24h. Upload via CSV.",
-  },
-  {
-    code: "P-02",
-    key: "P02",
-    title: "Question Bank: View All",
-    description: "Read-only access to all banks regardless of authorship.",
-  },
-  {
-    code: "P-03",
-    key: "P03",
-    title: "Session: Manage",
-    description:
-      "Create, configure, schedule, publish and terminate sessions; manage rosters.",
-  },
-  {
-    code: "P-04",
-    key: "P04",
-    title: "Session: Live Proctor",
-    description:
-      "Access the live dashboard, issue warnings, terminate student sessions.",
-  },
-  {
-    code: "P-05",
-    key: "P05",
-    title: "Students: Register",
-    description:
-      "Register students, upload roster CSVs, attach ID photographs.",
-  },
+// Real, final permission list from the backend (26 total). `key` is the
+// exact permission-name string the API returns/accepts; `category` groups
+// them for the Permission Matrix / Reference UIs.
+export const PERMISSION_DETAILS = [
+  { key: "CreateExamSession", label: "Create Exam Session", category: "Sessions" },
+  { key: "ViewExamSession", label: "View Exam Session", category: "Sessions" },
+  { key: "EditExamSession", label: "Edit Exam Session", category: "Sessions" },
+  { key: "DeleteExamSession", label: "Delete Exam Session", category: "Sessions" },
+  { key: "PublishExamSession", label: "Publish Exam Session", category: "Sessions" },
+  { key: "MonitorExamSession", label: "Monitor Exam Session", category: "Sessions" },
+  { key: "ExtendSessionTime", label: "Extend Session Time", category: "Sessions" },
 
-  {
-    code: "P-06",
-    key: "P06",
-    title: "Reports: Export",
-    description:
-      "Export grading packages and signed audit logs in CSV and JSON.",
-  },
-  {
-    code: "P-07",
-    key: "P07",
-    title: "Reports: View Violations",
-    description: "Read-only access to violation and incident logs.",
-  },
+  { key: "ViewStudents", label: "View Students", category: "Students" },
+  { key: "EnrollStudents", label: "Enroll Students", category: "Students" },
+  { key: "RemoveStudents", label: "Remove Students", category: "Students" },
+
+  { key: "AssignProctor", label: "Assign Proctor", category: "Proctors" },
+  { key: "ViewProctors", label: "View Proctors", category: "Proctors" },
+  { key: "ManageProctorActions", label: "Manage Proctor Actions", category: "Proctors" },
+
+  { key: "CreateUser", label: "Create User", category: "Users" },
+  { key: "ViewUsers", label: "View Users", category: "Users" },
+  { key: "EditUser", label: "Edit User", category: "Users" },
+  { key: "DeleteUser", label: "Delete User", category: "Users" },
+
+  { key: "ManageRoles", label: "Manage Roles", category: "Roles & Permissions" },
+  { key: "ManagePermissions", label: "Manage Permissions", category: "Roles & Permissions" },
+
+  { key: "ViewAuditLogs", label: "View Audit Logs", category: "Audit Logs" },
+
+  { key: "ViewReports", label: "View Reports", category: "Reports" },
+  { key: "ExportData", label: "Export Data", category: "Reports" },
+
+  { key: "ViewAlerts", label: "View Alerts", category: "Alerts" },
+  { key: "TakeProctorAction", label: "Take Proctor Action", category: "Alerts" },
+
+  { key: "ManageQuestionBanks", label: "Manage Question Banks", category: "Question Banks" },
+  { key: "ViewQuestionBanks", label: "View Question Banks", category: "Question Banks" },
 ];
+
+// Flat list of every real permission name — used where a role needs "all
+// permissions" (e.g. Super Admin's last-resort local fallback).
+export const ALL_PERMISSION_KEYS = PERMISSION_DETAILS.map((p) => p.key);
+
+// PERMISSION_DETAILS grouped by category, in table order — drives the
+// sectioned Permission Matrix / Reference UIs.
+export const PERMISSION_CATEGORIES = PERMISSION_DETAILS.reduce((groups, perm) => {
+  let group = groups.find((g) => g.category === perm.category);
+  if (!group) {
+    group = { category: perm.category, permissions: [] };
+    groups.push(group);
+  }
+  group.permissions.push(perm);
+  return groups;
+}, []);
 
 export function getInitials(name) {
   if (!name) return "?";

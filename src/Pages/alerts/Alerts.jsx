@@ -70,7 +70,7 @@ export default function Alerts() {
   const fetchResolvedAlerts = useAlertsStore((state) => state.fetchResolvedAlerts);
   const fetchEscalatedAlerts = useAlertsStore((state) => state.fetchEscalatedAlerts);
   const fetchAlertsByType = useAlertsStore((state) => state.fetchAlertsByType);
-  const currentUser = useAuthStore((state) => state.user);
+  const hasPermission = useAuthStore((state) => state.hasPermission);
 
   const [statusFilter, setStatusFilter] = useState("All");
   const [typeFilter, setTypeFilter] = useState("ALL");
@@ -91,9 +91,7 @@ export default function Alerts() {
     }
   }, [typeFilter]);
 
-  const isSuperAdmin = currentUser?.role === "SUPER_ADMIN";
-  const hasPermission = (perm) => isSuperAdmin || currentUser?.permissions?.[perm] === true;
-  const canAct = isSuperAdmin || hasPermission("P04");
+  const canAct = hasPermission("TakeProctorAction");
 
   const total = alerts.length;
   const critical = alerts.filter((a) => CRITICAL_TYPES.includes(a.type)).length;

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Input, InputNumber, DatePicker, Select, Switch, Segmented, Upload, Flex, message } from "antd";
 import { PlusCircleOutlined, UploadOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
 import MyModal from "../myModal/MyModal";
 import MyForm from "../myForm/MyForm";
 import MyRow from "../myRow/MyRow";
@@ -29,8 +30,8 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
   }, [open]);
 
   const proctorOptions = admins
-    .filter((admin) => !admin.disabled)
-    .map((admin) => ({ value: admin.name, label: admin.name }));
+    .filter((admin) => !admin.disabled && admin.role === "PROCTOR")
+    .map((admin) => ({ value: admin.id, label: admin.name }));
 
   const studentOptions = students.map((student) => ({
     value: student.id,
@@ -75,7 +76,7 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
       gracePeriod: values.gracePeriod,
       loginWindow: values.loginWindow,
       questionBankId: values.questionBank ? Number(values.questionBank) : null,
-      proctor: values.proctor || null,
+      proctorId: values.proctor || null,
       studentIds: values.studentIds || [],
       enrolledStudents: (values.studentIds || []).length,
       gazeThreshold: values.gazeThreshold,
@@ -144,9 +145,34 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
             <MyForm.Item
               name="scheduledStartUTC"
               label="Scheduled start (UTC)"
-              rules={[{ required: true, message: "Please pick a start date and time" }]}
+              rules={[
+                { required: true, message: "Please pick a start date and time" },
+                {
+                  validator: (_, value) =>
+                    !value || value.isAfter(dayjs())
+                      ? Promise.resolve()
+                      : Promise.reject(new Error("Start time must be in the future")),
+                },
+              ]}
             >
-              <DatePicker showTime format="YYYY-MM-DD HH:mm" style={{ width: "100%" }} />
+              <DatePicker
+                showTime
+                format="YYYY-MM-DD HH:mm"
+                style={{ width: "100%" }}
+                disabledDate={(current) => current && current.isBefore(dayjs(), "day")}
+                disabledTime={(current) => {
+                  if (!current || !current.isSame(dayjs(), "day")) return {};
+                  const now = dayjs();
+                  return {
+                    disabledHours: () =>
+                      Array.from({ length: now.hour() }, (_, i) => i),
+                    disabledMinutes: (selectedHour) =>
+                      selectedHour === now.hour()
+                        ? Array.from({ length: now.minute() + 1 }, (_, i) => i)
+                        : [],
+                  };
+                }}
+              />
             </MyForm.Item>
           </MyCol>
           <MyCol xs={24} sm={12}>
