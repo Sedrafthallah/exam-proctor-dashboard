@@ -81,6 +81,28 @@ const fetchAlertsWithParams = async (params = "", page = 1, pageSize = 7) => {
   }
 };
 
+const callAlertAction = async (id, action) => {
+  try {
+    const accessToken =
+      useAuthStore.getState().accessToken ?? sessionStorage.getItem("accessToken");
+
+    const res = await apiFetch(`/api/alerts/${id}/${action}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    const json = await res.json();
+    if (!res.ok || json.statusCode !== 200) {
+      return { success: false, error: json.message || `Failed to ${action} alert.` };
+    }
+
+    return { success: true, message: json.message };
+  } catch (err) {
+    console.error(`${action} alert error:`, err);
+    return { success: false, error: "Network error." };
+  }
+};
+
 // When backend is ready: swap this for a WebSocket subscription that pushes
 // new alerts in and PATCHes status changes through to the server.
 const useAlertsStore = create((set) => ({
@@ -198,6 +220,9 @@ const useAlertsStore = create((set) => ({
       return false;
     }
   },
+
+  warnAlertApi: async (id) => callAlertAction(id, "warn"),
+  escalateAlertApi: async (id) => callAlertAction(id, "escalate"),
 }));
 
 export default useAlertsStore;

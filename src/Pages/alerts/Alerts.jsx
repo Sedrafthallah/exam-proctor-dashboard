@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { theme, Flex, Badge, Segmented, Select, Tooltip, message } from "antd";
+import { theme, Flex, Badge, Segmented, Select, Tooltip, message, Modal } from "antd";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import {
@@ -16,6 +16,7 @@ import MyCol from "../../MyComponents/myCol/MyCol";
 import AlertsTable from "../../MyComponents/alertsTable/AlertsTable";
 import useAlertsStore from "../../store/useAlertsStore";
 import useAuthStore from "../../store/useAuthStore";
+import useSessionStore from "../../store/useSessionStore";
 
 dayjs.extend(relativeTime);
 
@@ -60,8 +61,10 @@ export default function Alerts() {
   const pageSize = useAlertsStore((state) => state.pageSize);
   const total = useAlertsStore((state) => state.total);
   const summary = useAlertsStore((state) => state.summary);
-  const updateAlertStatus = useAlertsStore((state) => state.updateAlertStatus);
   const dismissAlertApi = useAlertsStore((state) => state.dismissAlertApi);
+  const warnAlertApi = useAlertsStore((state) => state.warnAlertApi);
+  const escalateAlertApi = useAlertsStore((state) => state.escalateAlertApi);
+  const fetchSessions = useSessionStore((state) => state.fetchSessions);
   const fetchAlerts = useAlertsStore((state) => state.fetchAlerts);
   const fetchOpenAlerts = useAlertsStore((state) => state.fetchOpenAlerts);
   const fetchResolvedAlerts = useAlertsStore((state) => state.fetchResolvedAlerts);
@@ -124,13 +127,33 @@ export default function Alerts() {
     }
   };
 
-  const handleWarn = (alert) => {
-    message.success(`Warning sent to ${alert.student}.`);
+  const handleWarn = async (alert) => {
+    const result = await warnAlertApi(alert.id);
+    if (result.success) {
+      message.success(result.message);
+      refetchAlerts(page, pageSize);
+    } else {
+      message.error(result.error);
+    }
   };
 
   const handleEscalate = (alert) => {
-    updateAlertStatus(alert.id, "ESCALATED");
-    message.success(`Alert escalated for ${alert.student}.`);
+    Modal.confirm({
+      title: "Escalate this alert?",
+      content: `This will immediately terminate ${alert.student}'s exam session. This cannot be undone.`,
+      okText: "Escalate",
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        const result = await escalateAlertApi(alert.id);
+        if (result.success) {
+          message.success(result.message);
+          refetchAlerts(page, pageSize);
+          fetchSessions();
+        } else {
+          message.error(result.error);
+        }
+      },
+    });
   };
 
   return (

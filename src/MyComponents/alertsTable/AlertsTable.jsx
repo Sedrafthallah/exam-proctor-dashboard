@@ -1,4 +1,4 @@
-import { theme, Flex, Badge, Avatar, Popconfirm, Tag, Tooltip } from "antd";
+import { theme, Flex, Badge, Avatar, Tag, Tooltip } from "antd";
 import { CheckOutlined, NotificationOutlined, ArrowUpOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -145,17 +145,14 @@ export default function AlertsTable({ alerts, pagination, canAct, onDismiss, onW
             >
               Warn
             </MyButtonSecondary>
-            <Popconfirm
-              title="Escalate this alert?"
-              description="This flags it for immediate proctor/admin review."
-              okText="Escalate"
-              okButtonProps={{ danger: true }}
-              onConfirm={() => onEscalate(record)}
+            <MyButtonPrimary
+              size="small"
+              danger
+              icon={<ArrowUpOutlined />}
+              onClick={() => onEscalate(record)}
             >
-              <MyButtonPrimary size="small" danger icon={<ArrowUpOutlined />}>
-                Escalate
-              </MyButtonPrimary>
-            </Popconfirm>
+              Escalate
+            </MyButtonPrimary>
           </Flex>
         );
       },
