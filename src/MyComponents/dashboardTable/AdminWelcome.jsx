@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { theme, Flex, Avatar, Alert } from "antd";
 import {
   WarningOutlined,
@@ -424,7 +424,7 @@ export default function AdminWelcome() {
 
   const user = useAuthStore((state) => state.user);
 
-  const permissions = user?.permissions ?? [];
+  const permissions = useMemo(() => user?.permissions ?? [], [user?.permissions]);
   const has = (perm) => permissions.includes(perm);
 
   const sessions = useSessionStore((state) => state.sessions);
@@ -439,12 +439,29 @@ export default function AdminWelcome() {
   const fetchQuestionBanks = useQuestionBankStore((state) => state.fetchQuestionBanks);
 
   useEffect(() => {
-    fetchSessions();
-    fetchStudents();
-    fetchAlerts();
-    fetchQuestionBanks();
-    fetchWeeklyStatistics();
-  }, [fetchSessions, fetchStudents, fetchAlerts, fetchQuestionBanks, fetchWeeklyStatistics]);
+    // Mirrors the has(...) gates the cards/charts below use for the same
+    // data, so a reduced-permission account (e.g. Proctor) doesn't fire
+    // fetches for data it can't view and gets a 403 for.
+    // - sessions: feeds the "Sessions" card (ViewExamSession) AND the
+    //   "Ready to Export" card + Reports Status chart (ExportData).
+    // - alerts: feeds the "Escalated" card (ViewAlerts) AND the "Open
+    //   Alerts" card + Alerts by Type chart (MonitorExamSession).
+    if (permissions.includes("ViewExamSession") || permissions.includes("ExportData")) {
+      fetchSessions();
+    }
+    if (permissions.includes("ViewStudents")) {
+      fetchStudents();
+    }
+    if (permissions.includes("MonitorExamSession") || permissions.includes("ViewAlerts")) {
+      fetchAlerts();
+    }
+    if (permissions.includes("ManageQuestionBanks") || permissions.includes("ViewQuestionBanks")) {
+      fetchQuestionBanks();
+    }
+    if (permissions.includes("ViewExamSession")) {
+      fetchWeeklyStatistics();
+    }
+  }, [permissions, fetchSessions, fetchStudents, fetchAlerts, fetchQuestionBanks, fetchWeeklyStatistics]);
 
   const cardStyle = {
     borderRadius: 14,
