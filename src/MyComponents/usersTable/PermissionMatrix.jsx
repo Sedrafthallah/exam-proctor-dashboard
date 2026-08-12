@@ -1,34 +1,121 @@
-import { theme, Tooltip, Flex, Avatar, Switch, Popconfirm, Tag, Button } from "antd";
+import { useState } from "react";
+import { theme, Tooltip, Flex, Avatar, Switch, Popconfirm, Tag, Button, Drawer, Progress } from "antd";
 import {
   AppstoreOutlined,
   CheckOutlined,
+  CloseOutlined,
   LockOutlined,
   DeleteOutlined,
+  SafetyCertificateOutlined,
 } from "@ant-design/icons";
 import MyCard from "../myCard/MyCard";
 import MyText from "../myText/MyText";
 import MyTable from "../mytable/MyTable";
-import { PERMISSION_CATEGORIES, getInitials } from "./adminsData";
+import { PERMISSION_CATEGORIES, ALL_PERMISSION_KEYS, getInitials } from "./adminsData";
 
-function PermissionCell({ active, token }) {
+const ROLE_CONFIG = {
+  SUPER_ADMIN: { color: "purple", label: "Super Admin" },
+  ADMIN: { color: "blue", label: "Admin" },
+  PROCTOR: { color: "green", label: "Proctor" },
+};
+
+function PermissionsDrawer({ admin, onClose }) {
+  const { token } = theme.useToken();
+  if (!admin) return null;
+
+  const isSuperAdmin = admin.role === "SUPER_ADMIN";
+  const granted = isSuperAdmin ? ALL_PERMISSION_KEYS : admin.permissions ?? [];
+  const { color, label } = ROLE_CONFIG[admin.role] ?? { color: "default", label: admin.role };
+
   return (
-    <Flex justify="center">
-      <Flex
-        justify="center"
-        align="center"
-        style={{
-          width: 26,
-          height: 26,
-          borderRadius: 6,
-          fontSize: 13,
-          fontWeight: 600,
-          background: active ? token.colorSuccess : token.colorFillTertiary,
-          color: active ? "#fff" : token.colorTextQuaternary,
-        }}
-      >
-        {active ? <CheckOutlined style={{ fontSize: 12 }} /> : "–"}
+    <Drawer
+      open={!!admin}
+      onClose={onClose}
+      width={460}
+      title={
+        <Flex align="center" gap={10}>
+          <Avatar size={36} style={{ background: token.colorPrimary, fontWeight: 600, fontSize: 13 }}>
+            {getInitials(admin.name)}
+          </Avatar>
+          <Flex vertical>
+            <MyText strong style={{ fontSize: 14 }}>{admin.name}</MyText>
+            <MyText type="secondary" style={{ fontSize: 12 }}>{admin.jobTitle}</MyText>
+          </Flex>
+        </Flex>
+      }
+    >
+      <Flex vertical gap={20}>
+        <Flex align="center" justify="space-between">
+          <Tag color={color} style={{ margin: 0 }}>{label}</Tag>
+          <MyText type="secondary" style={{ fontSize: 12 }}>
+            {isSuperAdmin ? "Full access" : `${granted.length} / ${ALL_PERMISSION_KEYS.length} granted`}
+          </MyText>
+        </Flex>
+
+        {isSuperAdmin ? (
+          <Flex
+            align="center"
+            gap={10}
+            style={{
+              padding: "12px 14px",
+              borderRadius: 10,
+              background: token.colorSuccessBg,
+              border: `1px solid ${token.colorSuccessBorder}`,
+            }}
+          >
+            <SafetyCertificateOutlined style={{ fontSize: 16, color: token.colorSuccess }} />
+            <MyText style={{ fontSize: 12.5 }}>
+              Super Admin always has every permission.
+            </MyText>
+          </Flex>
+        ) : (
+          <Progress
+            percent={Math.round((granted.length / ALL_PERMISSION_KEYS.length) * 100)}
+            showInfo={false}
+            strokeColor={token.colorPrimary}
+          />
+        )}
+
+        {PERMISSION_CATEGORIES.map((group) => (
+          <Flex key={group.category} vertical gap={8}>
+            <MyText
+              type="secondary"
+              style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4 }}
+            >
+              {group.category}
+            </MyText>
+            <Flex wrap="wrap" gap={8}>
+              {group.permissions.map((perm) => {
+                const active = granted.includes(perm.key);
+                return (
+                  <Flex
+                    key={perm.key}
+                    align="center"
+                    gap={6}
+                    style={{
+                      padding: "5px 10px",
+                      borderRadius: 999,
+                      fontSize: 12.5,
+                      fontWeight: 500,
+                      background: active ? token.colorSuccessBg : token.colorFillTertiary,
+                      color: active ? token.colorSuccessTextActive : token.colorTextTertiary,
+                      border: `1px solid ${active ? token.colorSuccessBorder : token.colorBorderSecondary}`,
+                    }}
+                  >
+                    {active ? (
+                      <CheckOutlined style={{ fontSize: 10 }} />
+                    ) : (
+                      <CloseOutlined style={{ fontSize: 10 }} />
+                    )}
+                    {perm.label}
+                  </Flex>
+                );
+              })}
+            </Flex>
+          </Flex>
+        ))}
       </Flex>
-    </Flex>
+    </Drawer>
   );
 }
 
@@ -39,14 +126,13 @@ export default function PermissionMatrix({
   onDeleteAdmin,
 }) {
   const { token } = theme.useToken();
+  const [selectedAdmin, setSelectedAdmin] = useState(null);
 
   const columns = [
     {
       title: "Admin Account",
       dataIndex: "name",
       key: "name",
-      fixed: "left",
-      width: 240,
       render: (_, admin) => (
         <Flex align="center" gap={10}>
           <Avatar
@@ -82,61 +168,37 @@ export default function PermissionMatrix({
       dataIndex: "role",
       key: "role",
       render: (role) => {
-        const config = {
-          SUPER_ADMIN: { color: "purple", label: "Super Admin" },
-          ADMIN: { color: "blue", label: "Admin" },
-          PROCTOR: { color: "green", label: "Proctor" },
-        };
-        const { color, label } = config[role] ?? { color: "default", label: role };
+        const { color, label } = ROLE_CONFIG[role] ?? { color: "default", label: role };
         return <Tag color={color}>{label}</Tag>;
       },
     },
-    ...PERMISSION_CATEGORIES.map((group) => ({
-      title: group.category,
-      key: group.category,
-      children: group.permissions.map((perm) => ({
-        title: (
-          <Tooltip title={perm.label}>
-            <span>{perm.label}</span>
-          </Tooltip>
-        ),
-        dataIndex: perm.key,
-        key: perm.key,
-        align: "center",
-        width: 90,
-        render: (_, admin) => {
-          const isSuperAdmin = admin.role === "SUPER_ADMIN";
-          return isSuperAdmin ? (
-            <Tooltip title="Super Admin always has full access">
-              <Flex justify="center">
-                <Flex
-                  justify="center"
-                  align="center"
-                  style={{
-                    width: 26,
-                    height: 26,
-                    borderRadius: 6,
-                    background: token.colorSuccess,
-                    color: "#fff",
-                  }}
-                >
-                  <LockOutlined style={{ fontSize: 11 }} />
-                </Flex>
-              </Flex>
-            </Tooltip>
-          ) : (
-            <PermissionCell
-              active={admin.permissions?.includes(perm.key)}
-              token={token}
-            />
-          );
-        },
-      })),
-    })),
+    {
+      title: "Permissions",
+      key: "permissions",
+      render: (_, admin) => {
+        const isSuperAdmin = admin.role === "SUPER_ADMIN";
+        const granted = isSuperAdmin ? ALL_PERMISSION_KEYS : admin.permissions ?? [];
+
+        return (
+          <Button
+            type="default"
+            size="small"
+            icon={isSuperAdmin ? <LockOutlined /> : undefined}
+            onClick={() => setSelectedAdmin(admin)}
+            style={
+              isSuperAdmin
+                ? { color: token.colorSuccess, borderColor: token.colorSuccessBorder, background: token.colorSuccessBg }
+                : undefined
+            }
+          >
+            {isSuperAdmin ? "Full access" : `${granted.length} / ${ALL_PERMISSION_KEYS.length} permissions`}
+          </Button>
+        );
+      },
+    },
     {
       title: "Actions",
       key: "actions",
-      fixed: "right",
       width: 160,
       render: (_, admin) => {
         if (admin.role === "SUPER_ADMIN") {
@@ -145,13 +207,21 @@ export default function PermissionMatrix({
 
         return (
           <Flex align="center" gap={10}>
-            <Tooltip title={admin.disabled ? "Enable account" : "Disable account"}>
-              <Switch
-                size="small"
-                checked={!admin.disabled}
-                onChange={() => onToggleStatus(admin.id)}
-              />
-            </Tooltip>
+            <Popconfirm
+              title={admin.disabled ? "Enable this account?" : "Disable this account?"}
+              description={
+                admin.disabled
+                  ? "The admin will be able to log in again."
+                  : "This immediately blocks them from logging in."
+              }
+              okText={admin.disabled ? "Enable" : "Disable"}
+              okButtonProps={{ danger: !admin.disabled }}
+              onConfirm={() => onToggleStatus(admin.id)}
+            >
+              <Tooltip title={admin.disabled ? "Enable account" : "Disable account"}>
+                <Switch size="small" checked={!admin.disabled} />
+              </Tooltip>
+            </Popconfirm>
 
             <Popconfirm
               title="Delete this admin account?"
@@ -195,6 +265,8 @@ export default function PermissionMatrix({
           style: admin.disabled ? { opacity: 0.6 } : undefined,
         })}
       />
+
+      <PermissionsDrawer admin={selectedAdmin} onClose={() => setSelectedAdmin(null)} />
     </MyCard>
   );
 }

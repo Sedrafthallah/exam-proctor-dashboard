@@ -1,9 +1,6 @@
 import { useEffect } from "react";
 import { theme, Flex, Avatar, Alert } from "antd";
 import {
-  CheckCircleFilled,
-  ThunderboltOutlined,
-  WarningFilled,
   WarningOutlined,
   CalendarOutlined,
   TeamOutlined,
@@ -34,7 +31,6 @@ import MyTitle from "../MyTitle/MyTitle";
 import MyText from "../myText/MyText";
 import MyRow from "../myRow/MyRow";
 import MyCol from "../myCol/MyCol";
-import LiveAlerts from "./LiveAlerts";
 
 import useAuthStore from "../../store/useAuthStore";
 import useSessionStore from "../../store/useSessionStore";
@@ -427,7 +423,6 @@ export default function AdminWelcome() {
   const { token } = theme.useToken();
 
   const user = useAuthStore((state) => state.user);
-  const role = user?.role;
 
   const permissions = user?.permissions ?? [];
   const has = (perm) => permissions.includes(perm);
@@ -459,9 +454,7 @@ export default function AdminWelcome() {
   };
 
   const openAlerts = alerts.filter((a) => a.status === "OPEN");
-  const resolvedAlerts = alerts.filter((a) => a.status === "RESOLVED");
   const activeSessions = sessions.filter((s) => sessionStatus(s) === "ACTIVE");
-  const recentOpenAlerts = openAlerts.slice(0, 5);
   const hasAnyPermission = permissions.length > 0;
 
   const header = (
@@ -489,55 +482,7 @@ export default function AdminWelcome() {
     </MyCard>
   );
 
-  // TODO: this branch is keyed off role === "PROCTOR" rather than checking
-  // individual permissions. Fine while Proctor permissions are fixed;
-  // revisit if Proctor permissions ever become configurable like Admin's.
-  if (role === "PROCTOR") {
-    return (
-      <Flex vertical gap={20}>
-        {header}
-
-        <MyRow gutter={[16, 16]}>
-          <MyCol xs={24} sm={8}>
-            <StatCard
-              token={token}
-              icon={<ThunderboltOutlined />}
-              color="rgb(108, 140, 255)"
-              bg="rgba(47, 85, 212, 0.15)"
-              value={activeSessions.length}
-              label="Active Sessions"
-            />
-          </MyCol>
-          <MyCol xs={24} sm={8}>
-            <StatCard
-              token={token}
-              icon={<WarningFilled />}
-              color="rgb(239, 68, 68)"
-              bg="rgba(239, 68, 68, 0.13)"
-              value={openAlerts.length}
-              label="Open Alerts"
-            />
-          </MyCol>
-          <MyCol xs={24} sm={8}>
-            <StatCard
-              token={token}
-              icon={<CheckCircleFilled />}
-              color="rgb(34, 197, 94)"
-              bg="rgba(34, 197, 94, 0.15)"
-              value={resolvedAlerts.length}
-              label="Resolved Alerts"
-            />
-          </MyCol>
-        </MyRow>
-
-        <AlertsByTypeChart alerts={alerts} token={token} />
-
-        <LiveAlerts alerts={recentOpenAlerts} />
-      </Flex>
-    );
-  }
-
-  // ADMIN — dynamic layout based on granted permissions:
+  // ADMIN / PROCTOR — dynamic layout based on granted permissions:
   // Header → Cards (permission-gated) → Charts (permission-gated).
   const cards = [
     has("ViewExamSession") && {

@@ -10,6 +10,18 @@ import MyButtonPrimary from "../../MyComponents/myButton/MyButtonPrimary";
 import useRolesStore from "../../store/useRolesStore";
 import { PERMISSION_CATEGORIES } from "../../MyComponents/usersTable/adminsData";
 
+// Selectable pool for the Proctor role — an admin can check/uncheck any
+// subset of these, not an all-or-nothing set. Swap in DismissAlert/
+// WarnStudent/EscalateAlert here once the backend's expanded permission
+// catalog replaces TakeProctorAction.
+const PROCTOR_ALLOWED_PERMISSIONS = [
+  "MonitorExamSession",
+  "ViewExamSession",
+  "ViewStudents",
+  "ViewAlerts",
+  "TakeProctorAction",
+];
+
 export default function Roles() {
   const { token } = theme.useToken();
 
@@ -27,6 +39,15 @@ export default function Roles() {
   const selectedRole = roles.find((role) => role.id === selectedRoleId) || roles[0];
 
   const handleSave = () => saveRole(selectedRole.id);
+
+  const isProctorRole = selectedRole?.name === "Proctor";
+
+  const visibleCategories = PERMISSION_CATEGORIES.map((group) => ({
+    ...group,
+    permissions: isProctorRole
+      ? group.permissions.filter((p) => PROCTOR_ALLOWED_PERMISSIONS.includes(p.key))
+      : group.permissions,
+  })).filter((group) => group.permissions.length > 0);
 
   return (
     <Flex vertical gap={20}>
@@ -78,7 +99,7 @@ export default function Roles() {
       )}
 
       <Flex vertical gap={20}>
-        {PERMISSION_CATEGORIES.map((group) => (
+        {visibleCategories.map((group) => (
           <Flex key={group.category} vertical gap={10}>
             <MyText type="secondary" style={{ fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4 }}>
               {group.category}
