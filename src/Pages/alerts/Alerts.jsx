@@ -109,7 +109,9 @@ export default function Alerts() {
     fetchAlertTypes();
   }, [statusFilter, typeFilter]);
 
-  const canAct = hasPermission("TakeProctorAction");
+  const canDismiss = hasPermission("DismissAlert");
+  const canWarn = hasPermission("WarnStudent");
+  const canEscalate = hasPermission("EscalateAlert");
 
   const { critical, warnings, resolved } = summary;
 
@@ -277,7 +279,9 @@ export default function Alerts() {
           onChange: refetchAlerts,
           showSizeChanger: true,
         }}
-        canAct={canAct}
+        canDismiss={canDismiss}
+        canWarn={canWarn}
+        canEscalate={canEscalate}
         onDismiss={handleDismiss}
         onWarn={handleWarn}
         onEscalate={handleEscalate}

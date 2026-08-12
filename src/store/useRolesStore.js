@@ -31,7 +31,7 @@ export const INITIAL_ROLES = [
       "DeleteExamSession",
       "PublishExamSession",
       "ViewStudents",
-      "EnrollStudents",
+      "ImportStudents",
       "ExportData",
       "ViewReports",
       "ViewAuditLogs",

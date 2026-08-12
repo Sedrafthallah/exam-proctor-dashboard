@@ -1,6 +1,7 @@
-// Real, final permission list from the backend (26 total). `key` is the
-// exact permission-name string the API returns/accepts; `category` groups
-// them for the Permission Matrix / Reference UIs.
+// Real, final permission list from the backend (31 total, confirmed via
+// direct SQL query against the Permissions table). `key` is the exact
+// permission-name string the API returns/accepts; `category` groups them
+// for the Permission Matrix / Reference UIs.
 export const PERMISSION_DETAILS = [
   { key: "CreateExamSession", label: "Create Exam Session", category: "Sessions" },
   { key: "ViewExamSession", label: "View Exam Session", category: "Sessions" },
@@ -9,14 +10,13 @@ export const PERMISSION_DETAILS = [
   { key: "PublishExamSession", label: "Publish Exam Session", category: "Sessions" },
   { key: "MonitorExamSession", label: "Monitor Exam Session", category: "Sessions" },
   { key: "ExtendSessionTime", label: "Extend Session Time", category: "Sessions" },
+  { key: "RestoreExamSession", label: "Restore Exam Session", category: "Sessions" },
 
   { key: "ViewStudents", label: "View Students", category: "Students" },
-  { key: "EnrollStudents", label: "Enroll Students", category: "Students" },
-  { key: "RemoveStudents", label: "Remove Students", category: "Students" },
+  { key: "ImportStudents", label: "Import Students", category: "Students" },
 
   { key: "AssignProctor", label: "Assign Proctor", category: "Proctors" },
   { key: "ViewProctors", label: "View Proctors", category: "Proctors" },
-  { key: "ManageProctorActions", label: "Manage Proctor Actions", category: "Proctors" },
 
   { key: "CreateUser", label: "Create User", category: "Users" },
   { key: "ViewUsers", label: "View Users", category: "Users" },
@@ -32,10 +32,18 @@ export const PERMISSION_DETAILS = [
   { key: "ExportData", label: "Export Data", category: "Reports" },
 
   { key: "ViewAlerts", label: "View Alerts", category: "Alerts" },
-  { key: "TakeProctorAction", label: "Take Proctor Action", category: "Alerts" },
+  { key: "DismissAlert", label: "Dismiss Alert", category: "Alerts" },
+  { key: "WarnStudent", label: "Warn Student", category: "Alerts" },
+  { key: "EscalateAlert", label: "Escalate Alert", category: "Alerts" },
 
   { key: "ManageQuestionBanks", label: "Manage Question Banks", category: "Question Banks" },
   { key: "ViewQuestionBanks", label: "View Question Banks", category: "Question Banks" },
+
+  { key: "ViewSystemSettings", label: "View System Settings", category: "System Settings" },
+  { key: "ManageSystemSettings", label: "Manage System Settings", category: "System Settings" },
+
+  { key: "ViewDashboard", label: "View Dashboard", category: "Dashboard" },
+  { key: "ViewProctorDashboard", label: "View Proctor Dashboard", category: "Dashboard" },
 ];
 
 // Flat list of every real permission name — used where a role needs "all

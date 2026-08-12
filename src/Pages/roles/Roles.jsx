@@ -11,16 +11,20 @@ import useRolesStore from "../../store/useRolesStore";
 import { PERMISSION_CATEGORIES } from "../../MyComponents/usersTable/adminsData";
 
 // Selectable pool for the Proctor role — an admin can check/uncheck any
-// subset of these, not an all-or-nothing set. Swap in DismissAlert/
-// WarnStudent/EscalateAlert here once the backend's expanded permission
-// catalog replaces TakeProctorAction.
+// subset of these, not an all-or-nothing set.
 const PROCTOR_ALLOWED_PERMISSIONS = [
   "MonitorExamSession",
   "ViewExamSession",
   "ViewStudents",
   "ViewAlerts",
-  "TakeProctorAction",
+  "DismissAlert",
+  "WarnStudent",
+  "EscalateAlert",
 ];
+
+// User/role administration is a Super Admin-only capability — hidden from
+// every other role's editor so Admin (and Proctor) can never be granted it.
+const SUPER_ADMIN_ONLY_CATEGORIES = ["Users", "Roles & Permissions"];
 
 export default function Roles() {
   const { token } = theme.useToken();
@@ -42,12 +46,16 @@ export default function Roles() {
 
   const isProctorRole = selectedRole?.name === "Proctor";
 
-  const visibleCategories = PERMISSION_CATEGORIES.map((group) => ({
-    ...group,
-    permissions: isProctorRole
-      ? group.permissions.filter((p) => PROCTOR_ALLOWED_PERMISSIONS.includes(p.key))
-      : group.permissions,
-  })).filter((group) => group.permissions.length > 0);
+  const visibleCategories = PERMISSION_CATEGORIES.filter(
+    (group) => selectedRole?.isFixed || !SUPER_ADMIN_ONLY_CATEGORIES.includes(group.category),
+  )
+    .map((group) => ({
+      ...group,
+      permissions: isProctorRole
+        ? group.permissions.filter((p) => PROCTOR_ALLOWED_PERMISSIONS.includes(p.key))
+        : group.permissions,
+    }))
+    .filter((group) => group.permissions.length > 0);
 
   return (
     <Flex vertical gap={20}>

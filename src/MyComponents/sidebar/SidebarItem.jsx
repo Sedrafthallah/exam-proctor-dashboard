@@ -49,7 +49,7 @@ export const adminItems = [
     key: "/alerts",
     label: "Alerts",
     icon: <AlertOutlined />,
-    permission: ["ViewAlerts", "TakeProctorAction"],
+    permission: ["ViewAlerts", "DismissAlert", "WarnStudent", "EscalateAlert"],
   },
   {
     key: "/reports",

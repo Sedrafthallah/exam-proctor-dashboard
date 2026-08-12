@@ -52,7 +52,7 @@ const INITIAL_USERS = [
     role: "ADMIN",
     jobTitle: "Registrar",
     disabled: false,
-    permissions: ["ViewStudents", "EnrollStudents", "ExportData"],
+    permissions: ["ViewStudents", "ImportStudents", "ExportData"],
   },
 ];
 

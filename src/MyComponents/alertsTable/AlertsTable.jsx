@@ -12,8 +12,18 @@ import { ALERT_TYPE_CONFIG, ALERT_STATUS_CONFIG, DEFAULT_ALERT_TYPE_CONFIG } fro
 
 dayjs.extend(relativeTime);
 
-export default function AlertsTable({ alerts, pagination, canAct, onDismiss, onWarn, onEscalate }) {
+export default function AlertsTable({
+  alerts,
+  pagination,
+  canDismiss,
+  canWarn,
+  canEscalate,
+  onDismiss,
+  onWarn,
+  onEscalate,
+}) {
   const { token } = theme.useToken();
+  const canAct = canDismiss || canWarn || canEscalate;
 
   const columns = [
     {
@@ -135,24 +145,30 @@ export default function AlertsTable({ alerts, pagination, canAct, onDismiss, onW
 
         return (
           <Flex gap={6} wrap="wrap">
-            <MyButtonSecondary size="small" icon={<CheckOutlined />} onClick={() => onDismiss(record)}>
-              Dismiss
-            </MyButtonSecondary>
-            <MyButtonSecondary
-              size="small"
-              icon={<NotificationOutlined />}
-              onClick={() => onWarn(record)}
-            >
-              Warn
-            </MyButtonSecondary>
-            <MyButtonPrimary
-              size="small"
-              danger
-              icon={<ArrowUpOutlined />}
-              onClick={() => onEscalate(record)}
-            >
-              Escalate
-            </MyButtonPrimary>
+            {canDismiss && (
+              <MyButtonSecondary size="small" icon={<CheckOutlined />} onClick={() => onDismiss(record)}>
+                Dismiss
+              </MyButtonSecondary>
+            )}
+            {canWarn && (
+              <MyButtonSecondary
+                size="small"
+                icon={<NotificationOutlined />}
+                onClick={() => onWarn(record)}
+              >
+                Warn
+              </MyButtonSecondary>
+            )}
+            {canEscalate && (
+              <MyButtonPrimary
+                size="small"
+                danger
+                icon={<ArrowUpOutlined />}
+                onClick={() => onEscalate(record)}
+              >
+                Escalate
+              </MyButtonPrimary>
+            )}
           </Flex>
         );
       },
