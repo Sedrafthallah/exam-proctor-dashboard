@@ -33,9 +33,11 @@ export default function Roles() {
   const updateRolePermission = useRolesStore((state) => state.updateRolePermission);
   const saveRole = useRolesStore((state) => state.saveRole);
   const fetchRoles = useRolesStore((state) => state.fetchRoles);
+  const fetchPermissionCatalog = useRolesStore((state) => state.fetchPermissionCatalog);
 
   useEffect(() => {
     fetchRoles();
+    fetchPermissionCatalog();
   }, []);
 
   const [selectedRoleId, setSelectedRoleId] = useState(roles[0]?.id);

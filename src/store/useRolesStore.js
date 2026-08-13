@@ -49,6 +49,33 @@ export const INITIAL_ROLES = [
 
 const useRolesStore = create((set, get) => ({
   roles: INITIAL_ROLES,
+  permissionCatalog: [], // [{ id, name, description }] once loaded
+
+  fetchPermissionCatalog: async () => {
+    try {
+      const accessToken =
+        useAuthStore.getState().accessToken ??
+        sessionStorage.getItem("accessToken");
+
+      const res = await apiFetch("/api/roles/permissions", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      const json = await res.json();
+      if (!res.ok || json.statusCode !== 200) {
+        console.error(
+          "fetchPermissionCatalog: unexpected response",
+          json.statusCode,
+          json.message,
+        );
+        return;
+      }
+
+      set({ permissionCatalog: json.data });
+    } catch (err) {
+      console.error("fetchPermissionCatalog error:", err);
+    }
+  },
 
   fetchRoles: async () => {
     try {
@@ -105,6 +132,26 @@ const useRolesStore = create((set, get) => ({
       const role = get().roles.find((r) => r.id === roleId);
       if (!role || role.isFixed) return;
 
+      const catalog = get().permissionCatalog;
+      if (!catalog.length) {
+        message.error(
+          "Permission catalog not loaded yet — please try again in a moment.",
+        );
+        return;
+      }
+
+      const nameToId = new Map(catalog.map((p) => [p.name, p.id]));
+      const permissionIds = role.permissions
+        .map((name) => nameToId.get(name))
+        .filter((id) => id !== undefined);
+
+      if (permissionIds.length !== role.permissions.length) {
+        console.warn(
+          "saveRole: some permission names had no matching id in the catalog:",
+          role.permissions.filter((name) => !nameToId.has(name)),
+        );
+      }
+
       const accessToken =
         useAuthStore.getState().accessToken ??
         sessionStorage.getItem("accessToken");
@@ -115,7 +162,7 @@ const useRolesStore = create((set, get) => ({
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ permissions: role.permissions }),
+        body: JSON.stringify({ permissionIds }),
       });
 
       const json = await res.json();
@@ -123,6 +170,16 @@ const useRolesStore = create((set, get) => ({
       if (!res.ok || json.statusCode !== 200) {
         message.error(json.message || "Failed to save permissions.");
         return;
+      }
+
+      if (Array.isArray(json.data)) {
+        const roles = json.data.map((r) => ({
+          id: String(r.id),
+          name: r.name,
+          isFixed: r.name === "SuperAdmin",
+          permissions: r.permissions ?? [],
+        }));
+        set({ roles });
       }
 
       message.success(`"${role.name}" permissions saved.`);
