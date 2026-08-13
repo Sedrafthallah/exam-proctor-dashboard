@@ -12,9 +12,8 @@ const isAuthEndpoint = (path) => path.startsWith("/api/auth/");
 // instead of one per request.
 let refreshPromise = null;
 
-// NOTE: path/payload shape assumed to mirror /api/auth/login's response
-// ({ statusCode, data: { accessToken, refreshToken } }) — confirm the exact
-// contract with the backend once it's available.
+// Assumes the same response shape as /api/auth/login: { statusCode, data:
+// { accessToken, refreshToken } } — unconfirmed against the actual contract.
 function refreshAccessToken() {
   if (refreshPromise) return refreshPromise;
 

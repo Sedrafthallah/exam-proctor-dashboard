@@ -13,16 +13,6 @@ import { BarChartOutlined } from "@ant-design/icons";
 import MyCard from "../../MyComponents/myCard/MyCard";
 import MyText from "../../MyComponents/myText/MyText";
 
-// const staticData = [
-//   { day: "Mon", sessions: 5, submissions: 4 },
-//   { day: "Tue", sessions: 8, submissions: 7 },
-//   { day: "Wed", sessions: 4, submissions: 4 },
-//   { day: "Thu", sessions: 11, submissions: 10 },
-//   { day: "Fri", sessions: 8, submissions: 8 },
-//   { day: "Sat", sessions: 3, submissions: 3 },
-//   { day: "Sun", sessions: 10, submissions: 5 },
-// ];
-
 export default function ExamActivityChart({ data = [] }) {
   const { token } = theme.useToken();
 

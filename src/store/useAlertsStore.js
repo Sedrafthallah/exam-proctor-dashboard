@@ -12,15 +12,10 @@ const ALERT_TYPE_MAP = {
   ConnectivityLost: "CONNECTIVITY_LOST",
 };
 
-// Backend now sends `status` as a numeric-string code instead of the
-// previously-guessed `isDelivered` boolean. Only "0" has been observed in
-// practice so far (an alert with no actionTaken yet), so it's mapped onto
-// the OPEN/RESOLVED/ESCALATED vocabulary the rest of the app already
-// filters/gates action buttons on (see AlertsTable, AlertFeed, Alerts.jsx,
-// AdminWelcome.jsx, Dashboard.jsx). TODO: confirm the remaining status codes
-// with the backend once alerts in other states are observed. Unmapped codes
-// deliberately fail closed to a synthetic, non-matching token — this hides
-// action buttons rather than guessing they mean "open".
+// `status` is a numeric-string code from the backend; only "0" (OPEN) is
+// confirmed so far. Unmapped codes fail closed to a non-matching token
+// rather than guessing "open", so action buttons stay hidden.
+// TODO: confirm remaining status codes once other states are observed.
 const STATUS_LABELS = {
   "0": "OPEN",
 };
@@ -34,7 +29,7 @@ const SEVERITY_LABELS = {
 const mapAlert = (a) => ({
   id: String(a.id),
   type: ALERT_TYPE_MAP[a.alertType] ?? a.alertType.toUpperCase(),
-  typeCode: a.alertType, // raw PascalCase backend code (e.g. "GazeDeviation"), for matching against GET /api/alerts/types
+  typeCode: a.alertType, // raw PascalCase code, for matching against GET /api/alerts/types
   description: a.alertDescription ?? "",
   status: STATUS_LABELS[a.status] ?? `UNKNOWN_STATUS_${a.status}`,
   statusCode: a.status, // raw backend code, kept in case exact-match filtering needs it later

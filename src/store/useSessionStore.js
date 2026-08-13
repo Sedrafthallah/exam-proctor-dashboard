@@ -1,162 +1,7 @@
 import { create } from "zustand";
 import { message } from "antd";
-import dayjs from "dayjs";
 import { apiFetch } from "../api/apiClient";
 import useAuthStore from "./useAuthStore";
-export const INITIAL_SESSIONS = [
-  {
-    id: "sess-001",
-    sessionTitle: "CS301 Final — Spring 2025",
-    courseCode: "CS301",
-    scheduledStartUTC: "2025-06-10T08:00:00Z", // ماضي بكثير → CLOSED
-    duration: 90,
-    gracePeriod: 5,
-    loginWindow: 15,
-    questionBank: "QB-2025-CS301",
-    proctor: "Manar Aljarkas",
-    enrolledStudents: 214,
-    questionRandomisation: true,
-    optionShuffle: true,
-    audioMonitoring: true,
-    gazeThreshold: 3,
-    faceAlertSensitivity: "Medium",
-    published: false,
-    archived: false,
-  },
-  {
-    id: "sess-002",
-    sessionTitle: "DB202 Midterm",
-    courseCode: "DB202",
-    scheduledStartUTC: dayjs().subtract(20, "minute").toISOString(), // ماضي قريب → ACTIVE أو GRACE
-    duration: 60,
-    gracePeriod: 5,
-    loginWindow: 15,
-    questionBank: "QB-2025-DB202",
-    proctor: "Manar Aljarkas",
-    enrolledStudents: 98,
-    questionRandomisation: true,
-    optionShuffle: false,
-    audioMonitoring: false,
-    gazeThreshold: 3,
-    faceAlertSensitivity: "Low",
-    published: true,
-    archived: false,
-  },
-  {
-    id: "sess-003",
-    sessionTitle: "NET410 Quiz 3",
-    courseCode: "NET410",
-    scheduledStartUTC: dayjs().add(12, "hour").toISOString(), // ضمن نافذة T-24h → LOCKED
-    duration: 45,
-    gracePeriod: 5,
-    loginWindow: 10,
-    questionBank: "QB-2025-NET410",
-    proctor: "Inas Alqadiri",
-    enrolledStudents: 55,
-    questionRandomisation: false,
-    optionShuffle: false,
-    audioMonitoring: true,
-    gazeThreshold: 5,
-    faceAlertSensitivity: "High",
-    published: true,
-    archived: false,
-  },
-  {
-    id: "sess-004",
-    sessionTitle: "AI501 Final Project",
-    courseCode: "AI501",
-    scheduledStartUTC: "2026-07-15T11:00:00Z", // مستقبل بعيد → SCHEDULED
-    duration: 120,
-    gracePeriod: 10,
-    loginWindow: 20,
-    questionBank: "QB-2025-AI501",
-    proctor: "Manar Aljarkas",
-    enrolledStudents: 42,
-    questionRandomisation: true,
-    optionShuffle: true,
-    audioMonitoring: true,
-    gazeThreshold: 3,
-    faceAlertSensitivity: "Medium",
-    published: true,
-    archived: false,
-  },
-  {
-    id: "sess-005",
-    sessionTitle: "CS101 Intro Quiz",
-    courseCode: "CS101",
-    scheduledStartUTC: "2026-08-01T10:00:00Z", // مستقبل + مش منشور → DRAFT
-    duration: 30,
-    gracePeriod: 5,
-    loginWindow: 15,
-    questionBank: null,
-    proctor: null,
-    enrolledStudents: 0,
-    questionRandomisation: false,
-    optionShuffle: false,
-    audioMonitoring: false,
-    gazeThreshold: 3,
-    faceAlertSensitivity: "Medium",
-    published: false, // ← DRAFT
-    archived: false,
-  },
-  {
-    id: "sess-006",
-    sessionTitle: "CS201 Spring 2024",
-    courseCode: "CS201",
-    scheduledStartUTC: "2024-12-10T08:00:00Z", // قديم جداً → ARCHIVED
-    duration: 90,
-    gracePeriod: 5,
-    loginWindow: 15,
-    questionBank: "QB-2024-CS201",
-    proctor: "Inas Alqadiri",
-    enrolledStudents: 180,
-    questionRandomisation: true,
-    optionShuffle: true,
-    audioMonitoring: false,
-    gazeThreshold: 3,
-    faceAlertSensitivity: "Medium",
-    published: true,
-    archived: true, // ← ARCHIVED
-  },
-  {
-    id: "sess-007",
-    sessionTitle: "MTH120 Final Exam",
-    courseCode: "MTH120",
-    scheduledStartUTC: "2025-05-20T09:00:00Z", // ماضي بكثير → CLOSED
-    duration: 60,
-    gracePeriod: 5,
-    loginWindow: 15,
-    questionBank: "QB-2025-MTH120",
-    proctor: "Manar Aljarkas",
-    enrolledStudents: 64,
-    questionRandomisation: true,
-    optionShuffle: true,
-    audioMonitoring: true,
-    gazeThreshold: 3,
-    faceAlertSensitivity: "Medium",
-    published: true,
-    archived: false,
-  },
-  {
-    id: "sess-008",
-    sessionTitle: "PHY210 Midterm",
-    courseCode: "PHY210",
-    scheduledStartUTC: "2025-04-02T10:00:00Z", // ماضي بكثير → CLOSED
-    duration: 75,
-    gracePeriod: 5,
-    loginWindow: 15,
-    questionBank: "QB-2025-PHY210",
-    proctor: "Inas Alqadiri",
-    enrolledStudents: 87,
-    questionRandomisation: true,
-    optionShuffle: false,
-    audioMonitoring: true,
-    gazeThreshold: 4,
-    faceAlertSensitivity: "High",
-    published: true,
-    archived: false,
-  },
-];
 
 const useSessionStore = create((set, get) => ({
   sessions: [],
@@ -211,7 +56,7 @@ const useSessionStore = create((set, get) => ({
         id: String(s.id),
         sessionTitle: s.title,
         courseCode: s.courseTag,
-        status: s.status, // ← جاهز من الباك مباشرة
+        status: s.status,
         scheduledStartUTC: s.startTime,
         duration: s.durationMinutes,
         gracePeriod: s.gracePeriodMinutes,
@@ -290,12 +135,9 @@ const useSessionStore = create((set, get) => ({
       ],
     })),
 
-  // Confirmed via a working Postman request against POST /api/exam-sessions:
-  // this endpoint expects multipart/form-data (PascalCase field names), not
-  // JSON — sending JSON was the root cause of the previous 400 "Invalid
-  // session settings" on every attempt. Do NOT set a Content-Type header
-  // below; the browser must set it itself so it can include the multipart
-  // boundary string.
+  // POST /api/exam-sessions expects multipart/form-data with PascalCase
+  // fields, not JSON. Don't set Content-Type manually — the browser needs
+  // to set the multipart boundary itself.
   createSessionApi: async (fields) => {
     try {
       const accessToken =
@@ -317,9 +159,7 @@ const useSessionStore = create((set, get) => ({
       formData.append("QuestionRandomisation", fields.questionRandomisation ?? true);
       formData.append("OptionShuffle", fields.optionShuffle ?? true);
       formData.append("AudioMonitoring", fields.audioMonitoring ?? true);
-      // Single append today since the UI only selects one proctor; if
-      // fields.proctorId ever becomes an array, loop and append once per id
-      // — that's the standard way to send an array via form-data.
+      // UI only selects one proctor today, hence a single append.
       if (fields.proctorId) {
         formData.append("AssignedProctorIds", fields.proctorId);
       }
@@ -467,7 +307,6 @@ const useSessionStore = create((set, get) => ({
     }
   },
 
-  // extend
   extendSessionTimeApi: async (id, extraMinutes) => {
     try {
       const accessToken =
@@ -511,7 +350,6 @@ const useSessionStore = create((set, get) => ({
       return false;
     }
   },
-  //update
   updateSessionApi: async (id, fields) => {
     try {
       const accessToken =
@@ -531,12 +369,9 @@ const useSessionStore = create((set, get) => ({
           gracePeriodMinutes: fields.gracePeriod,
           loginWindowMinutes: fields.loginWindow,
           eyeGazeThresholdSec: fields.gazeThreshold,
-          // Only included when the proctor field was actually part of this
-          // edit (see EditSessionModal's handleFinish) — previously omitted
-          // entirely, so reassigning a proctor from "Edit Session" silently
-          // never reached the backend. NOTE: assumed to follow the same
-          // assignedProctorIds shape createSessionApi/editRestoreSessionApi
-          // use for this same resource — confirm with the backend if wrong.
+          // Only sent when the proctor field was part of this edit; uses
+          // the same assignedProctorIds shape as createSessionApi/
+          // editRestoreSessionApi.
           ...(fields.proctorId !== undefined
             ? { assignedProctorIds: fields.proctorId ? [fields.proctorId] : [] }
             : {}),
@@ -577,7 +412,6 @@ const useSessionStore = create((set, get) => ({
     }
   },
 
-  // edit restore
   editRestoreSessionApi: async (id, fields) => {
     try {
       const accessToken =
@@ -689,7 +523,6 @@ const useSessionStore = create((set, get) => ({
     set({ weeklyStatisticsLoading: true });
 
     try {
-      // جيبي الـ token من useAuthStore
       const accessToken = useAuthStore.getState().accessToken;
 
       const response = await apiFetch("/api/exam-sessions/weekly-statistics", {

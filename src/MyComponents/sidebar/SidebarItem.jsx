@@ -12,9 +12,8 @@ import {
   SafetyCertificateOutlined,
 } from "@ant-design/icons";
 
-// Permission values are the real permission-name strings from the backend's
-// roles-and-permissions endpoint (26 total). An array means the item is
-// visible if the Admin holds ANY one of the listed permissions.
+// Permission values are permission-name strings from the backend. An array
+// means the item is visible if the Admin holds ANY one of the listed permissions.
 export const adminItems = [
   {
     key: "/dashboard",

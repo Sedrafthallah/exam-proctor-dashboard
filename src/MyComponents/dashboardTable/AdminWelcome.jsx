@@ -65,8 +65,7 @@ function getGreeting() {
   return "Good evening";
 }
 
-// Real sessions from the API already carry a `status` field (e.g. "CLOSED",
-// "ARCHIVED"); fall back to deriving it only for sessions that don't.
+// Sessions from the API carry a `status` field; derive it only as a fallback.
 function sessionStatus(session) {
   return session.status || getSessionStatus(session);
 }
@@ -223,12 +222,10 @@ const ALERT_STATUS_COLORS = {
   ESCALATED: "#fa541c",
 };
 
-// Counts are computed client-side from the already-loaded `alerts` array
-// (same source AlertsByTypeChart uses) because GET /api/alerts?status=...
-// is confirmed broken — it returns the same empty result regardless of the
-// status value. `alert.status` here is already normalized by useAlertsStore
-// (STATUS_LABELS / UNKNOWN_STATUS_${code} fallback), so unrecognized codes
-// still show up as their own labeled bar instead of being dropped.
+// Computed client-side from `alerts` — GET /api/alerts?status=... ignores
+// the status filter and always returns the same results. `alert.status` is
+// already normalized by useAlertsStore, so unrecognized codes still show up
+// as their own labeled bar instead of being dropped.
 function AlertsByStatusChart({ alerts, token }) {
   const statusCounts = alerts.reduce((counts, alert) => {
     counts[alert.status] = (counts[alert.status] ?? 0) + 1;
@@ -615,9 +612,7 @@ export default function AdminWelcome() {
   const user = useAuthStore((state) => state.user);
   const role = user?.role;
 
-  // Proctor dashboard — separate confirmed endpoints, fetched and rendered
-  // via the same StatCard/MyCard components as the Admin path below rather
-  // than merged into its permission-gated cards/charts logic.
+  // Proctor dashboard — separate endpoints from the Admin path below.
   const [proctorSummary, setProctorSummary] = useState(null);
   const [proctorAlertCounts, setProctorAlertCounts] = useState([]);
 
@@ -659,13 +654,8 @@ export default function AdminWelcome() {
   const fetchQuestionBanks = useQuestionBankStore((state) => state.fetchQuestionBanks);
 
   useEffect(() => {
-    // Mirrors the has(...) gates the cards/charts below use for the same
-    // data, so a reduced-permission account (e.g. Proctor) doesn't fire
-    // fetches for data it can't view and gets a 403 for.
-    // - sessions: feeds the "Sessions" card (ViewExamSession) AND the
-    //   "Ready to Export" card + Reports Status chart (ExportData).
-    // - alerts: feeds the "Escalated" card (ViewAlerts) AND the "Open
-    //   Alerts" card + Alerts by Type chart (MonitorExamSession).
+    // Mirrors the has(...) gates the cards/charts below use, so a
+    // reduced-permission account doesn't fetch data it can't view.
     if (permissions.includes("ViewExamSession") || permissions.includes("ExportData")) {
       fetchSessions();
     }
@@ -719,10 +709,7 @@ export default function AdminWelcome() {
     </MyCard>
   );
 
-  // PROCTOR — separate confirmed endpoints, rendered with the same
-  // StatCard/MyCard components as the Admin path below. Kept as an early
-  // return rather than merged into that path's has()-based permission
-  // gating, which doesn't apply to this data.
+  // PROCTOR — early return; permission-gating below doesn't apply here.
   if (role === "PROCTOR") {
     return (
       <Flex vertical gap={20}>

@@ -57,11 +57,8 @@ const INITIAL_USERS = [
 ];
 
 // Last-resort fallback for when the backend returns an empty permissions
-// array for a specific user despite their role having real permissions
-// defined. Reuses whatever useRolesStore currently has (either the real
-// role→permissions data fetched from GET /api/roles, or its own last-resort
-// INITIAL_ROLES if that fetch hasn't happened/succeeded yet) rather than
-// duplicating another hand-guessed mock map here.
+// array for a user despite their role having permissions defined. Reuses
+// useRolesStore's role→permissions data.
 function fallbackPermissionsForRole(roleName) {
   const roles = useRolesStore.getState().roles;
   const match = roles.find(
@@ -124,8 +121,8 @@ const useAuthStore = create((set, get) => ({
               : "ADMIN",
         jobTitle: data.roles?.[0] ?? "Admin",
         disabled: false,
-        // Confirmed API shape: array of granted permission-name strings.
-        // Fallback only applies if the backend returns an empty array here.
+        // permissions is an array of granted permission-name strings;
+        // fallback only applies if the backend returns it empty.
         permissions:
           data.permissions?.length > 0
             ? data.permissions
@@ -199,9 +196,8 @@ const useAuthStore = create((set, get) => ({
     set({ accessToken, refreshToken });
   },
 
-  // Patches the logged-in user's own profile fields locally after a
-  // successful self-service update (My Account modal), so the UI reflects
-  // the change immediately without requiring a re-login.
+  // Patches the logged-in user's own profile locally after a self-service
+  // update, so the UI reflects it without requiring a re-login.
   updateOwnProfile: (updates) =>
     set((state) => {
       const user = { ...state.user, ...updates };
@@ -226,8 +222,8 @@ const useAuthStore = create((set, get) => ({
       if (!res.ok || json.statusCode !== 200) return;
 
       const admins = json.data.items.map((a) => {
-        // Confirmed API shape: array of granted permission-name strings.
-        // Fallback only applies if the backend returns an empty array here.
+        // permissions is an array of granted permission-name strings;
+        // fallback only applies if the backend returns it empty.
         const permissions =
           a.permissions?.length > 0
             ? a.permissions // ← real permissions if available
@@ -255,11 +251,8 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
-  // Creates a real login account for a new admin (Users Management > New Admin).
-  // The duplicate-email check below is a fast-fail UX nicety only — the API
-  // response is still the source of truth for success/failure.
-  // Returns { success, error, data } so the caller can surface a duplicate-email
-  // error inline and show the API's temporary password on success.
+  // Creates a login account for a new admin. The email check below is a
+  // fast-fail UX nicety only — the API response is the source of truth.
   registerAdminApi: async ({ name, email, roleIds }) => {
     const normalizedEmail = email.trim().toLowerCase();
     const emailTaken = get().users.some(
@@ -306,12 +299,9 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
-  // Edits an existing admin's profile/login/permissions from Users Management.
-  // Returns { success, error } so the caller can surface a duplicate-email error inline.
-  // NOTE: no update-admin endpoint exists elsewhere in the codebase to copy —
-  // this follows the same `/api/admins/${id}` shape as deleteAdminApi /
-  // deactivateAdminApi. Confirm the exact path/payload with the backend once
-  // it's available.
+  // Edits an existing admin's profile/login/permissions. Not currently called
+  // from the UI; assumes PATCH /api/admins/${id}, matching deleteAdminApi/
+  // deactivateAdminApi's shape.
   updateAdminApi: async (userId, { name, email, password, permissions }) => {
     const normalizedEmail = email.trim().toLowerCase();
     const emailTaken = get().users.some(

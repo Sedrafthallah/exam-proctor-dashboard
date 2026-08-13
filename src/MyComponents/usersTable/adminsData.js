@@ -1,7 +1,5 @@
-// Real, final permission list from the backend (31 total, confirmed via
-// direct SQL query against the Permissions table). `key` is the exact
-// permission-name string the API returns/accepts; `category` groups them
-// for the Permission Matrix / Reference UIs.
+// `key` is the exact permission-name string the API returns/accepts;
+// `category` groups them for the Permission Matrix / Reference UIs.
 export const PERMISSION_DETAILS = [
   { key: "CreateExamSession", label: "Create Exam Session", category: "Sessions" },
   { key: "ViewExamSession", label: "View Exam Session", category: "Sessions" },

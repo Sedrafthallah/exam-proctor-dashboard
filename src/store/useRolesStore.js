@@ -4,11 +4,9 @@ import { apiFetch } from "../api/apiClient";
 import useAuthStore from "./useAuthStore";
 import { ALL_PERMISSION_KEYS } from "../MyComponents/usersTable/adminsData";
 
-// Last-resort local fallback, only used if fetchRoles() fails (e.g. backend
-// unreachable). Real per-role permissions always come from GET /api/roles
-// when available — Proctor's set here matches the confirmed live response
-// (["CreateExamSession", "ViewExamSession", "EditExamSession"]); Admin's is
-// a best-effort placeholder, not authoritative.
+// Last-resort fallback for when fetchRoles() fails or a role's permissions
+// come back empty. Proctor's set matches the confirmed API response;
+// Admin's is a best-effort placeholder, not authoritative.
 export const INITIAL_ROLES = [
   {
     id: "superadmin",
@@ -46,6 +44,11 @@ export const INITIAL_ROLES = [
     permissions: ["CreateExamSession", "ViewExamSession", "EditExamSession"],
   },
 ];
+
+export function mapPermissionNamesToIds(names, catalog) {
+  const nameToId = new Map(catalog.map((p) => [p.name, p.id]));
+  return names.map((name) => nameToId.get(name)).filter((id) => id !== undefined);
+}
 
 const useRolesStore = create((set, get) => ({
   roles: INITIAL_ROLES,
@@ -91,17 +94,15 @@ const useRolesStore = create((set, get) => ({
 
       if (!res.ok || json.statusCode !== 200) return;
 
-      // حولي الـ response لشكل يناسب الـ store
       const roles = json.data.map((r) => ({
         id: String(r.id),
         name: r.name,
         isFixed: r.name === "SuperAdmin",
         permissions:
           r.permissions?.length > 0
-            ? r.permissions // real permission-name array from the API
+            ? r.permissions
             : (INITIAL_ROLES.find((ir) => ir.name === r.name)?.permissions ??
               []),
-        // لو فاضية → خدي من الـ INITIAL_ROLES الموك
       }));
 
       set({ roles });
@@ -144,12 +145,10 @@ const useRolesStore = create((set, get) => ({
         return;
       }
 
-      const nameToId = new Map(catalog.map((p) => [p.name, p.id]));
-      const permissionIds = role.permissions
-        .map((name) => nameToId.get(name))
-        .filter((id) => id !== undefined);
+      const permissionIds = mapPermissionNamesToIds(role.permissions, catalog);
 
       if (permissionIds.length !== role.permissions.length) {
+        const nameToId = new Map(catalog.map((p) => [p.name, p.id]));
         console.warn(
           "saveRole: some permission names had no matching id in the catalog:",
           role.permissions.filter((name) => !nameToId.has(name)),
