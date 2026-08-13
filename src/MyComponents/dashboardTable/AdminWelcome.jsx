@@ -36,6 +36,11 @@ import useAuthStore from "../../store/useAuthStore";
 import useSessionStore, {
   fetchProctorSummaryCards,
   fetchProctorAlertCountsByType,
+  fetchDashboardSummaryCards,
+  fetchDashboardAlertCountsByType,
+  fetchDashboardSessionCountsByDay,
+  fetchDashboardQuestionCountsByBank,
+  fetchDashboardExportStatus,
 } from "../../store/useSessionStore";
 import useAlertsStore from "../../store/useAlertsStore";
 import useStudentStore from "../../store/useStudentStore";
@@ -128,13 +133,24 @@ function StatCard({ icon, color, bg, value, label, sub, token }) {
   );
 }
 
-function AlertsByTypeChart({ alerts, token }) {
-  const data = ALERT_TYPES.map((type) => ({
-    type,
-    label: ALERT_TYPE_CONFIG[type]?.label ?? type.replace("_", " "),
-    color: ALERT_TYPE_CONFIG[type]?.color ?? token.colorPrimary,
-    count: alerts.filter((a) => a.type === type).length,
-  }));
+function AlertsByTypeChart({ alerts, alertCounts, token }) {
+  // Prefer the backend's pre-counted data (GET /api/dashboard/alert-counts-by-type)
+  // when available; its `code` values don't match ALERT_TYPE_CONFIG's keys, so
+  // bars use a flat color there instead of falling back to the client-side count.
+  const hasBackendData = alertCounts && alertCounts.length > 0;
+  const data = hasBackendData
+    ? alertCounts.map((item) => ({
+        type: item.code,
+        label: item.label,
+        color: token.colorPrimary,
+        count: item.count,
+      }))
+    : ALERT_TYPES.map((type) => ({
+        type,
+        label: ALERT_TYPE_CONFIG[type]?.label ?? type.replace("_", " "),
+        color: ALERT_TYPE_CONFIG[type]?.color ?? token.colorPrimary,
+        count: alerts.filter((a) => a.type === type).length,
+      }));
 
   return (
     <MyCard
@@ -197,6 +213,99 @@ function AlertsByTypeChart({ alerts, token }) {
           </BarChart>
         </ResponsiveContainer>
       </Flex>
+    </MyCard>
+  );
+}
+
+const ALERT_STATUS_COLORS = {
+  OPEN: "#faad14",
+  RESOLVED: "#52c41a",
+  ESCALATED: "#fa541c",
+};
+
+// Counts are computed client-side from the already-loaded `alerts` array
+// (same source AlertsByTypeChart uses) because GET /api/alerts?status=...
+// is confirmed broken — it returns the same empty result regardless of the
+// status value. `alert.status` here is already normalized by useAlertsStore
+// (STATUS_LABELS / UNKNOWN_STATUS_${code} fallback), so unrecognized codes
+// still show up as their own labeled bar instead of being dropped.
+function AlertsByStatusChart({ alerts, token }) {
+  const statusCounts = alerts.reduce((counts, alert) => {
+    counts[alert.status] = (counts[alert.status] ?? 0) + 1;
+    return counts;
+  }, {});
+
+  const data = Object.entries(statusCounts).map(([status, count]) => ({
+    status,
+    count,
+    color: ALERT_STATUS_COLORS[status] ?? token.colorTextTertiary,
+  }));
+
+  return (
+    <MyCard
+      title={
+        <Flex align="center" gap={8}>
+          <BarChartOutlined
+            style={{ color: token.colorPrimary, fontSize: 16 }}
+          />
+          <MyText strong>Alerts by Status</MyText>
+        </Flex>
+      }
+      style={chartCardStyle(token)}
+    >
+      {data.length === 0 ? (
+        <MyText type="secondary">No alert data yet.</MyText>
+      ) : (
+        <Flex style={{ width: "100%", height: 220, marginTop: 5 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={data}
+              margin={{ top: 5, right: 10, left: -25, bottom: 0 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke={token.colorBorderSecondary}
+                vertical={false}
+              />
+              <XAxis
+                dataKey="status"
+                tick={{ fill: token.colorTextDescription, fontSize: 11 }}
+                axisLine={false}
+                tickLine={false}
+                interval={0}
+                angle={-15}
+                textAnchor="end"
+                height={50}
+              />
+              <YAxis
+                tick={{ fill: token.colorTextDescription, fontSize: 12 }}
+                axisLine={false}
+                tickLine={false}
+                allowDecimals={false}
+              />
+              <Tooltip
+                contentStyle={{
+                  background: token.colorBgElevated,
+                  borderColor: token.colorBorder,
+                  borderRadius: 8,
+                  color: token.colorText,
+                }}
+                cursor={{ fill: token.colorFillSecondary, opacity: 0.3 }}
+              />
+              <Bar
+                name="Alerts"
+                dataKey="count"
+                radius={[3, 3, 0, 0]}
+                barSize={28}
+              >
+                {data.map((entry) => (
+                  <Cell key={entry.status} fill={entry.color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </Flex>
+      )}
     </MyCard>
   );
 }
@@ -351,19 +460,26 @@ function SessionsTrendChart({ data, token }) {
   );
 }
 
-function ReportsStatusPieChart({ sessions, token }) {
-  const data = [
-    {
-      name: "Exported",
-      value: sessions.filter((s) => sessionStatus(s) === "CLOSED").length,
-      color: token.colorSuccess,
-    },
-    {
-      name: "Pending",
-      value: sessions.filter((s) => sessionStatus(s) === "ACTIVE").length,
-      color: token.colorWarning,
-    },
-  ];
+function ReportsStatusPieChart({ sessions, exportStatus, token }) {
+  const hasBackendData =
+    exportStatus && (exportStatus.exported > 0 || exportStatus.pending > 0);
+  const data = hasBackendData
+    ? [
+        { name: "Exported", value: exportStatus.exported, color: token.colorSuccess },
+        { name: "Pending", value: exportStatus.pending, color: token.colorWarning },
+      ]
+    : [
+        {
+          name: "Exported",
+          value: sessions.filter((s) => sessionStatus(s) === "CLOSED").length,
+          color: token.colorSuccess,
+        },
+        {
+          name: "Pending",
+          value: sessions.filter((s) => sessionStatus(s) === "ACTIVE").length,
+          color: token.colorWarning,
+        },
+      ];
   const total = data.reduce((sum, d) => sum + d.value, 0);
 
   return (
@@ -511,6 +627,23 @@ export default function AdminWelcome() {
     fetchProctorAlertCountsByType(7).then(setProctorAlertCounts);
   }, [role]);
 
+  // ADMIN — dedicated backend-computed dashboard endpoints, replacing the
+  // client-side computed values used for the stat cards/charts below.
+  const [dashboardSummary, setDashboardSummary] = useState(null);
+  const [alertCountsByType, setAlertCountsByType] = useState([]);
+  const [sessionCountsByDay, setSessionCountsByDay] = useState([]);
+  const [questionCountsByBank, setQuestionCountsByBank] = useState([]);
+  const [exportStatus, setExportStatus] = useState(null);
+
+  useEffect(() => {
+    if (role === "PROCTOR") return;
+    fetchDashboardSummaryCards().then(setDashboardSummary);
+    fetchDashboardAlertCountsByType().then(setAlertCountsByType);
+    fetchDashboardSessionCountsByDay(7).then(setSessionCountsByDay);
+    fetchDashboardQuestionCountsByBank().then(setQuestionCountsByBank);
+    fetchDashboardExportStatus().then(setExportStatus);
+  }, [role]);
+
   const permissions = useMemo(() => user?.permissions ?? [], [user?.permissions]);
   const has = (perm) => permissions.includes(perm);
 
@@ -640,15 +773,15 @@ export default function AdminWelcome() {
     has("ViewExamSession") && {
       key: "sessions",
       title: "Sessions",
-      value: sessions.length,
-      sub: `${activeSessions.length} active`,
+      value: dashboardSummary?.totalSessions ?? sessions.length,
+      sub: `${dashboardSummary?.activeSessions ?? activeSessions.length} active`,
       icon: <CalendarOutlined />,
       color: token.colorPrimary,
     },
     has("ViewStudents") && {
       key: "students",
       title: "Students",
-      value: students.length,
+      value: dashboardSummary?.registeredStudents ?? students.length,
       sub: "registered",
       icon: <TeamOutlined />,
       color: token.colorSuccess,
@@ -656,7 +789,7 @@ export default function AdminWelcome() {
     (has("ManageQuestionBanks") || has("ViewQuestionBanks")) && {
       key: "question-banks",
       title: "Question Banks",
-      value: questionBanks.length,
+      value: dashboardSummary?.questionBanks ?? questionBanks.length,
       sub: "total banks",
       icon: <FileTextOutlined />,
       color: token.colorWarning,
@@ -664,15 +797,15 @@ export default function AdminWelcome() {
     has("MonitorExamSession") && {
       key: "open-alerts",
       title: "Open Alerts",
-      value: openAlerts.length,
-      sub: `${openAlerts.filter((a) => CRITICAL_ALERT_TYPES.includes(a.type)).length} critical`,
+      value: dashboardSummary?.openAlerts ?? openAlerts.length,
+      sub: `${dashboardSummary?.criticalOpenAlerts ?? openAlerts.filter((a) => CRITICAL_ALERT_TYPES.includes(a.type)).length} critical`,
       icon: <BellOutlined />,
       color: token.colorError,
     },
     has("ExportData") && {
       key: "ready-to-export",
       title: "Ready to Export",
-      value: sessions.filter((s) => sessionStatus(s) === "CLOSED").length,
+      value: dashboardSummary?.readyToExport ?? sessions.filter((s) => sessionStatus(s) === "CLOSED").length,
       sub: "closed sessions",
       icon: <BarChartOutlined />,
       color: token.colorInfo,
@@ -680,31 +813,66 @@ export default function AdminWelcome() {
     has("ViewAlerts") && {
       key: "escalated",
       title: "Escalated",
-      value: alerts.filter((a) => a.status === "ESCALATED").length,
+      value: dashboardSummary?.escalatedAlerts ?? alerts.filter((a) => a.status === "ESCALATED").length,
       sub: "violations",
       icon: <WarningOutlined />,
       color: "#fa541c",
     },
   ].filter(Boolean);
 
+  // Backend session-counts-by-day/question-counts-by-bank shapes mapped onto
+  // the field names SessionsTrendChart/QuestionsPerBankChart already render,
+  // so the charts themselves don't need to know about two data sources.
+  const sessionsChartData =
+    sessionCountsByDay.length > 0
+      ? sessionCountsByDay.map((d) => ({
+          day: d.dayName.slice(0, 3),
+          sessions: d.sessionCount,
+        }))
+      : weeklyStatistics;
+
+  const questionBankChartData =
+    questionCountsByBank.length > 0
+      ? questionCountsByBank.map((qb) => ({
+          code: qb.bankTitle,
+          questionCount: qb.questionCount,
+        }))
+      : questionBanks;
+
   const activeCharts = [
     has("MonitorExamSession") && {
       key: "alerts-chart",
-      component: <AlertsByTypeChart alerts={alerts} token={token} />,
+      component: (
+        <AlertsByTypeChart
+          alerts={alerts}
+          alertCounts={alertCountsByType}
+          token={token}
+        />
+      ),
     },
     has("ViewExamSession") && {
       key: "sessions-chart",
-      component: <SessionsTrendChart data={weeklyStatistics} token={token} />,
+      component: <SessionsTrendChart data={sessionsChartData} token={token} />,
     },
     has("ExportData") && {
       key: "reports-chart",
-      component: <ReportsStatusPieChart sessions={sessions} token={token} />,
+      component: (
+        <ReportsStatusPieChart
+          sessions={sessions}
+          exportStatus={exportStatus}
+          token={token}
+        />
+      ),
     },
     (has("ManageQuestionBanks") || has("ViewQuestionBanks")) && {
       key: "qbank-chart",
       component: (
-        <QuestionsPerBankChart questionBanks={questionBanks} token={token} />
+        <QuestionsPerBankChart questionBanks={questionBankChartData} token={token} />
       ),
+    },
+    has("ViewAlerts") && {
+      key: "alerts-by-status",
+      component: <AlertsByStatusChart alerts={alerts} token={token} />,
     },
   ].filter(Boolean);
   return (

@@ -46,8 +46,7 @@ function accessRulesFor(path) {
   if (!item) return {};
 
   // Present only in superAdminItems (not adminItems) → Super Admin-exclusive
-  // page (Users, Roles, Settings, Audit Logs), gated by role rather than a
-  // named permission.
+  // page (Users, Roles), gated by role rather than a named permission.
   if (!ADMIN_VISIBLE_PATHS.has(path)) return { superAdminOnly: true };
 
   return item.permission ? { permission: item.permission } : {};

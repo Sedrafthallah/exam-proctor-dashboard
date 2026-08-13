@@ -57,11 +57,23 @@ export const adminItems = [
     icon: <BarChartOutlined />,
     permission: ["ViewReports", "ExportData"],
   },
+  {
+    key: "/logs",
+    label: "Audit Logs",
+    icon: <HistoryOutlined />,
+    permission: "ViewAuditLogs",
+  },
+  {
+    key: "/settings",
+    label: "System Settings",
+    icon: <SettingOutlined />,
+    permission: ["ViewSystemSettings", "ManageSystemSettings"],
+  },
 ];
 
-// Users Management, System Settings and Audit Logs are Super Admin-only
-// capabilities (role R-01) rather than granted permissions, so they carry
-// no `permission` flag — the Sidebar only renders this list for that role.
+// Users Management and Roles & Permissions are Super Admin-only capabilities
+// (role R-01) rather than granted permissions, so they carry no `permission`
+// flag — the Sidebar only renders these two entries for that role.
 export const superAdminItems = [
   ...adminItems,
   {
@@ -73,16 +85,5 @@ export const superAdminItems = [
     key: "/roles",
     label: "Roles & Permissions",
     icon: <SafetyCertificateOutlined />,
-  },
-
-  {
-    key: "/logs",
-    label: "Audit Logs",
-    icon: <HistoryOutlined />,
-  },
-  {
-    key: "/settings",
-    label: "System Settings",
-    icon: <SettingOutlined />,
   },
 ];

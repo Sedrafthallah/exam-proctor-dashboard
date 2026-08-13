@@ -753,4 +753,92 @@ export async function fetchProctorAlertCountsByType(days = 7) {
   }
 }
 
+// Admin dashboard — dedicated backend-computed endpoints for the stat
+// cards/charts in AdminWelcome.jsx, same fetch-and-return convention as the
+// Proctor dashboard helpers above.
+export async function fetchDashboardSummaryCards() {
+  try {
+    const accessToken =
+      useAuthStore.getState().accessToken ?? sessionStorage.getItem("accessToken");
+
+    const res = await apiFetch("/api/dashboard/summary-cards", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    const json = await res.json();
+    return json.data ?? null;
+  } catch (err) {
+    console.error("fetchDashboardSummaryCards error:", err);
+    return null;
+  }
+}
+
+export async function fetchDashboardAlertCountsByType() {
+  try {
+    const accessToken =
+      useAuthStore.getState().accessToken ?? sessionStorage.getItem("accessToken");
+
+    const res = await apiFetch("/api/dashboard/alert-counts-by-type", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    const json = await res.json();
+    return json.data ?? [];
+  } catch (err) {
+    console.error("fetchDashboardAlertCountsByType error:", err);
+    return [];
+  }
+}
+
+export async function fetchDashboardSessionCountsByDay(days = 7) {
+  try {
+    const accessToken =
+      useAuthStore.getState().accessToken ?? sessionStorage.getItem("accessToken");
+
+    const res = await apiFetch(`/api/dashboard/session-counts-by-day?days=${days}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    const json = await res.json();
+    return json.data ?? [];
+  } catch (err) {
+    console.error("fetchDashboardSessionCountsByDay error:", err);
+    return [];
+  }
+}
+
+export async function fetchDashboardQuestionCountsByBank() {
+  try {
+    const accessToken =
+      useAuthStore.getState().accessToken ?? sessionStorage.getItem("accessToken");
+
+    const res = await apiFetch("/api/dashboard/question-counts-by-bank", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    const json = await res.json();
+    return json.data ?? [];
+  } catch (err) {
+    console.error("fetchDashboardQuestionCountsByBank error:", err);
+    return [];
+  }
+}
+
+export async function fetchDashboardExportStatus() {
+  try {
+    const accessToken =
+      useAuthStore.getState().accessToken ?? sessionStorage.getItem("accessToken");
+
+    const res = await apiFetch("/api/dashboard/session-counts-by-export-status", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    const json = await res.json();
+    return json.data ?? null;
+  } catch (err) {
+    console.error("fetchDashboardExportStatus error:", err);
+    return null;
+  }
+}
+
 export default useSessionStore;

@@ -1,13 +1,21 @@
 import { useEffect, useState } from "react";
 import { Input, Flex, Tabs, theme, message } from "antd";
-import { UserOutlined, LockOutlined } from "@ant-design/icons";
+import {
+  UserOutlined,
+  LockOutlined,
+  SafetyOutlined,
+  CheckCircleFilled,
+  CloseCircleOutlined,
+} from "@ant-design/icons";
 import MyModal from "../myModal/MyModal";
 import MyForm from "../myForm/MyForm";
 import MyButtonPrimary from "../myButton/MyButtonPrimary";
 import MyButtonSecondary from "../myButton/MyButtonSecondary";
 import MyText from "../myText/MyText";
+import MyCard from "../myCard/MyCard";
 import useAuthStore from "../../store/useAuthStore";
 import { apiFetch } from "../../api/apiClient";
+import { PERMISSION_CATEGORIES } from "../usersTable/adminsData";
 
 export default function MyAccountModal({ open, onClose }) {
   const { token } = theme.useToken();
@@ -20,6 +28,9 @@ export default function MyAccountModal({ open, onClose }) {
   const accessToken = useAuthStore((state) => state.accessToken);
   const setTokens = useAuthStore((state) => state.setTokens);
   const updateOwnProfile = useAuthStore((state) => state.updateOwnProfile);
+
+  const isSuperAdmin = user?.role === "SUPER_ADMIN";
+  const grantedSet = new Set(user?.permissions ?? []);
 
   useEffect(() => {
     if (open && user) {
@@ -225,6 +236,64 @@ export default function MyAccountModal({ open, onClose }) {
             </MyButtonPrimary>
           </Flex>
         </MyForm>
+      ),
+    },
+    {
+      key: "permissions",
+      label: (
+        <Flex align="center" gap={6}>
+          <SafetyOutlined />
+          My Permissions
+        </Flex>
+      ),
+      children: (
+        <Flex vertical gap={16}>
+          {isSuperAdmin ? (
+            <MyText type="secondary">
+              Super Admin has full access to all permissions.
+            </MyText>
+          ) : (
+            PERMISSION_CATEGORIES.map((group) => (
+              <Flex key={group.category} vertical gap={10}>
+                <MyText
+                  type="secondary"
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: 0.4,
+                  }}
+                >
+                  {group.category}
+                </MyText>
+
+                <Flex vertical gap={8}>
+                  {group.permissions.map(({ key, label }) => {
+                    const granted = grantedSet.has(key);
+
+                    return (
+                      <MyCard key={key} style={{ padding: "10px 14px" }}>
+                        <Flex align="center" gap={12}>
+                          {granted ? (
+                            <CheckCircleFilled style={{ color: token.colorSuccess }} />
+                          ) : (
+                            <CloseCircleOutlined style={{ color: token.colorTextDisabled }} />
+                          )}
+                          <MyText
+                            strong={granted}
+                            type={granted ? undefined : "secondary"}
+                          >
+                            {label}
+                          </MyText>
+                        </Flex>
+                      </MyCard>
+                    );
+                  })}
+                </Flex>
+              </Flex>
+            ))
+          )}
+        </Flex>
       ),
     },
   ];
