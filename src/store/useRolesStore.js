@@ -130,7 +130,11 @@ const useRolesStore = create((set, get) => ({
   saveRole: async (roleId) => {
     try {
       const role = get().roles.find((r) => r.id === roleId);
-      if (!role || role.isFixed) return;
+      if (!role) {
+        message.error("No role selected - please select a role and try again.");
+        return;
+      }
+      if (role.isFixed) return;
 
       const catalog = get().permissionCatalog;
       if (!catalog.length) {

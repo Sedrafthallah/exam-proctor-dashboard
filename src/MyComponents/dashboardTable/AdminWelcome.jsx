@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { theme, Flex, Avatar, Alert } from "antd";
 import {
   WarningOutlined,
@@ -33,7 +33,10 @@ import MyRow from "../myRow/MyRow";
 import MyCol from "../myCol/MyCol";
 
 import useAuthStore from "../../store/useAuthStore";
-import useSessionStore from "../../store/useSessionStore";
+import useSessionStore, {
+  fetchProctorSummaryCards,
+  fetchProctorAlertCountsByType,
+} from "../../store/useSessionStore";
 import useAlertsStore from "../../store/useAlertsStore";
 import useStudentStore from "../../store/useStudentStore";
 import useQuestionBankStore from "../../store/useQuestionBankStore";
@@ -194,6 +197,77 @@ function AlertsByTypeChart({ alerts, token }) {
           </BarChart>
         </ResponsiveContainer>
       </Flex>
+    </MyCard>
+  );
+}
+
+// Proctor dashboard only — data already arrives pre-counted as
+// [{ code, label, count }] from GET /api/proctor-dashboard/alert-counts-by-type,
+// a different shape than AlertsByTypeChart's raw alert list, so this is a
+// separate minimal chart rather than adapting that one.
+function ProctorAlertCountsChart({ data, token }) {
+  return (
+    <MyCard
+      title={
+        <Flex align="center" gap={8}>
+          <BarChartOutlined
+            style={{ color: token.colorPrimary, fontSize: 16 }}
+          />
+          <MyText strong>Alerts by Type — last 7 days</MyText>
+        </Flex>
+      }
+      style={chartCardStyle(token)}
+    >
+      {!data || data.length === 0 ? (
+        <MyText type="secondary">No alert data yet.</MyText>
+      ) : (
+        <Flex style={{ width: "100%", height: 220, marginTop: 5 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={data}
+              margin={{ top: 5, right: 10, left: -25, bottom: 0 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke={token.colorBorderSecondary}
+                vertical={false}
+              />
+              <XAxis
+                dataKey="label"
+                tick={{ fill: token.colorTextDescription, fontSize: 11 }}
+                axisLine={false}
+                tickLine={false}
+                interval={0}
+                angle={-15}
+                textAnchor="end"
+                height={50}
+              />
+              <YAxis
+                tick={{ fill: token.colorTextDescription, fontSize: 12 }}
+                axisLine={false}
+                tickLine={false}
+                allowDecimals={false}
+              />
+              <Tooltip
+                contentStyle={{
+                  background: token.colorBgElevated,
+                  borderColor: token.colorBorder,
+                  borderRadius: 8,
+                  color: token.colorText,
+                }}
+                cursor={{ fill: token.colorFillSecondary, opacity: 0.3 }}
+              />
+              <Bar
+                name="Alerts"
+                dataKey="count"
+                fill={token.colorPrimary}
+                radius={[3, 3, 0, 0]}
+                barSize={28}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </Flex>
+      )}
     </MyCard>
   );
 }
@@ -423,6 +497,19 @@ export default function AdminWelcome() {
   const { token } = theme.useToken();
 
   const user = useAuthStore((state) => state.user);
+  const role = user?.role;
+
+  // Proctor dashboard — separate confirmed endpoints, fetched and rendered
+  // via the same StatCard/MyCard components as the Admin path below rather
+  // than merged into its permission-gated cards/charts logic.
+  const [proctorSummary, setProctorSummary] = useState(null);
+  const [proctorAlertCounts, setProctorAlertCounts] = useState([]);
+
+  useEffect(() => {
+    if (role !== "PROCTOR") return;
+    fetchProctorSummaryCards().then(setProctorSummary);
+    fetchProctorAlertCountsByType(7).then(setProctorAlertCounts);
+  }, [role]);
 
   const permissions = useMemo(() => user?.permissions ?? [], [user?.permissions]);
   const has = (perm) => permissions.includes(perm);
@@ -499,7 +586,55 @@ export default function AdminWelcome() {
     </MyCard>
   );
 
-  // ADMIN / PROCTOR — dynamic layout based on granted permissions:
+  // PROCTOR — separate confirmed endpoints, rendered with the same
+  // StatCard/MyCard components as the Admin path below. Kept as an early
+  // return rather than merged into that path's has()-based permission
+  // gating, which doesn't apply to this data.
+  if (role === "PROCTOR") {
+    return (
+      <Flex vertical gap={20}>
+        {header}
+
+        <MyRow gutter={[16, 16]}>
+          <MyCol xs={24} sm={12} md={8}>
+            <StatCard
+              token={token}
+              icon={<CalendarOutlined />}
+              color={token.colorPrimary}
+              value={proctorSummary?.activeSessions ?? 0}
+              label="Active Sessions"
+            />
+          </MyCol>
+          <MyCol xs={24} sm={12} md={8}>
+            <StatCard
+              token={token}
+              icon={<BellOutlined />}
+              color={token.colorError}
+              value={proctorSummary?.openAlerts ?? 0}
+              label="Open Alerts"
+            />
+          </MyCol>
+          <MyCol xs={24} sm={12} md={8}>
+            <StatCard
+              token={token}
+              icon={<WarningOutlined />}
+              color={token.colorSuccess}
+              value={proctorSummary?.resolvedAlertsToday ?? 0}
+              label="Resolved Today"
+            />
+          </MyCol>
+        </MyRow>
+
+        <MyRow gutter={[16, 16]}>
+          <MyCol xs={24} lg={24}>
+            <ProctorAlertCountsChart data={proctorAlertCounts} token={token} />
+          </MyCol>
+        </MyRow>
+      </Flex>
+    );
+  }
+
+  // ADMIN — dynamic layout based on granted permissions:
   // Header → Cards (permission-gated) → Charts (permission-gated).
   const cards = [
     has("ViewExamSession") && {

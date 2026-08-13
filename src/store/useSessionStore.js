@@ -717,4 +717,40 @@ const useSessionStore = create((set, get) => ({
     }
   },
 }));
+// Proctor dashboard — separate lightweight endpoints, not part of the store
+// (no client state to keep in sync), just fetch-and-return for AdminWelcome.
+export async function fetchProctorSummaryCards() {
+  try {
+    const accessToken =
+      useAuthStore.getState().accessToken ?? sessionStorage.getItem("accessToken");
+
+    const res = await apiFetch("/api/proctor-dashboard/summary-cards", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    const json = await res.json();
+    return json.data ?? null;
+  } catch (err) {
+    console.error("fetchProctorSummaryCards error:", err);
+    return null;
+  }
+}
+
+export async function fetchProctorAlertCountsByType(days = 7) {
+  try {
+    const accessToken =
+      useAuthStore.getState().accessToken ?? sessionStorage.getItem("accessToken");
+
+    const res = await apiFetch(`/api/proctor-dashboard/alert-counts-by-type?days=${days}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    const json = await res.json();
+    return json.data ?? [];
+  } catch (err) {
+    console.error("fetchProctorAlertCountsByType error:", err);
+    return [];
+  }
+}
+
 export default useSessionStore;

@@ -40,7 +40,18 @@ export default function Roles() {
     fetchPermissionCatalog();
   }, []);
 
-  const [selectedRoleId, setSelectedRoleId] = useState(roles[0]?.id);
+  const [selectedRoleId, setSelectedRoleId] = useState(null);
+
+  // Adjust selectedRoleId during render (rather than in a useEffect) so the
+  // fix-up happens before paint instead of triggering an extra render pass.
+  const [syncedRoles, setSyncedRoles] = useState(roles);
+  if (roles !== syncedRoles) {
+    setSyncedRoles(roles);
+    const stillExists = roles.some((r) => r.id === selectedRoleId);
+    if (!stillExists && roles.length > 0) {
+      setSelectedRoleId(roles[0].id);
+    }
+  }
 
   const selectedRole = roles.find((role) => role.id === selectedRoleId) || roles[0];
 
