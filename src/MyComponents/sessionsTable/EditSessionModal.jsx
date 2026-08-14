@@ -19,13 +19,12 @@ const FACE_ALERT_OPTIONS = ["Low", "Medium", "High"];
 
 export default function EditSessionModal({ open, session, status, onClose, onSave }) {
   const [form] = MyForm.useForm();
-  const admins = useAuthStore((state) => state.users);
+  const proctors = useAuthStore((state) => state.proctors);
+  const fetchProctors = useAuthStore((state) => state.fetchProctors);
   const fetchSessionById = useSessionStore((state) => state.fetchSessionById);
   const fetchQuestionBanks = useQuestionBankStore((state) => state.fetchQuestionBanks);
   const [detailLoading, setDetailLoading] = useState(false);
-  const proctorOptions = admins
-    .filter((admin) => !admin.disabled && admin.role === "PROCTOR")
-    .map((admin) => ({ value: admin.id, label: admin.name }));
+  const proctorOptions = proctors.map((p) => ({ value: p.proctorId, label: p.full_name }));
 
   const canEdit = (field) => isEditable(field, status);
   const isReadOnly = !canEdit("sessionTitle") && !canEdit("proctor");
@@ -33,6 +32,7 @@ export default function EditSessionModal({ open, session, status, onClose, onSav
   const handleAfterOpenChange = (isOpen) => {
     if (isOpen && session) {
       fetchQuestionBanks();
+      fetchProctors();
 
       setDetailLoading(true);
       fetchSessionById(session.id).then((data) => {
@@ -46,8 +46,8 @@ export default function EditSessionModal({ open, session, status, onClose, onSav
           loginWindow: s.loginWindow,
           questionBank: s.questionBank,
           // s.proctor is a display name (from the sessions API) — resolve it
-          // to the matching admin's id so it matches proctorOptions' values.
-          proctor: admins.find((admin) => admin.name === s.proctor)?.id ?? null,
+          // to the matching proctor's id so it matches proctorOptions' values.
+          proctor: proctors.find((p) => p.full_name === s.proctor)?.proctorId ?? null,
           gazeThreshold: s.gazeThreshold,
           faceAlertSensitivity: s.faceAlertSensitivity,
           questionRandomisation: s.questionRandomisation,
