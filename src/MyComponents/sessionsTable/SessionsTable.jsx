@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { theme, Flex, Tag, Button, Popconfirm, message } from "antd";
+import { theme, Flex, Tag, Button, Popconfirm, Tooltip, message } from "antd";
 import { CalendarOutlined, DeleteOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import MyCard from "../myCard/MyCard";
@@ -12,6 +12,11 @@ import EditRosterModal from "./EditRosterModal";
 import useSessionStore from "../../store/useSessionStore";
 import useAuthStore from "../../store/useAuthStore";
 import { getStatusConfig } from "../../utils/sessionUtils";
+import { getPermissionLabel } from "../usersTable/adminsData";
+
+function permTooltip(allowed, permissionKey) {
+  return allowed ? "" : `Requires the ${getPermissionLabel(permissionKey)} permission.`;
+}
 
 function SessionActions({
   session,
@@ -36,35 +41,61 @@ function SessionActions({
   };
 
   if (status === "DRAFT") {
+    const canEdit = isSuperAdmin || hasPermission("EditExamSession");
+    const canPublish = isSuperAdmin || hasPermission("PublishExamSession");
+    const canDelete = isSuperAdmin || hasPermission("DeleteExamSession");
+
     return (
       <Flex gap={8} wrap="wrap">
-        <Button size="small" onClick={() => onOpenSession(session)}>
-          Edit
-        </Button>
-        <Button size="small" type="primary" onClick={() => onPublish(session)}>
-          Publish
-        </Button>
-        <Popconfirm
-          title="Delete this draft session?"
-          okText="Delete"
-          okButtonProps={{ danger: true, loading: deleting }}
-          onConfirm={() => handleDeleteClick()}
-        >
-          <Button size="small" danger icon={<DeleteOutlined />} loading={deleting} />
-        </Popconfirm>
+        <Tooltip title={permTooltip(canEdit, "EditExamSession")}>
+          <Button size="small" disabled={!canEdit} onClick={() => onOpenSession(session)}>
+            Edit
+          </Button>
+        </Tooltip>
+        <Tooltip title={permTooltip(canPublish, "PublishExamSession")}>
+          <Button
+            size="small"
+            type="primary"
+            disabled={!canPublish}
+            onClick={() => onPublish(session)}
+          >
+            Publish
+          </Button>
+        </Tooltip>
+        <Tooltip title={permTooltip(canDelete, "DeleteExamSession")}>
+          <Popconfirm
+            title="Delete this draft session?"
+            okText="Delete"
+            okButtonProps={{ danger: true, loading: deleting }}
+            onConfirm={() => handleDeleteClick()}
+            disabled={!canDelete}
+          >
+            <Button
+              size="small"
+              danger
+              icon={<DeleteOutlined />}
+              loading={deleting}
+              disabled={!canDelete}
+            />
+          </Popconfirm>
+        </Tooltip>
       </Flex>
     );
   }
 
   if (status === "SCHEDULED") {
+    const canEditRoster = isSuperAdmin || hasPermission("RestoreExamSession");
+
     return (
       <Flex gap={8} wrap="wrap">
         <Button size="small" onClick={() => onOpenSession(session)}>
           View
         </Button>
-        <Button size="small" onClick={() => onEditRoster(session)}>
-          Edit Roster
-        </Button>
+        <Tooltip title={permTooltip(canEditRoster, "RestoreExamSession")}>
+          <Button size="small" disabled={!canEditRoster} onClick={() => onEditRoster(session)}>
+            Edit Roster
+          </Button>
+        </Tooltip>
       </Flex>
     );
   }
@@ -105,6 +136,8 @@ function SessionActions({
   }
 
   if (status === "ACTIVE" || status === "GRACE") {
+    const canTerminate = isSuperAdmin || hasPermission("MonitorExamSession");
+
     return (
       <Flex gap={8} wrap="wrap">
         {isSuperAdmin && (
@@ -112,17 +145,20 @@ function SessionActions({
             Extend Time
           </Button>
         )}
-        {!isSuperAdmin && hasPermission("MonitorExamSession") && (
-          <Popconfirm
-            title="Terminate this session now?"
-            okText="Terminate"
-            okButtonProps={{ danger: true }}
-            onConfirm={() => onTerminate(session)}
-          >
-            <Button size="small" danger>
-              Terminate
-            </Button>
-          </Popconfirm>
+        {!isSuperAdmin && (
+          <Tooltip title={permTooltip(canTerminate, "MonitorExamSession")}>
+            <Popconfirm
+              title="Terminate this session now?"
+              okText="Terminate"
+              okButtonProps={{ danger: true }}
+              onConfirm={() => onTerminate(session)}
+              disabled={!canTerminate}
+            >
+              <Button size="small" danger disabled={!canTerminate}>
+                Terminate
+              </Button>
+            </Popconfirm>
+          </Tooltip>
         )}
         <Button size="small" onClick={() => onOpenSession(session)}>
           View
@@ -134,19 +170,13 @@ function SessionActions({
   if (status === "CLOSED") {
     const canExport = isSuperAdmin || hasPermission("ExportData");
 
-    if (!canExport) {
-      return (
-        <Button size="small" onClick={() => onOpenSession(session)}>
-          View
-        </Button>
-      );
-    }
-
     return (
       <Flex gap={8} wrap="wrap">
-        <Button size="small" onClick={() => onExport(session)}>
-          Export
-        </Button>
+        <Tooltip title={permTooltip(canExport, "ExportData")}>
+          <Button size="small" disabled={!canExport} onClick={() => onExport(session)}>
+            Export
+          </Button>
+        </Tooltip>
       </Flex>
     );
   }

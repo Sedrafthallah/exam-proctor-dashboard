@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { theme, Flex, Tag, Button } from "antd";
+import { theme, Flex, Tag, Button, Tooltip } from "antd";
 import { UploadOutlined, ArrowLeftOutlined, BookOutlined } from "@ant-design/icons";
 
 import useAuthStore from "../../store/useAuthStore";
 import useQuestionBankStore from "../../store/useQuestionBankStore";
 import { getBankStatus, getStatusConfig } from "../../utils/questionBankUtils";
+import { getPermissionLabel } from "../../MyComponents/usersTable/adminsData";
 
 import MyTitle from "../../MyComponents/MyTitle/MyTitle";
 import MyText from "../../MyComponents/myText/MyText";
@@ -50,7 +51,7 @@ export default function QuestionBanks() {
     return success;
   };
 
-  const uploadModal = canAuthor && (
+  const uploadModal = (
     <UploadBankModal
       open={isUploadModalOpen}
       onClose={() => setIsUploadModalOpen(false)}
@@ -86,11 +87,19 @@ export default function QuestionBanks() {
             </Flex>
           </Flex>
 
-          {canAuthor && (
-            <MyButtonPrimary icon={<UploadOutlined />} onClick={() => setIsUploadModalOpen(true)}>
+          <Tooltip
+            title={
+              canAuthor ? "" : `Requires the ${getPermissionLabel("ManageQuestionBanks")} permission.`
+            }
+          >
+            <MyButtonPrimary
+              icon={<UploadOutlined />}
+              disabled={!canAuthor}
+              onClick={() => setIsUploadModalOpen(true)}
+            >
               Upload File
             </MyButtonPrimary>
-          )}
+          </Tooltip>
         </Flex>
 
         <BanksList

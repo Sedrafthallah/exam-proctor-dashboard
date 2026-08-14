@@ -1,4 +1,4 @@
-import { theme, Flex, Badge, Avatar, List, Popconfirm } from "antd";
+import { theme, Flex, Badge, Avatar, List, Popconfirm, Tooltip } from "antd";
 import { BellOutlined, CheckOutlined, NotificationOutlined, ArrowUpOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -6,6 +6,7 @@ import MyCard from "../myCard/MyCard";
 import MyText from "../myText/MyText";
 import MyButtonPrimary from "../myButton/MyButtonPrimary";
 import MyButtonSecondary from "../myButton/MyButtonSecondary";
+import { getPermissionLabel } from "../usersTable/adminsData";
 import { ALERT_TYPE_CONFIG, ALERT_STATUS_CONFIG, DEFAULT_ALERT_TYPE_CONFIG } from "../../utils/alertUtils";
 
 dayjs.extend(relativeTime);
@@ -43,7 +44,10 @@ export default function AlertFeed({ alerts, canAct, onDismiss, onWarn, onEscalat
         renderItem={(alert) => {
           const config = ALERT_TYPE_CONFIG[alert.type] ?? DEFAULT_ALERT_TYPE_CONFIG;
           const statusConfig = ALERT_STATUS_CONFIG[alert.status] ?? ALERT_STATUS_CONFIG.Open;
-          const showActions = canAct && alert.status === "Open";
+          const showActions = alert.status === "Open";
+          const actTooltip = canAct
+            ? ""
+            : `Requires the ${getPermissionLabel("MonitorExamSession")} permission.`;
 
           return (
             <List.Item
@@ -82,24 +86,41 @@ export default function AlertFeed({ alerts, canAct, onDismiss, onWarn, onEscalat
 
               {showActions ? (
                 <Flex gap={6} wrap="wrap" style={{ marginTop: 10 }}>
-                  <MyButtonSecondary size="small" icon={<CheckOutlined />} onClick={() => onDismiss(alert)}>
-                    Dismiss
-                  </MyButtonSecondary>
-                  <MyButtonSecondary size="small" icon={<NotificationOutlined />} onClick={() => onWarn(alert)}>
-                    Warn
-                  </MyButtonSecondary>
-                  {ESCALATABLE_TYPES.includes(alert.type) && (
-                    <Popconfirm
-                      title="Escalate this alert?"
-                      description="This flags it for immediate proctor/admin review."
-                      okText="Escalate"
-                      okButtonProps={{ danger: true }}
-                      onConfirm={() => onEscalate(alert)}
+                  <Tooltip title={actTooltip}>
+                    <MyButtonSecondary
+                      size="small"
+                      icon={<CheckOutlined />}
+                      disabled={!canAct}
+                      onClick={() => onDismiss(alert)}
                     >
-                      <MyButtonPrimary size="small" danger icon={<ArrowUpOutlined />}>
-                        Escalate
-                      </MyButtonPrimary>
-                    </Popconfirm>
+                      Dismiss
+                    </MyButtonSecondary>
+                  </Tooltip>
+                  <Tooltip title={actTooltip}>
+                    <MyButtonSecondary
+                      size="small"
+                      icon={<NotificationOutlined />}
+                      disabled={!canAct}
+                      onClick={() => onWarn(alert)}
+                    >
+                      Warn
+                    </MyButtonSecondary>
+                  </Tooltip>
+                  {ESCALATABLE_TYPES.includes(alert.type) && (
+                    <Tooltip title={actTooltip}>
+                      <Popconfirm
+                        title="Escalate this alert?"
+                        description="This flags it for immediate proctor/admin review."
+                        okText="Escalate"
+                        okButtonProps={{ danger: true }}
+                        onConfirm={() => onEscalate(alert)}
+                        disabled={!canAct}
+                      >
+                        <MyButtonPrimary size="small" danger icon={<ArrowUpOutlined />} disabled={!canAct}>
+                          Escalate
+                        </MyButtonPrimary>
+                      </Popconfirm>
+                    </Tooltip>
                   )}
                 </Flex>
               ) : (

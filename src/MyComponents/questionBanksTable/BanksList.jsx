@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { theme, Tag, Button, Popconfirm } from "antd";
+import { theme, Tag, Button, Popconfirm, Tooltip } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import MyCard from "../myCard/MyCard";
 import MyText from "../myText/MyText";
 import MyTable from "../mytable/MyTable";
 import useQuestionBankStore from "../../store/useQuestionBankStore";
 import { getBankStatus, getStatusConfig } from "../../utils/questionBankUtils";
+import { getPermissionLabel } from "../usersTable/adminsData";
 
 export default function BanksList({ questionBanks, onSelectBank, canAuthor, loading }) {
   const { token } = theme.useToken();
@@ -66,27 +67,35 @@ export default function BanksList({ questionBanks, onSelectBank, canAuthor, load
       align: "center",
       width: 70,
       render: (_, bank) => {
-        if (getBankStatus(bank) !== "DRAFT" || !canAuthor) return null;
+        if (getBankStatus(bank) !== "DRAFT") return null;
 
         return (
-          <Popconfirm
-            title="Delete this question bank?"
-            okText="Delete"
-            okButtonProps={{ danger: true, loading: deletingId === bank.id }}
-            onConfirm={(e) => {
-              e?.stopPropagation();
-              handleDelete(bank);
-            }}
-            onCancel={(e) => e?.stopPropagation()}
+          <Tooltip
+            title={
+              canAuthor ? "" : `Requires the ${getPermissionLabel("ManageQuestionBanks")} permission.`
+            }
           >
-            <Button
-              size="small"
-              danger
-              icon={<DeleteOutlined />}
-              loading={deletingId === bank.id}
-              onClick={(e) => e.stopPropagation()}
-            />
-          </Popconfirm>
+            <Popconfirm
+              title="Delete this question bank?"
+              okText="Delete"
+              okButtonProps={{ danger: true, loading: deletingId === bank.id }}
+              onConfirm={(e) => {
+                e?.stopPropagation();
+                handleDelete(bank);
+              }}
+              onCancel={(e) => e?.stopPropagation()}
+              disabled={!canAuthor}
+            >
+              <Button
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+                loading={deletingId === bank.id}
+                disabled={!canAuthor}
+                onClick={(e) => e.stopPropagation()}
+              />
+            </Popconfirm>
+          </Tooltip>
         );
       },
     },

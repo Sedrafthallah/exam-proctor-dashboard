@@ -3,10 +3,12 @@ import { theme, Flex, message, Upload, Tooltip } from "antd";
 import { UploadOutlined, TeamOutlined, InfoCircleOutlined } from "@ant-design/icons";
 
 import useStudentStore from "../../store/useStudentStore";
+import useAuthStore from "../../store/useAuthStore";
 
 import MyTitle from "../../MyComponents/MyTitle/MyTitle";
 import MyText from "../../MyComponents/myText/MyText";
 import MyButtonPrimary from "../../MyComponents/myButton/MyButtonPrimary";
+import { getPermissionLabel } from "../../MyComponents/usersTable/adminsData";
 
 import StudentsRoster from "../../MyComponents/studentsTable/StudentsRoster";
 
@@ -23,12 +25,16 @@ export default function Students() {
   const importing = useStudentStore((state) => state.importing);
   const fetchStudents = useStudentStore((state) => state.fetchStudents);
   const importStudents = useStudentStore((state) => state.importStudents);
+  const hasPermission = useAuthStore((state) => state.hasPermission);
+  const canImport = hasPermission("ImportStudents");
 
   useEffect(() => {
     fetchStudents();
   }, [fetchStudents]);
 
   const handleImportZip = async (file) => {
+    if (!canImport) return false;
+
     try {
       const result = await importStudents(file);
 
@@ -86,10 +92,21 @@ export default function Students() {
         </Flex>
 
         <Flex align="center" gap={8}>
-          <Upload accept=".zip" showUploadList={false} beforeUpload={handleImportZip}>
-            <MyButtonPrimary icon={<UploadOutlined />} loading={importing}>
-              Import Students (ZIP)
-            </MyButtonPrimary>
+          <Upload
+            accept=".zip"
+            showUploadList={false}
+            beforeUpload={handleImportZip}
+            disabled={!canImport}
+          >
+            <Tooltip
+              title={
+                canImport ? "" : `Requires the ${getPermissionLabel("ImportStudents")} permission.`
+              }
+            >
+              <MyButtonPrimary icon={<UploadOutlined />} loading={importing} disabled={!canImport}>
+                Import Students (ZIP)
+              </MyButtonPrimary>
+            </Tooltip>
           </Upload>
           <Tooltip title={IMPORT_ZIP_HELP}>
             <InfoCircleOutlined style={{ color: token.colorTextSecondary, fontSize: 16 }} />

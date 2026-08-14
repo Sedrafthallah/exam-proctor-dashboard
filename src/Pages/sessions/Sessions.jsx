@@ -1,5 +1,6 @@
 import useSessionStore from "../../store/useSessionStore";
-import { theme, Flex } from "antd";
+import useAuthStore from "../../store/useAuthStore";
+import { theme, Flex, Tooltip } from "antd";
 import { useState, useEffect } from "react";
 import MyTitle from "../../MyComponents/MyTitle/MyTitle";
 import MyText from "../../MyComponents/myText/MyText";
@@ -7,6 +8,7 @@ import MyButtonPrimary from "../../MyComponents/myButton/MyButtonPrimary";
 import SessionsTable from "../../MyComponents/sessionsTable/SessionsTable";
 import NewSessionModal from "../../MyComponents/sessionsTable/NewSessionModal";
 import { PlusCircleOutlined, CalendarOutlined } from "@ant-design/icons";
+import { getPermissionLabel } from "../../MyComponents/usersTable/adminsData";
 
 export default function Sessions() {
   const FILTERS = [
@@ -30,6 +32,8 @@ export default function Sessions() {
   const extendSessionTimeApi = useSessionStore(
     (state) => state.extendSessionTimeApi,
   );
+  const hasPermission = useAuthStore((state) => state.hasPermission);
+  const canCreate = hasPermission("CreateExamSession");
 
   useEffect(() => {
     fetchSessions();
@@ -73,12 +77,19 @@ export default function Sessions() {
           </Flex>
         </Flex>
         <Flex gap={10}>
-          <MyButtonPrimary
-            icon={<PlusCircleOutlined />}
-            onClick={() => setIsModalOpen(true)}
+          <Tooltip
+            title={
+              canCreate ? "" : `Requires the ${getPermissionLabel("CreateExamSession")} permission.`
+            }
           >
-            New Session
-          </MyButtonPrimary>
+            <MyButtonPrimary
+              icon={<PlusCircleOutlined />}
+              disabled={!canCreate}
+              onClick={() => setIsModalOpen(true)}
+            >
+              New Session
+            </MyButtonPrimary>
+          </Tooltip>
         </Flex>
       </Flex>
       <Flex gap={10} wrap="wrap">

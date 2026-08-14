@@ -7,7 +7,7 @@ import MyText from "../myText/MyText";
 import MyTable from "../mytable/MyTable";
 import MyButtonPrimary from "../myButton/MyButtonPrimary";
 import MyButtonSecondary from "../myButton/MyButtonSecondary";
-import { getInitials } from "../usersTable/adminsData";
+import { getInitials, getPermissionLabel } from "../usersTable/adminsData";
 import { ALERT_TYPE_CONFIG, ALERT_STATUS_CONFIG, DEFAULT_ALERT_TYPE_CONFIG } from "../../utils/alertUtils";
 
 dayjs.extend(relativeTime);
@@ -23,7 +23,6 @@ export default function AlertsTable({
   onEscalate,
 }) {
   const { token } = theme.useToken();
-  const canAct = canDismiss || canWarn || canEscalate;
 
   const columns = [
     {
@@ -109,7 +108,7 @@ export default function AlertsTable({
       title: "Actions",
       key: "actions",
       fixed: "right",
-      width: canAct ? 230 : 90,
+      width: 230,
       render: (_, record) => {
         // A moderator action was already recorded on this alert elsewhere —
         // show it read-only rather than offering the buttons again.
@@ -124,14 +123,6 @@ export default function AlertsTable({
           );
         }
 
-        if (!canAct) {
-          return (
-            <MyText type="secondary" style={{ fontSize: 12.5 }}>
-              —
-            </MyText>
-          );
-        }
-
         if (record.status !== "Open") {
           return (
             <MyText type="secondary" style={{ fontSize: 12.5 }}>
@@ -142,30 +133,43 @@ export default function AlertsTable({
 
         return (
           <Flex gap={6} wrap="wrap">
-            {canDismiss && (
-              <MyButtonSecondary size="small" icon={<CheckOutlined />} onClick={() => onDismiss(record)}>
+            <Tooltip
+              title={canDismiss ? "" : `Requires the ${getPermissionLabel("DismissAlert")} permission.`}
+            >
+              <MyButtonSecondary
+                size="small"
+                icon={<CheckOutlined />}
+                disabled={!canDismiss}
+                onClick={() => onDismiss(record)}
+              >
                 Dismiss
               </MyButtonSecondary>
-            )}
-            {canWarn && (
+            </Tooltip>
+            <Tooltip
+              title={canWarn ? "" : `Requires the ${getPermissionLabel("WarnStudent")} permission.`}
+            >
               <MyButtonSecondary
                 size="small"
                 icon={<NotificationOutlined />}
+                disabled={!canWarn}
                 onClick={() => onWarn(record)}
               >
                 Warn
               </MyButtonSecondary>
-            )}
-            {canEscalate && (
+            </Tooltip>
+            <Tooltip
+              title={canEscalate ? "" : `Requires the ${getPermissionLabel("EscalateAlert")} permission.`}
+            >
               <MyButtonPrimary
                 size="small"
                 danger
                 icon={<ArrowUpOutlined />}
+                disabled={!canEscalate}
                 onClick={() => onEscalate(record)}
               >
                 Escalate
               </MyButtonPrimary>
-            )}
+            </Tooltip>
           </Flex>
         );
       },

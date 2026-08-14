@@ -17,14 +17,25 @@ import QuestionBankField from "./QuestionBankField";
 
 const FACE_ALERT_OPTIONS = ["Low", "Medium", "High"];
 
-export default function EditSessionModal({ open, session, status, onClose, onSave }) {
+export default function EditSessionModal({
+  open,
+  session,
+  status,
+  onClose,
+  onSave,
+}) {
   const [form] = MyForm.useForm();
   const proctors = useAuthStore((state) => state.proctors);
   const fetchProctors = useAuthStore((state) => state.fetchProctors);
   const fetchSessionById = useSessionStore((state) => state.fetchSessionById);
-  const fetchQuestionBanks = useQuestionBankStore((state) => state.fetchQuestionBanks);
+  const fetchQuestionBanks = useQuestionBankStore(
+    (state) => state.fetchQuestionBanks,
+  );
   const [detailLoading, setDetailLoading] = useState(false);
-  const proctorOptions = proctors.map((p) => ({ value: p.proctorId, label: p.full_name }));
+  const proctorOptions = proctors.map((p) => ({
+    value: p.proctorId,
+    label: p.full_name,
+  }));
 
   const canEdit = (field) => isEditable(field, status);
   const isReadOnly = !canEdit("sessionTitle") && !canEdit("proctor");
@@ -47,7 +58,8 @@ export default function EditSessionModal({ open, session, status, onClose, onSav
           questionBank: s.questionBank,
           // s.proctor is a display name (from the sessions API) — resolve it
           // to the matching proctor's id so it matches proctorOptions' values.
-          proctor: proctors.find((p) => p.full_name === s.proctor)?.proctorId ?? null,
+          proctor:
+            proctors.find((p) => p.full_name === s.proctor)?.proctorId ?? null,
           gazeThreshold: s.gazeThreshold,
           faceAlertSensitivity: s.faceAlertSensitivity,
           questionRandomisation: s.questionRandomisation,
@@ -67,7 +79,9 @@ export default function EditSessionModal({ open, session, status, onClose, onSav
   const handleFinish = (values) => {
     // Only submit fields this status actually allows editing, even though
     // disabled inputs already hold their unchanged original values.
-    const editableEntries = Object.entries(values).filter(([field]) => canEdit(field));
+    const editableEntries = Object.entries(values).filter(([field]) =>
+      canEdit(field),
+    );
 
     onSave(session.id, {
       ...Object.fromEntries(editableEntries),
@@ -91,13 +105,16 @@ export default function EditSessionModal({ open, session, status, onClose, onSav
       title={
         <Flex align="center" gap={8}>
           {isReadOnly ? <EyeOutlined /> : <EditOutlined />}
-          <MyText strong>{isReadOnly ? "Session Details" : "Edit Session"}</MyText>
+          <MyText strong>
+            {isReadOnly ? "Session Details" : "Edit Session"}
+          </MyText>
         </Flex>
       }
     >
       {isReadOnly && (
         <MyText type="secondary" style={{ display: "block", marginBottom: 16 }}>
-          This session's status doesn't allow field edits — showing read-only details.
+          This session's status doesn't allow field edits — showing read-only
+          details.
         </MyText>
       )}
 
@@ -126,18 +143,30 @@ export default function EditSessionModal({ open, session, status, onClose, onSav
           </MyCol>
           <MyCol xs={24} sm={12}>
             <MyForm.Item name="duration" label="Duration (min)">
-              <InputNumber min={1} style={{ width: "100%" }} disabled={!canEdit("duration")} />
+              <InputNumber
+                min={1}
+                style={{ width: "100%" }}
+                disabled={!canEdit("duration")}
+              />
             </MyForm.Item>
           </MyCol>
 
           <MyCol xs={24} sm={12}>
             <MyForm.Item name="gracePeriod" label="Grace period (min)">
-              <InputNumber min={0} style={{ width: "100%" }} disabled={!canEdit("gracePeriod")} />
+              <InputNumber
+                min={0}
+                style={{ width: "100%" }}
+                disabled={!canEdit("gracePeriod")}
+              />
             </MyForm.Item>
           </MyCol>
           <MyCol xs={24} sm={12}>
             <MyForm.Item name="loginWindow" label="Login window (min)">
-              <InputNumber min={0} style={{ width: "100%" }} disabled={!canEdit("loginWindow")} />
+              <InputNumber
+                min={0}
+                style={{ width: "100%" }}
+                disabled={!canEdit("loginWindow")}
+              />
             </MyForm.Item>
           </MyCol>
 
@@ -153,26 +182,42 @@ export default function EditSessionModal({ open, session, status, onClose, onSav
           </MyCol>
         </MyRow>
 
-        <MyText strong style={{ display: "block", margin: "4px 0 8px", fontSize: 12.5 }}>
+        <MyText
+          strong
+          style={{ display: "block", margin: "4px 0 8px", fontSize: 12.5 }}
+        >
           QUESTION BANK
         </MyText>
 
         <QuestionBankField form={form} disabled={!canEdit("questionBank")} />
 
-        <MyText strong style={{ display: "block", margin: "4px 0 12px", fontSize: 12.5 }}>
+        <MyText
+          strong
+          style={{ display: "block", margin: "4px 0 12px", fontSize: 12.5 }}
+        >
           MONITORING SETTINGS
         </MyText>
 
         <MyRow gutter={[16, 0]}>
           <MyCol xs={24} sm={12}>
             <MyForm.Item name="gazeThreshold" label="Gaze alert threshold (s)">
-              <InputNumber min={1} style={{ width: "100%" }} disabled={!canEdit("gazeThreshold")} />
+              <InputNumber
+                min={1}
+                style={{ width: "100%" }}
+                disabled={!canEdit("gazeThreshold")}
+              />
             </MyForm.Item>
           </MyCol>
           <MyCol xs={24} sm={12}>
-            <MyForm.Item name="faceAlertSensitivity" label="Face alert sensitivity">
+            <MyForm.Item
+              name="faceAlertSensitivity"
+              label="Face alert sensitivity"
+            >
               <Select
-                options={FACE_ALERT_OPTIONS.map((level) => ({ value: level, label: level }))}
+                options={FACE_ALERT_OPTIONS.map((level) => ({
+                  value: level,
+                  label: level,
+                }))}
                 disabled={!canEdit("faceAlertSensitivity")}
               />
             </MyForm.Item>
@@ -182,7 +227,11 @@ export default function EditSessionModal({ open, session, status, onClose, onSav
         <Flex vertical gap={10} style={{ marginBottom: 8 }}>
           <Flex justify="space-between" align="center">
             <MyText style={{ fontSize: 13 }}>Question randomisation</MyText>
-            <MyForm.Item name="questionRandomisation" valuePropName="checked" noStyle>
+            <MyForm.Item
+              name="questionRandomisation"
+              valuePropName="checked"
+              noStyle
+            >
               <Switch disabled={!canEdit("questionRandomisation")} />
             </MyForm.Item>
           </Flex>
@@ -205,7 +254,11 @@ export default function EditSessionModal({ open, session, status, onClose, onSav
             {isReadOnly ? "Close" : "Cancel"}
           </MyButtonSecondary>
           {!isReadOnly && (
-            <MyButtonPrimary htmlType="submit" icon={<EditOutlined />} loading={detailLoading}>
+            <MyButtonPrimary
+              htmlType="submit"
+              icon={<EditOutlined />}
+              loading={detailLoading}
+            >
               Save Changes
             </MyButtonPrimary>
           )}
