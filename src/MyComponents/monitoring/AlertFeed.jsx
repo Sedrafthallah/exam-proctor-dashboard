@@ -14,7 +14,7 @@ const ESCALATABLE_TYPES = ["FACE_ABSENCE", "MULTIPLE_FACES"];
 
 export default function AlertFeed({ alerts, canAct, onDismiss, onWarn, onEscalate }) {
   const { token } = theme.useToken();
-  const unreadCount = alerts.filter((a) => a.status === "OPEN").length;
+  const unreadCount = alerts.filter((a) => a.status === "Open").length;
 
   return (
     <MyCard
@@ -42,8 +42,8 @@ export default function AlertFeed({ alerts, canAct, onDismiss, onWarn, onEscalat
         locale={{ emptyText: "No alerts for this session" }}
         renderItem={(alert) => {
           const config = ALERT_TYPE_CONFIG[alert.type] ?? DEFAULT_ALERT_TYPE_CONFIG;
-          const statusConfig = ALERT_STATUS_CONFIG[alert.status] ?? ALERT_STATUS_CONFIG.OPEN;
-          const showActions = canAct && alert.status === "OPEN";
+          const statusConfig = ALERT_STATUS_CONFIG[alert.status] ?? ALERT_STATUS_CONFIG.Open;
+          const showActions = canAct && alert.status === "Open";
 
           return (
             <List.Item

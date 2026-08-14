@@ -28,8 +28,15 @@ export default function Users() {
   const reactivateAdminApi = useAuthStore((state) => state.reactivateAdminApi);
   const deleteAdminApi = useAuthStore((state) => state.deleteAdminApi);
 
+  const proctors = useAuthStore((state) => state.proctors);
+  const proctorsTotal = useAuthStore((state) => state.proctorsTotal);
+  const proctorsPage = useAuthStore((state) => state.proctorsPage);
+  const proctorsPageSize = useAuthStore((state) => state.proctorsPageSize);
+  const fetchProctors = useAuthStore((state) => state.fetchProctors);
+
   useEffect(() => {
     fetchAdmins();
+    fetchProctors();
   }, []);
 
   const handleCreate = () => {
@@ -61,8 +68,11 @@ export default function Users() {
     }
   };
 
-  const adminAccounts = admins.filter((a) => a.role !== "PROCTOR");
-  const proctorAccounts = admins.filter((a) => a.role === "PROCTOR");
+  // /api/admins/with-permissions still returns proctor accounts mixed in
+  // (see fetchAdmins' role mapping) — exclude them by id against the real
+  // /api/proctors population instead of relying on the role field.
+  const proctorIds = new Set(proctors.map((p) => String(p.proctorId)));
+  const adminAccounts = admins.filter((a) => !proctorIds.has(a.id));
 
   return (
     <Flex vertical gap={20}>
@@ -117,10 +127,14 @@ export default function Users() {
       />
 
       <ProctorsList
-        proctors={proctorAccounts}
+        proctors={proctors}
         loading={loading}
-        onToggleStatus={handleToggleStatus}
-        onDeleteAdmin={handleDeleteAdmin}
+        pagination={{
+          current: proctorsPage,
+          pageSize: proctorsPageSize,
+          total: proctorsTotal,
+          onChange: fetchProctors,
+        }}
       />
 
       <PermissionReference />

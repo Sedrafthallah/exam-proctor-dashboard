@@ -3,6 +3,39 @@ import { message } from "antd";
 import { apiFetch } from "../api/apiClient";
 import useAuthStore from "./useAuthStore";
 
+// Shared by fetchSessions/fetchProctorSessions — both endpoints return items
+// in the same exam-session shape.
+function mapSession(s) {
+  return {
+    id: String(s.id),
+    sessionTitle: s.title,
+    courseCode: s.courseTag,
+    status: s.status,
+    scheduledStartUTC: s.startTime,
+    duration: s.durationMinutes,
+    gracePeriod: s.gracePeriodMinutes,
+    loginWindow: s.loginWindowMinutes,
+    gazeThreshold: s.eyeGazeThresholdSec,
+    questionBank: s.questionBankName ?? null,
+    questionBankId: s.questionBankId ?? null,
+    lockedAt: s.lockedAt ?? null,
+    closedAt: s.closedAt ?? null,
+    createdAt: s.createdAt ?? null,
+    createdBy: s.createdBy ?? null,
+    updatedAt: s.updatedAt ?? null,
+    updatedBy: s.updatedBy ?? null,
+    enrolledStudents: s.studentCount ?? 0,
+    proctor: s.proctorName ?? null,
+    published: s.status !== "DRAFT",
+    archived: s.status === "ARCHIVED",
+    // monitoring defaults
+    audioMonitoring: s.audioMonitoring ?? false,
+    faceAlertSensitivity: s.faceAlertSensitivity ?? "Medium",
+    questionRandomisation: s.questionRandomisation ?? true,
+    optionShuffle: s.optionShuffle ?? true,
+  };
+}
+
 const useSessionStore = create((set, get) => ({
   sessions: [],
   page: 1,
@@ -52,34 +85,7 @@ const useSessionStore = create((set, get) => ({
         throw new Error(json.message || "Failed to fetch sessions");
       }
 
-      const sessions = json.data.items.map((s) => ({
-        id: String(s.id),
-        sessionTitle: s.title,
-        courseCode: s.courseTag,
-        status: s.status,
-        scheduledStartUTC: s.startTime,
-        duration: s.durationMinutes,
-        gracePeriod: s.gracePeriodMinutes,
-        loginWindow: s.loginWindowMinutes,
-        gazeThreshold: s.eyeGazeThresholdSec,
-        questionBank: s.questionBankName ?? null,
-        questionBankId: s.questionBankId ?? null,
-        lockedAt: s.lockedAt ?? null,
-        closedAt: s.closedAt ?? null,
-        createdAt: s.createdAt ?? null,
-        createdBy: s.createdBy ?? null,
-        updatedAt: s.updatedAt ?? null,
-        updatedBy: s.updatedBy ?? null,
-        enrolledStudents: s.studentCount ?? 0,
-        proctor: s.proctorName ?? null,
-        published: s.status !== "DRAFT",
-        archived: s.status === "ARCHIVED",
-        // monitoring defaults
-        audioMonitoring: s.audioMonitoring ?? false,
-        faceAlertSensitivity: s.faceAlertSensitivity ?? "Medium",
-        questionRandomisation: s.questionRandomisation ?? true,
-        optionShuffle: s.optionShuffle ?? true,
-      }));
+      const sessions = json.data.items.map(mapSession);
 
       set({
         sessions,
@@ -91,6 +97,27 @@ const useSessionStore = create((set, get) => ({
     } catch (error) {
       console.error("fetchSessions error:", error);
       set({ loading: false });
+    }
+  },
+
+  // Proctor-scoped equivalent of fetchSessions — used by the Monitoring page
+  // so a Proctor only sees sessions they're assigned to, not every session
+  // in the system.
+  fetchProctorSessions: async (page = 1, pageSize = 10) => {
+    try {
+      const accessToken =
+        useAuthStore.getState().accessToken ?? sessionStorage.getItem("accessToken");
+
+      const res = await apiFetch(`/api/proctor-sessions?page=${page}&pageSize=${pageSize}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      const json = await res.json();
+      if (!res.ok || json.statusCode !== 200) return;
+
+      set({ sessions: json.data.items.map(mapSession) });
+    } catch (err) {
+      console.error("fetchProctorSessions error:", err);
     }
   },
 

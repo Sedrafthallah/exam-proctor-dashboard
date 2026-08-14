@@ -19,7 +19,7 @@ import MyButtonPrimary from "../../MyComponents/myButton/MyButtonPrimary";
 
 import useSessionStore from "../../store/useSessionStore";
 import useAuthStore from "../../store/useAuthStore";
-import { getSessionStatus, getStatusConfig } from "../../utils/sessionUtils";
+import { getStatusConfig } from "../../utils/sessionUtils";
 import { apiFetch } from "../../api/apiClient";
 
 export default function Reports() {
@@ -35,7 +35,7 @@ export default function Reports() {
   }, [fetchSessions]);
 
   const reportableSessions = sessions.filter((session) =>
-    ["CLOSED", "ARCHIVED"].includes(getSessionStatus(session)),
+    ["CLOSED", "ARCHIVED"].includes(session.status),
   );
 
   const [selectedSessionId, setSelectedSessionId] = useState(
@@ -57,7 +57,7 @@ export default function Reports() {
   const selectedSession =
     reportableSessions.find((s) => s.id === selectedSessionId) ?? null;
 
-  const status = selectedSession ? getSessionStatus(selectedSession) : null;
+  const status = selectedSession ? selectedSession.status : null;
   const statusConfig = status ? getStatusConfig(status) : null;
 
   const sessionOptions = reportableSessions.map((session) => ({

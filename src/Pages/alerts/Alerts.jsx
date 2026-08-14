@@ -121,7 +121,7 @@ export default function Alerts() {
   const { critical, warnings, resolved } = summary;
 
   const filteredAlerts = alerts.filter((alert) => {
-    if (statusFilter !== "All" && alert.status !== statusFilter.toUpperCase()) return false;
+    if (statusFilter !== "All" && alert.status !== statusFilter) return false;
     if (typeFilter !== "ALL" && alert.typeCode !== typeFilter) return false;
     return true;
   });

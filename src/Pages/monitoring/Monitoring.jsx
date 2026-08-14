@@ -11,7 +11,6 @@ import useSessionStore from "../../store/useSessionStore";
 import useStudentStore from "../../store/useStudentStore";
 import useAlertsStore from "../../store/useAlertsStore";
 import useAuthStore from "../../store/useAuthStore";
-import { getSessionStatus } from "../../utils/sessionUtils";
 
 // Monitoring-only overlay (login state during the exam) for the roster in
 // useStudentStore — not real session-attendance data, since the backend
@@ -31,22 +30,28 @@ export default function Monitoring() {
   const { token } = theme.useToken();
   const sessions = useSessionStore((state) => state.sessions);
   const fetchSessions = useSessionStore((state) => state.fetchSessions);
+  const fetchProctorSessions = useSessionStore((state) => state.fetchProctorSessions);
   const students = useStudentStore((state) => state.students);
   const fetchStudents = useStudentStore((state) => state.fetchStudents);
   const alerts = useAlertsStore((state) => state.alerts);
   const fetchAlerts = useAlertsStore((state) => state.fetchAlerts);
   const updateAlertStatus = useAlertsStore((state) => state.updateAlertStatus);
   const hasPermission = useAuthStore((state) => state.hasPermission);
+  const role = useAuthStore((state) => state.user?.role);
 
   const canAct = hasPermission("MonitorExamSession");
 
   useEffect(() => {
-    fetchSessions();
+    if (role === "PROCTOR") {
+      fetchProctorSessions();
+    } else {
+      fetchSessions();
+    }
     fetchStudents();
     fetchAlerts();
-  }, [fetchSessions, fetchStudents, fetchAlerts]);
+  }, [role, fetchSessions, fetchProctorSessions, fetchStudents, fetchAlerts]);
 
-  const activeSessions = sessions.filter((session) => getSessionStatus(session) === "ACTIVE");
+  const activeSessions = sessions.filter((session) => session.status === "ACTIVE");
   const [selectedSessionId, setSelectedSessionId] = useState(activeSessions[0]?.id ?? null);
   const selectedSession = activeSessions.find((s) => s.id === selectedSessionId) ?? activeSessions[0] ?? null;
 
@@ -78,7 +83,7 @@ export default function Monitoring() {
     .filter(Boolean);
 
   const handleDismiss = (alert) => {
-    updateAlertStatus(alert.id, "RESOLVED");
+    updateAlertStatus(alert.id, "Resolved");
     message.success(`Alert dismissed for ${alert.student}.`);
   };
 
@@ -87,7 +92,7 @@ export default function Monitoring() {
   };
 
   const handleEscalate = (alert) => {
-    updateAlertStatus(alert.id, "ESCALATED");
+    updateAlertStatus(alert.id, "Escalated");
     message.success(`Alert escalated for ${alert.student}.`);
   };
 

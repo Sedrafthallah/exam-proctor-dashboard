@@ -29,6 +29,10 @@ const useAuthStore = create((set, get) => ({
   total: 0,
   loading: false,
   error: null,
+  proctors: [],
+  proctorsTotal: 0,
+  proctorsPage: 1,
+  proctorsPageSize: 10,
 
   login: async (email, password) => {
     set({
@@ -202,6 +206,29 @@ const useAuthStore = create((set, get) => ({
     } catch (err) {
       console.error("fetchAdmins error:", err);
       set({ loading: false });
+    }
+  },
+
+  fetchProctors: async (page = 1, pageSize = 10) => {
+    try {
+      const accessToken =
+        get().accessToken ?? sessionStorage.getItem("accessToken");
+
+      const res = await apiFetch(`/api/proctors?page=${page}&pageSize=${pageSize}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      const json = await res.json();
+      if (!res.ok || json.statusCode !== 200) return;
+
+      set({
+        proctors: json.data.items,
+        proctorsTotal: json.data.totalCount,
+        proctorsPage: json.data.page,
+        proctorsPageSize: json.data.pageSize,
+      });
+    } catch (err) {
+      console.error("fetchProctors error:", err);
     }
   },
 

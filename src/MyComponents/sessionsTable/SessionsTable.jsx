@@ -11,7 +11,7 @@ import ExtendTimeModal from "./ExtendTimeModal";
 import EditRosterModal from "./EditRosterModal";
 import useSessionStore from "../../store/useSessionStore";
 import useAuthStore from "../../store/useAuthStore";
-import { getSessionStatus, getStatusConfig } from "../../utils/sessionUtils";
+import { getStatusConfig } from "../../utils/sessionUtils";
 
 function SessionActions({
   session,
@@ -295,7 +295,7 @@ export default function SessionsTable({ sessions }) {
       key: "status",
       width: 110,
       render: (_, session) => {
-        const status = getSessionStatus(session);
+        const status = session.status;
         const { color, label } = getStatusConfig(status);
         return (
           <Tag
@@ -322,7 +322,7 @@ export default function SessionsTable({ sessions }) {
       render: (_, session) => (
         <SessionActions
           session={session}
-          status={getSessionStatus(session)}
+          status={session.status}
           isSuperAdmin={isSuperAdmin}
           hasPermission={hasPermission}
           onOpenSession={setOpenSession}
@@ -374,7 +374,7 @@ export default function SessionsTable({ sessions }) {
       <EditSessionModal
         open={!!openSession}
         session={openSession}
-        status={openSession ? getSessionStatus(openSession) : null}
+        status={openSession ? openSession.status : null}
         onClose={() => setOpenSession(null)}
         onSave={handleSaveSession}
       />

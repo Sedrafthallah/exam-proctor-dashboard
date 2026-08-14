@@ -99,9 +99,6 @@ export default function AlertsTable({
       width: 110,
       render: (status) => {
         const config = ALERT_STATUS_CONFIG[status];
-        // Unmapped/unconfirmed status codes (see STATUS_LABELS TODO in
-        // useAlertsStore.js) fall back to showing the raw token instead of
-        // silently mislabeling as "Open".
         if (!config) {
           return <Badge status="default" text={<MyText style={{ fontSize: 12.5 }}>{status}</MyText>} />;
         }
@@ -135,7 +132,7 @@ export default function AlertsTable({
           );
         }
 
-        if (record.status !== "OPEN") {
+        if (record.status !== "Open") {
           return (
             <MyText type="secondary" style={{ fontSize: 12.5 }}>
               —

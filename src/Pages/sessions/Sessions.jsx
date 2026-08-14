@@ -1,5 +1,4 @@
 import useSessionStore from "../../store/useSessionStore";
-import { getSessionStatus } from "../../utils/sessionUtils";
 import { theme, Flex } from "antd";
 import { useState, useEffect } from "react";
 import MyTitle from "../../MyComponents/MyTitle/MyTitle";
@@ -38,7 +37,7 @@ export default function Sessions() {
 
   const filteredSessions = sessions.filter((session) => {
     if (activeFilter === "ALL") return true;
-    return getSessionStatus(session) === activeFilter;
+    return session.status === activeFilter;
   });
 
   const handleCreateSession = async (fields) => {

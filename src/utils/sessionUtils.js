@@ -18,6 +18,10 @@ export function getStatusConfig(status) {
   );
 }
 
+// Backend is the source of truth for status; this time-based calculation is
+// only a fallback for a session built locally before the backend has
+// assigned one (e.g. optimistic local state), not for already-fetched
+// sessions.
 export function getSessionStatus(session) {
   const now = new Date();
   const start = new Date(session.scheduledStartUTC);
@@ -49,6 +53,13 @@ export function getSessionStatus(session) {
   }
   if (session.published) return "SCHEDULED";
   return "DRAFT";
+}
+
+// Prefers the real backend status; falls back to the time-based calculation
+// only when status is genuinely missing (e.g. a session object built
+// optimistically before the backend has assigned one).
+export function sessionStatus(session) {
+  return session.status ?? getSessionStatus(session);
 }
 
 // Field-level edit permissions, keyed by the session's current lifecycle status.

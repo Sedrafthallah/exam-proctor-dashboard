@@ -12,29 +12,13 @@ const ALERT_TYPE_MAP = {
   ConnectivityLost: "CONNECTIVITY_LOST",
 };
 
-// `status` is a numeric-string code from the backend; only "0" (OPEN) is
-// confirmed so far. Unmapped codes fail closed to a non-matching token
-// rather than guessing "open", so action buttons stay hidden.
-// TODO: confirm remaining status codes once other states are observed.
-const STATUS_LABELS = {
-  "0": "OPEN",
-};
-
-// TODO: confirm the full severity code mapping with the backend once other
-// values are observed — only "0" has been seen so far.
-const SEVERITY_LABELS = {
-  "0": "Low",
-};
-
 const mapAlert = (a) => ({
   id: String(a.id),
   type: ALERT_TYPE_MAP[a.alertType] ?? a.alertType.toUpperCase(),
   typeCode: a.alertType, // raw PascalCase code, for matching against GET /api/alerts/types
   description: a.alertDescription ?? "",
-  status: STATUS_LABELS[a.status] ?? `UNKNOWN_STATUS_${a.status}`,
-  statusCode: a.status, // raw backend code, kept in case exact-match filtering needs it later
-  severity: SEVERITY_LABELS[a.severity] ?? `Severity ${a.severity}`,
-  severityCode: a.severity,
+  status: a.status,
+  severity: a.severity,
   student: a.studentName || "Unknown",
   studentNumber: a.studentNumber ?? null,
   studentId: a.studentId ?? null,

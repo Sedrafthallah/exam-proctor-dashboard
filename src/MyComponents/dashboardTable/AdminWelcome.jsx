@@ -45,7 +45,6 @@ import useSessionStore, {
 import useAlertsStore from "../../store/useAlertsStore";
 import useStudentStore from "../../store/useStudentStore";
 import useQuestionBankStore from "../../store/useQuestionBankStore";
-import { getSessionStatus } from "../../utils/sessionUtils";
 import { ALERT_TYPE_CONFIG } from "../../utils/alertUtils";
 
 const ALERT_TYPES = [
@@ -63,11 +62,6 @@ function getGreeting() {
   if (hour < 12) return "Good morning";
   if (hour < 18) return "Good afternoon";
   return "Good evening";
-}
-
-// Sessions from the API carry a `status` field; derive it only as a fallback.
-function sessionStatus(session) {
-  return session.status || getSessionStatus(session);
 }
 
 const chartCardStyle = (token) => ({
@@ -217,9 +211,9 @@ function AlertsByTypeChart({ alerts, alertCounts, token }) {
 }
 
 const ALERT_STATUS_COLORS = {
-  OPEN: "#faad14",
-  RESOLVED: "#52c41a",
-  ESCALATED: "#fa541c",
+  Open: "#faad14",
+  Resolved: "#52c41a",
+  Escalated: "#fa541c",
 };
 
 // Computed client-side from `alerts` — GET /api/alerts?status=... ignores
@@ -468,12 +462,12 @@ function ReportsStatusPieChart({ sessions, exportStatus, token }) {
     : [
         {
           name: "Exported",
-          value: sessions.filter((s) => sessionStatus(s) === "CLOSED").length,
+          value: sessions.filter((s) => s.status === "CLOSED").length,
           color: token.colorSuccess,
         },
         {
           name: "Pending",
-          value: sessions.filter((s) => sessionStatus(s) === "ACTIVE").length,
+          value: sessions.filter((s) => s.status === "ACTIVE").length,
           color: token.colorWarning,
         },
       ];
@@ -680,8 +674,8 @@ export default function AdminWelcome() {
     background: token.colorBgElevated,
   };
 
-  const openAlerts = alerts.filter((a) => a.status === "OPEN");
-  const activeSessions = sessions.filter((s) => sessionStatus(s) === "ACTIVE");
+  const openAlerts = alerts.filter((a) => a.status === "Open");
+  const activeSessions = sessions.filter((s) => s.status === "ACTIVE");
   const hasAnyPermission = permissions.length > 0;
 
   const header = (
@@ -792,7 +786,7 @@ export default function AdminWelcome() {
     has("ExportData") && {
       key: "ready-to-export",
       title: "Ready to Export",
-      value: dashboardSummary?.readyToExport ?? sessions.filter((s) => sessionStatus(s) === "CLOSED").length,
+      value: dashboardSummary?.readyToExport ?? sessions.filter((s) => s.status === "CLOSED").length,
       sub: "closed sessions",
       icon: <BarChartOutlined />,
       color: token.colorInfo,
@@ -800,7 +794,7 @@ export default function AdminWelcome() {
     has("ViewAlerts") && {
       key: "escalated",
       title: "Escalated",
-      value: dashboardSummary?.escalatedAlerts ?? alerts.filter((a) => a.status === "ESCALATED").length,
+      value: dashboardSummary?.escalatedAlerts ?? alerts.filter((a) => a.status === "Escalated").length,
       sub: "violations",
       icon: <WarningOutlined />,
       color: "#fa541c",
