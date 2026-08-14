@@ -27,6 +27,14 @@ function SessionActions({
   onEditRoster,
   onExport,
 }) {
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteClick = async () => {
+    setDeleting(true);
+    await onDelete(session);
+    setDeleting(false);
+  };
+
   if (status === "DRAFT") {
     return (
       <Flex gap={8} wrap="wrap">
@@ -39,10 +47,10 @@ function SessionActions({
         <Popconfirm
           title="Delete this draft session?"
           okText="Delete"
-          okButtonProps={{ danger: true }}
-          onConfirm={() => onDelete(session)}
+          okButtonProps={{ danger: true, loading: deleting }}
+          onConfirm={() => handleDeleteClick()}
         >
-          <Button size="small" danger icon={<DeleteOutlined />} />
+          <Button size="small" danger icon={<DeleteOutlined />} loading={deleting} />
         </Popconfirm>
       </Flex>
     );

@@ -48,6 +48,23 @@ export const PERMISSION_DETAILS = [
 // permissions" (e.g. Super Admin's last-resort local fallback).
 export const ALL_PERMISSION_KEYS = PERMISSION_DETAILS.map((p) => p.key);
 
+// Selectable pool for the Proctor role — an admin can check/uncheck any
+// subset of these, not an all-or-nothing set.
+export const PROCTOR_ALLOWED_PERMISSIONS = [
+  "MonitorExamSession",
+  "ViewExamSession",
+  "ViewStudents",
+  "ViewAlerts",
+  "DismissAlert",
+  "WarnStudent",
+  "EscalateAlert",
+];
+
+// key → short label lookup, e.g. for compact permission tags on a Proctor row.
+export function getPermissionLabel(key) {
+  return PERMISSION_DETAILS.find((p) => p.key === key)?.label ?? key;
+}
+
 // PERMISSION_DETAILS grouped by category, in table order — drives the
 // sectioned Permission Matrix / Reference UIs.
 export const PERMISSION_CATEGORIES = PERMISSION_DETAILS.reduce((groups, perm) => {

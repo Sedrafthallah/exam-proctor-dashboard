@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { theme, Flex, Badge, Segmented, Select, Tooltip, message, Modal } from "antd";
+import { useState, useEffect, useRef } from "react";
+import { theme, Flex, Badge, Segmented, Select, Tooltip, message, Modal, Input } from "antd";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import {
@@ -83,6 +83,11 @@ export default function Alerts() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [typeFilter, setTypeFilter] = useState("ALL");
 
+  const DEFAULT_WARN_MESSAGE = "Please remain visible in front of the camera.";
+  const DEFAULT_ESCALATE_REASON = "Suspicious behavior confirmed by proctor review.";
+  const warnMessageRef = useRef(DEFAULT_WARN_MESSAGE);
+  const escalateReasonRef = useRef(DEFAULT_ESCALATE_REASON);
+
   // Type filter takes priority over status filter for the server-side fetch
   // (the two only ever combine on the client via filteredAlerts below) —
   // kept as a single function so pagination's onChange can re-request
@@ -129,24 +134,56 @@ export default function Alerts() {
     }
   };
 
-  const handleWarn = async (alert) => {
-    const result = await warnAlertApi(alert.id);
-    if (result.success) {
-      message.success(result.message);
-      refetchAlerts(page, pageSize);
-    } else {
-      message.error(result.error);
-    }
+  const handleWarn = (alert) => {
+    warnMessageRef.current = DEFAULT_WARN_MESSAGE;
+    Modal.confirm({
+      title: `Warn ${alert.student}?`,
+      content: (
+        <Input.TextArea
+          rows={3}
+          defaultValue={warnMessageRef.current}
+          placeholder="Warning message to send to the student..."
+          onChange={(e) => {
+            warnMessageRef.current = e.target.value;
+          }}
+        />
+      ),
+      okText: "Send Warning",
+      onOk: async () => {
+        const result = await warnAlertApi(alert.id, warnMessageRef.current);
+        if (result.success) {
+          message.success(result.message);
+          refetchAlerts(page, pageSize);
+        } else {
+          message.error(result.error);
+        }
+      },
+    });
   };
 
   const handleEscalate = (alert) => {
+    escalateReasonRef.current = DEFAULT_ESCALATE_REASON;
     Modal.confirm({
       title: "Escalate this alert?",
-      content: `This will immediately terminate ${alert.student}'s exam session. This cannot be undone.`,
+      content: (
+        <Flex vertical gap={12}>
+          <MyText>
+            This will immediately terminate {alert.student}&apos;s exam session. This cannot be undone.
+          </MyText>
+          <Input.TextArea
+            rows={3}
+            defaultValue={escalateReasonRef.current}
+            placeholder="Reason for escalation..."
+            onChange={(e) => {
+              escalateReasonRef.current = e.target.value;
+            }}
+          />
+        </Flex>
+      ),
       okText: "Escalate",
       okButtonProps: { danger: true },
       onOk: async () => {
-        const result = await escalateAlertApi(alert.id);
+        const result = await escalateAlertApi(alert.id, escalateReasonRef.current);
         if (result.success) {
           message.success(result.message);
           refetchAlerts(page, pageSize);

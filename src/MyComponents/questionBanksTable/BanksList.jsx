@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { theme, Tag, Button, Popconfirm } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import MyCard from "../myCard/MyCard";
@@ -6,12 +7,15 @@ import MyTable from "../mytable/MyTable";
 import useQuestionBankStore from "../../store/useQuestionBankStore";
 import { getBankStatus, getStatusConfig } from "../../utils/questionBankUtils";
 
-export default function BanksList({ questionBanks, onSelectBank, canAuthor }) {
+export default function BanksList({ questionBanks, onSelectBank, canAuthor, loading }) {
   const { token } = theme.useToken();
   const deleteQuestionBankApi = useQuestionBankStore((state) => state.deleteQuestionBankApi);
+  const [deletingId, setDeletingId] = useState(null);
 
   const handleDelete = async (bank) => {
+    setDeletingId(bank.id);
     await deleteQuestionBankApi(bank.id);
+    setDeletingId(null);
   };
 
   const columns = [
@@ -68,13 +72,18 @@ export default function BanksList({ questionBanks, onSelectBank, canAuthor }) {
           <Popconfirm
             title="Delete this question bank?"
             okText="Delete"
-            okButtonProps={{ danger: true }}
-            onConfirm={() => handleDelete(bank)}
+            okButtonProps={{ danger: true, loading: deletingId === bank.id }}
+            onConfirm={(e) => {
+              e?.stopPropagation();
+              handleDelete(bank);
+            }}
+            onCancel={(e) => e?.stopPropagation()}
           >
             <Button
               size="small"
               danger
               icon={<DeleteOutlined />}
+              loading={deletingId === bank.id}
               onClick={(e) => e.stopPropagation()}
             />
           </Popconfirm>
@@ -98,6 +107,7 @@ export default function BanksList({ questionBanks, onSelectBank, canAuthor }) {
         dataSource={questionBanks}
         rowKey="code"
         pagination={false}
+        loading={loading}
         onRow={(bank) => ({
           onClick: () => onSelectBank(bank.id),
           style: { cursor: "pointer" },

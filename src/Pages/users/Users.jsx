@@ -9,6 +9,7 @@ import MyText from "../../MyComponents/myText/MyText";
 import MyButtonPrimary from "../../MyComponents/myButton/MyButtonPrimary";
 
 import PermissionMatrix from "../../MyComponents/usersTable/PermissionMatrix";
+import ProctorsList from "../../MyComponents/usersTable/ProctorsList";
 import PermissionReference from "../../MyComponents/usersTable/PermissionReference";
 import NewAdminModal from "../../MyComponents/usersTable/NewAdminModal";
 
@@ -17,6 +18,7 @@ export default function Users() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const admins = useAuthStore((state) => state.users);
+  const loading = useAuthStore((state) => state.loading);
   const page = useAuthStore((state) => state.page);
   const pageSize = useAuthStore((state) => state.pageSize);
   const total = useAuthStore((state) => state.total);
@@ -59,6 +61,9 @@ export default function Users() {
     }
   };
 
+  const adminAccounts = admins.filter((a) => a.role !== "PROCTOR");
+  const proctorAccounts = admins.filter((a) => a.role === "PROCTOR");
+
   return (
     <Flex vertical gap={20}>
       <Flex justify="space-between" align="flex-start" wrap="wrap" gap={12}>
@@ -98,7 +103,8 @@ export default function Users() {
       </Flex>
 
       <PermissionMatrix
-        admins={admins}
+        admins={adminAccounts}
+        loading={loading}
         onToggleStatus={handleToggleStatus}
         onDeleteAdmin={handleDeleteAdmin}
         pagination={{
@@ -109,6 +115,14 @@ export default function Users() {
           showSizeChanger: true,
         }}
       />
+
+      <ProctorsList
+        proctors={proctorAccounts}
+        loading={loading}
+        onToggleStatus={handleToggleStatus}
+        onDeleteAdmin={handleDeleteAdmin}
+      />
+
       <PermissionReference />
 
       <NewAdminModal

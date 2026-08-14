@@ -76,14 +76,18 @@ const fetchAlertsWithParams = async (params = "", page = 1, pageSize = 7) => {
   }
 };
 
-const callAlertAction = async (id, action) => {
+const callAlertAction = async (id, action, body) => {
   try {
     const accessToken =
       useAuthStore.getState().accessToken ?? sessionStorage.getItem("accessToken");
 
     const res = await apiFetch(`/api/alerts/${id}/${action}`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        ...(body ? { "Content-Type": "application/json" } : {}),
+      },
+      ...(body ? { body: JSON.stringify(body) } : {}),
     });
 
     const json = await res.json();
@@ -216,8 +220,8 @@ const useAlertsStore = create((set) => ({
     }
   },
 
-  warnAlertApi: async (id) => callAlertAction(id, "warn"),
-  escalateAlertApi: async (id) => callAlertAction(id, "escalate"),
+  warnAlertApi: async (id, warnMessage) => callAlertAction(id, "warn", { message: warnMessage }),
+  escalateAlertApi: async (id, reason) => callAlertAction(id, "escalate", { Reason: reason }),
 }));
 
 export default useAlertsStore;

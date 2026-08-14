@@ -122,11 +122,26 @@ function PermissionsDrawer({ admin, onClose }) {
 export default function PermissionMatrix({
   admins,
   pagination,
+  loading,
   onToggleStatus,
   onDeleteAdmin,
 }) {
   const { token } = theme.useToken();
   const [selectedAdmin, setSelectedAdmin] = useState(null);
+  const [togglingId, setTogglingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+
+  const handleToggleStatus = async (adminId) => {
+    setTogglingId(adminId);
+    await onToggleStatus(adminId);
+    setTogglingId(null);
+  };
+
+  const handleDeleteAdmin = async (adminId) => {
+    setDeletingId(adminId);
+    await onDeleteAdmin(adminId);
+    setDeletingId(null);
+  };
 
   const columns = [
     {
@@ -215,11 +230,11 @@ export default function PermissionMatrix({
                   : "This immediately blocks them from logging in."
               }
               okText={admin.disabled ? "Enable" : "Disable"}
-              okButtonProps={{ danger: !admin.disabled }}
-              onConfirm={() => onToggleStatus(admin.id)}
+              okButtonProps={{ danger: !admin.disabled, loading: togglingId === admin.id }}
+              onConfirm={() => handleToggleStatus(admin.id)}
             >
               <Tooltip title={admin.disabled ? "Enable account" : "Disable account"}>
-                <Switch size="small" checked={!admin.disabled} />
+                <Switch size="small" checked={!admin.disabled} loading={togglingId === admin.id} />
               </Tooltip>
             </Popconfirm>
 
@@ -227,10 +242,16 @@ export default function PermissionMatrix({
               title="Delete this admin account?"
               description="This permanently removes their login and permissions."
               okText="Delete"
-              okButtonProps={{ danger: true }}
-              onConfirm={() => onDeleteAdmin(admin.id)}
+              okButtonProps={{ danger: true, loading: deletingId === admin.id }}
+              onConfirm={() => handleDeleteAdmin(admin.id)}
             >
-              <Button type="text" danger size="small" icon={<DeleteOutlined />} />
+              <Button
+                type="text"
+                danger
+                size="small"
+                icon={<DeleteOutlined />}
+                loading={deletingId === admin.id}
+              />
             </Popconfirm>
           </Flex>
         );
@@ -261,6 +282,7 @@ export default function PermissionMatrix({
         dataSource={admins}
         rowKey="id"
         pagination={pagination ?? false}
+        loading={loading}
         onRow={(admin) => ({
           style: admin.disabled ? { opacity: 0.6 } : undefined,
         })}

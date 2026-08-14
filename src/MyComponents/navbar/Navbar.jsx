@@ -1,9 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Layout, Input, Avatar, Space, Switch, Dropdown, App, theme } from "antd";
+import {
+  Layout,
+  Avatar,
+  Space,
+  Switch,
+  Dropdown,
+  App,
+  theme,
+  Badge,
+} from "antd";
 
 import {
-  SearchOutlined,
   BellOutlined,
   UserOutlined,
   MoonOutlined,
@@ -12,8 +20,8 @@ import {
   DownOutlined,
 } from "@ant-design/icons";
 import useAuthStore from "../../store/useAuthStore";
-import { useLanguage } from "../../i18n-context";
-import MyButtonSecondary from "../../MyComponents/myButton/MyButtonSecondary";
+import useSessionStore from "../../store/useSessionStore";
+
 import MyText from "../../MyComponents/myText/MyText";
 import MyAccountModal from "./MyAccountModal";
 const { Header } = Layout;
@@ -26,13 +34,14 @@ const ROLE_LABELS = {
 
 export default function Navbar({ isDark, setIsDark }) {
   const { token } = useToken();
-  const { locale, setLocale } = useLanguage();
+
   const navigate = useNavigate();
   const { modal } = App.useApp();
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
 
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+  const openAlertsCount = useSessionStore((state) => state.stats.openAlerts);
 
   const roleLabel = ROLE_LABELS[user?.role] || user?.role;
 
@@ -107,7 +116,7 @@ export default function Navbar({ isDark, setIsDark }) {
         background: token.colorBgContainer,
         borderBottom: `1px solid ${token.colorBorder}`,
         display: "flex",
-        justifyContent: "space-between",
+        justifyContent: "flex-end",
         alignItems: "center",
         gap: 16,
         position: "sticky",
@@ -115,20 +124,6 @@ export default function Navbar({ isDark, setIsDark }) {
         zIndex: 10,
       }}
     >
-      <Input
-        placeholder="Search..."
-        allowClear
-        prefix={<SearchOutlined style={{ color: token.colorTextTertiary }} />}
-        style={{
-          flex: "0 1 360px",
-          minWidth: 160,
-          height: 40,
-          borderRadius: 10,
-          background: token.colorFillSecondary,
-          borderColor: "transparent",
-        }}
-      />
-
       <Space size={20} style={{ flexShrink: 0 }}>
         <Space
           size={9}
@@ -156,38 +151,16 @@ export default function Navbar({ isDark, setIsDark }) {
           />
         </Space>
 
-        <Space size={6}>
-          <MyButtonSecondary
-            size="small"
-            type={locale === "ar" ? "primary" : "default"}
-            onClick={() => setLocale("ar")}
+        <Badge count={openAlertsCount} size="small" offset={[-2, 2]}>
+          <BellOutlined
             style={{
-              minWidth: 42,
-              fontWeight: 600,
+              fontSize: 19,
+              color: token.colorTextSecondary,
+              cursor: "pointer",
             }}
-          >
-            AR
-          </MyButtonSecondary>
-          <MyButtonSecondary
-            size="small"
-            type={locale === "en" ? "primary" : "default"}
-            onClick={() => setLocale("en")}
-            style={{
-              minWidth: 42,
-              fontWeight: 600,
-            }}
-          >
-            EN
-          </MyButtonSecondary>
-        </Space>
-
-        <BellOutlined
-          style={{
-            fontSize: 19,
-            color: token.colorTextSecondary,
-            cursor: "pointer",
-          }}
-        />
+            onClick={() => navigate("/alerts")}
+          />
+        </Badge>
 
         <Dropdown
           menu={{ items: userMenuItems }}

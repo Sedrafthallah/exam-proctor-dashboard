@@ -23,6 +23,7 @@ export default function QuestionBanks() {
   const canAuthor = hasPermission("ManageQuestionBanks");
 
   const questionBanks = useQuestionBankStore((state) => state.questionBanks);
+  const loading = useQuestionBankStore((state) => state.loading);
   const fetchQuestionBanks = useQuestionBankStore((state) => state.fetchQuestionBanks);
   const uploadQuestionBankApi = useQuestionBankStore((state) => state.uploadQuestionBankApi);
   const uploading = useQuestionBankStore((state) => state.uploading);
@@ -96,6 +97,7 @@ export default function QuestionBanks() {
           questionBanks={questionBanks}
           onSelectBank={handleSelectBank}
           canAuthor={canAuthor}
+          loading={loading}
         />
 
         {uploadModal}

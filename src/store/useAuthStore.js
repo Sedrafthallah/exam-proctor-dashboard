@@ -3,59 +3,6 @@ import { message } from "antd";
 import { apiFetch } from "../api/apiClient";
 import useRolesStore from "./useRolesStore";
 
-const INITIAL_USERS = [
-  {
-    id: 2,
-    name: "Manar Aljarkas",
-    email: "manar@university.edu",
-    password: "admin123",
-    role: "ADMIN",
-    jobTitle: "Admin",
-    disabled: false,
-    permissions: ["CreateExamSession", "ViewExamSession", "EditExamSession", "ExportData", "ViewAlerts"],
-  },
-  {
-    id: 3,
-    name: "Prof. Maher Saleh",
-    email: "maher.saleh@vu.edu",
-    password: "admin123",
-    role: "PROCTOR",
-    jobTitle: "Proctor",
-    disabled: false,
-    permissions: ["CreateExamSession", "ViewExamSession", "EditExamSession"],
-  },
-  {
-    id: 4,
-    name: "Dr. Lina Abbas",
-    email: "lina.abbas@vu.edu",
-    password: "admin123",
-    role: "ADMIN",
-    jobTitle: "Question Author",
-    disabled: false,
-    permissions: ["ManageQuestionBanks", "ViewQuestionBanks"],
-  },
-  {
-    id: 5,
-    name: "Fadi Nasser",
-    email: "fadi.nasser@vu.edu",
-    password: "admin123",
-    role: "ADMIN",
-    jobTitle: "Proctor",
-    disabled: false,
-    permissions: ["MonitorExamSession", "ViewAlerts"],
-  },
-  {
-    id: 6,
-    name: "Yara Tannous",
-    email: "yara.tannous@vu.edu",
-    password: "admin123",
-    role: "ADMIN",
-    jobTitle: "Registrar",
-    disabled: false,
-    permissions: ["ViewStudents", "ImportStudents", "ExportData"],
-  },
-];
-
 // Last-resort fallback for when the backend returns an empty permissions
 // array for a user despite their role having permissions defined. Reuses
 // useRolesStore's role→permissions data.
@@ -76,7 +23,7 @@ const useAuthStore = create((set, get) => ({
   isAuthenticated: !!savedToken,
   accessToken: savedToken ?? null,
   refreshToken: savedRefreshToken ?? null,
-  users: INITIAL_USERS,
+  users: [],
   page: 1,
   pageSize: 10,
   total: 0,
@@ -206,6 +153,8 @@ const useAuthStore = create((set, get) => ({
     }),
 
   fetchAdmins: async (page = 1, pageSize = 10) => {
+    set({ loading: true });
+
     try {
       const accessToken =
         get().accessToken ?? sessionStorage.getItem("accessToken");
@@ -219,7 +168,10 @@ const useAuthStore = create((set, get) => ({
 
       const json = await res.json();
 
-      if (!res.ok || json.statusCode !== 200) return;
+      if (!res.ok || json.statusCode !== 200) {
+        set({ loading: false });
+        return;
+      }
 
       const admins = json.data.items.map((a) => {
         // permissions is an array of granted permission-name strings;
@@ -245,9 +197,11 @@ const useAuthStore = create((set, get) => ({
         page: json.data.page,
         pageSize: json.data.pageSize,
         total: json.data.totalCount,
+        loading: false,
       });
     } catch (err) {
       console.error("fetchAdmins error:", err);
+      set({ loading: false });
     }
   },
 

@@ -8,19 +8,7 @@ import MyText from "../../MyComponents/myText/MyText";
 import MyButtonPrimary from "../../MyComponents/myButton/MyButtonPrimary";
 
 import useRolesStore from "../../store/useRolesStore";
-import { PERMISSION_CATEGORIES } from "../../MyComponents/usersTable/adminsData";
-
-// Selectable pool for the Proctor role — an admin can check/uncheck any
-// subset of these, not an all-or-nothing set.
-const PROCTOR_ALLOWED_PERMISSIONS = [
-  "MonitorExamSession",
-  "ViewExamSession",
-  "ViewStudents",
-  "ViewAlerts",
-  "DismissAlert",
-  "WarnStudent",
-  "EscalateAlert",
-];
+import { PERMISSION_CATEGORIES, PROCTOR_ALLOWED_PERMISSIONS } from "../../MyComponents/usersTable/adminsData";
 
 // User/role administration is a Super Admin-only capability — hidden from
 // every other role's editor so Admin (and Proctor) can never be granted it.
