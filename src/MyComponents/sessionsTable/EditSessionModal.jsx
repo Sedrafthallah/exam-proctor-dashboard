@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Input, InputNumber, DatePicker, Select, Switch, Flex } from "antd";
 import { EditOutlined, EyeOutlined } from "@ant-design/icons";
-import dayjs from "dayjs";
 import MyModal from "../myModal/MyModal";
 import MyForm from "../myForm/MyForm";
 import MyRow from "../myRow/MyRow";
@@ -12,7 +11,7 @@ import MyText from "../myText/MyText";
 import useAuthStore from "../../store/useAuthStore";
 import useSessionStore from "../../store/useSessionStore";
 import useQuestionBankStore from "../../store/useQuestionBankStore";
-import { isEditable } from "../../utils/sessionUtils";
+import { isEditable, toInstitutionTime } from "../../utils/sessionUtils";
 import QuestionBankField from "./QuestionBankField";
 
 const FACE_ALERT_OPTIONS = ["Low", "Medium", "High"];
@@ -51,7 +50,7 @@ export default function EditSessionModal({
         form.setFieldsValue({
           sessionTitle: s.sessionTitle,
           courseCode: s.courseCode,
-          scheduledStartUTC: dayjs(s.scheduledStartUTC),
+          scheduledStartUTC: toInstitutionTime(s.scheduledStartUTC),
           duration: s.duration,
           gracePeriod: s.gracePeriod,
           loginWindow: s.loginWindow,

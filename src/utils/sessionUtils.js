@@ -1,3 +1,18 @@
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
+
+// Syria does not observe DST (abolished 2022) and is fixed at UTC+3 year-round.
+// Hardcoding the offset in minutes — rather than relying on a named IANA zone like
+// "Asia/Damascus" — sidesteps any possibility of a stale/incorrect timezone database
+// on the viewer's own device, which is what caused this bug in the first place.
+const INSTITUTION_UTC_OFFSET_MINUTES = 180;
+
+export function toInstitutionTime(value) {
+  return dayjs(value).utc().utcOffset(INSTITUTION_UTC_OFFSET_MINUTES);
+}
+
 export const SESSION_STATUS_CONFIG = {
   DRAFT: { color: "default", label: "Draft" },
   SCHEDULED: { color: "blue", label: "Scheduled" },

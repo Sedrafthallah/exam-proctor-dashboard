@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { theme, Flex, Tag, Button, Popconfirm, Tooltip, message } from "antd";
 import { CalendarOutlined, DeleteOutlined } from "@ant-design/icons";
-import dayjs from "dayjs";
 import MyCard from "../myCard/MyCard";
 import MyText from "../myText/MyText";
 import MyTable from "../mytable/MyTable";
@@ -11,7 +10,7 @@ import ExtendTimeModal from "./ExtendTimeModal";
 import EditRosterModal from "./EditRosterModal";
 import useSessionStore from "../../store/useSessionStore";
 import useAuthStore from "../../store/useAuthStore";
-import { getStatusConfig } from "../../utils/sessionUtils";
+import { getStatusConfig, toInstitutionTime } from "../../utils/sessionUtils";
 import { getPermissionLabel } from "../usersTable/adminsData";
 
 function permTooltip(allowed, permissionKey) {
@@ -288,7 +287,7 @@ export default function SessionsTable({ sessions }) {
       key: "scheduledStartUTC",
       width: 130,
       render: (value) => {
-        const start = dayjs(value);
+        const start = toInstitutionTime(value);
         return (
           <Flex vertical gap={0}>
             <MyText style={{ fontSize: 12.5 }}>

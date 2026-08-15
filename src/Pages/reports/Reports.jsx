@@ -9,7 +9,6 @@ import {
   CalendarOutlined,
   InboxOutlined,
 } from "@ant-design/icons";
-import dayjs from "dayjs";
 import MyTitle from "../../MyComponents/MyTitle/MyTitle";
 import MyText from "../../MyComponents/myText/MyText";
 import MyCard from "../../MyComponents/myCard/MyCard";
@@ -19,7 +18,7 @@ import MyButtonPrimary from "../../MyComponents/myButton/MyButtonPrimary";
 
 import useSessionStore from "../../store/useSessionStore";
 import useAuthStore from "../../store/useAuthStore";
-import { getStatusConfig } from "../../utils/sessionUtils";
+import { getStatusConfig, toInstitutionTime } from "../../utils/sessionUtils";
 import { apiFetch } from "../../api/apiClient";
 
 export default function Reports() {
@@ -62,7 +61,7 @@ export default function Reports() {
 
   const sessionOptions = reportableSessions.map((session) => ({
     value: session.id,
-    label: `${session.sessionTitle} · ${session.courseCode} · ${dayjs(session.scheduledStartUTC).format("YYYY-MM-DD")}`,
+    label: `${session.sessionTitle} · ${session.courseCode} · ${toInstitutionTime(session.scheduledStartUTC).format("YYYY-MM-DD")}`,
   }));
 
   const handleDownloadCsv = async () => {
@@ -215,7 +214,7 @@ export default function Reports() {
                     style={{ fontSize: 12, color: token.colorTextTertiary }}
                   />
                   <MyText type="secondary" style={{ fontSize: 13 }}>
-                    {dayjs(selectedSession.scheduledStartUTC).format(
+                    {toInstitutionTime(selectedSession.scheduledStartUTC).format(
                       "YYYY-MM-DD",
                     )}
                   </MyText>

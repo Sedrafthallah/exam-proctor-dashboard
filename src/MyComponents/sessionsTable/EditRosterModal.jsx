@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Select, Avatar, Flex, Button, message, theme } from "antd";
 import { TeamOutlined, CloseOutlined } from "@ant-design/icons";
-import dayjs from "dayjs";
 import MyModal from "../myModal/MyModal";
 import MyText from "../myText/MyText";
 import MyButtonPrimary from "../myButton/MyButtonPrimary";
 import MyButtonSecondary from "../myButton/MyButtonSecondary";
 import useSessionStore from "../../store/useSessionStore";
 import useStudentStore from "../../store/useStudentStore";
+import { toInstitutionTime } from "../../utils/sessionUtils";
 
 const API_DATETIME_FORMAT = "YYYY-MM-DDTHH:mm:ss";
 
@@ -48,7 +48,7 @@ export default function EditRosterModal({ open, session, onClose, onSave }) {
       fetchStudents();
 
       if (session.scheduledStartUTC && session.duration) {
-        const start = dayjs(session.scheduledStartUTC);
+        const start = toInstitutionTime(session.scheduledStartUTC);
         const startTime = start.format(API_DATETIME_FORMAT);
         const endTime = start.add(session.duration, "minute").format(API_DATETIME_FORMAT);
 
