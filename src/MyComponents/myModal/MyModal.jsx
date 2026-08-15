@@ -1,11 +1,11 @@
 import { Modal } from "antd";
 
-export default function MyModal({ children, ...props }) {
+export default function MyModal({ children, width = 700, ...props }) {
   return (
     <Modal
       {...props}
-      width={700}
-      style={{ top: 20 }}
+      width={width}
+      style={{ top: 20, ...props.style }}
       styles={{
         body: {
           maxHeight: "70vh",
@@ -13,6 +13,7 @@ export default function MyModal({ children, ...props }) {
           overflowX: "hidden",
           paddingRight: 8,
         },
+        ...props.styles,
       }}
       footer={null}
     >

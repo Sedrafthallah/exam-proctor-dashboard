@@ -6,7 +6,8 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 // otherwise a failed login (wrong password) or the logout call itself could
 // trigger a refresh attempt (and, on failure, another logout() call that
 // re-enters apiFetch), looping forever.
-const isAuthEndpoint = (path) => path.startsWith("/api/auth/");
+const isAuthEndpoint = (path) =>
+  path.startsWith("/api/auth/") || path.startsWith("/api/v1/auth/");
 
 // Shared in-flight promise so concurrent 401s trigger a single refresh call
 // instead of one per request.
@@ -15,7 +16,7 @@ let refreshPromise = null;
 // NOTE: path/payload shape assumed to mirror /api/auth/login's response
 // ({ statusCode, data: { accessToken, refreshToken } }) — confirm the exact
 // contract with the backend once it's available.
-function refreshAccessToken() {
+export function refreshAccessToken() {
   if (refreshPromise) return refreshPromise;
 
   refreshPromise = (async () => {

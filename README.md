@@ -1,16 +1,40 @@
-# React + Vite
+# Exam Proctor Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Vite + React monitoring console for proctors and admins.
 
-Currently, two official plugins are available:
+## Scripts
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm install
+npm run dev      # http://localhost:5173 — proxies /api and /ws
+npm run build
+npm run preview
+```
 
-## React Compiler
+## Local API (Stream watch)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+By default the Vite proxy targets `http://localhost:5041`. Run the ASP.NET API locally, then:
 
-## Expanding the ESLint configuration
+```bash
+npm run dev
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+For on-demand live camera watch (SignalR + WebRTC), see [docs/STREAM_WATCH.md](docs/STREAM_WATCH.md).
+
+To proxy a different host:
+
+```bash
+VITE_PROXY_TARGET=https://manaraljarkas.visual-host.com npm run dev
+```
+
+Optional direct API origin (skips proxy for REST; hub needs CORS):
+
+```bash
+# .env
+VITE_API_BASE_URL=http://localhost:5041
+```
+
+## Stack
+
+- React 19, Ant Design 6, Zustand, React Router
+- `@microsoft/signalr` for `/ws/monitoring`
