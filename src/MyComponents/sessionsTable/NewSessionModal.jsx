@@ -111,7 +111,8 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
     onCreate({
       sessionTitle: values.sessionTitle,
       courseCode: values.courseCode,
-      scheduledStartUTC: values.scheduledStartUTC.toISOString(),
+      scheduledDate: values.scheduledStartUTC.format("YYYY-MM-DD"),
+      scheduledTime: values.scheduledStartUTC.format("HH:mm"),
       duration: values.duration,
       gracePeriod: values.gracePeriod,
       loginWindow: values.loginWindow,

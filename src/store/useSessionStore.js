@@ -174,7 +174,8 @@ const useSessionStore = create((set, get) => ({
       const formData = new FormData();
       formData.append("Title", fields.sessionTitle);
       formData.append("CourseCode", fields.courseCode);
-      formData.append("ScheduledStart", fields.scheduledStartUTC);
+      formData.append("ScheduledDate", fields.scheduledDate);
+      formData.append("ScheduledTime", fields.scheduledTime);
       formData.append("DurationMinutes", fields.duration);
       formData.append("GracePeriodMinutes", fields.gracePeriod);
       formData.append("LoginWindowMinutes", fields.loginWindow);
