@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { theme, Flex, Badge, Select, message } from "antd";
+import { useEffect, useMemo, useState } from "react";
+import { theme, Flex, Select, Spin, message } from "antd";
 import { VideoCameraOutlined } from "@ant-design/icons";
 import MyTitle from "../../MyComponents/MyTitle/MyTitle";
 import MyText from "../../MyComponents/myText/MyText";
@@ -7,41 +7,72 @@ import MyRow from "../../MyComponents/myRow/MyRow";
 import MyCol from "../../MyComponents/myCol/MyCol";
 import StudentStatusGrid from "../../MyComponents/monitoring/StudentStatusGrid";
 import AlertFeed from "../../MyComponents/monitoring/AlertFeed";
+import HubConnectionBadge from "../../MyComponents/monitoring/HubConnectionBadge";
+import WatchStreamModal from "../../MyComponents/monitoring/WatchStreamModal";
 import useSessionStore from "../../store/useSessionStore";
-import useStudentStore from "../../store/useStudentStore";
 import useAlertsStore from "../../store/useAlertsStore";
 import useAuthStore from "../../store/useAuthStore";
+<<<<<<< HEAD
+=======
+import useMonitoringHubStore from "../../store/useMonitoringHubStore";
+import useMonitoringRosterStore from "../../store/useMonitoringRosterStore";
+import { ALERT_TYPE_CONFIG } from "../../utils/alertUtils";
+>>>>>>> exam_session
 
-// Monitoring-only overlay (login state during the exam) for the roster in
-// useStudentStore — not real session-attendance data, since the backend
-// doesn't exist yet. Keyed by student id, linked to the live DB202 session.
-const MONITORING_STATUS = {
-  "S-20211847": { status: "ACTIVE", loginTime: "09:02" }, // Layla Mansour
-  "S-20210934": { status: "ACTIVE", loginTime: "09:00" }, // Omar Khalil
-  "S-20213302": { status: "ACTIVE", loginTime: "09:03" }, // Nour Haidar
-  "S-20209981": { status: "PENDING_AUTH", loginTime: null }, // Yousef Aziz
-  "S-20214410": { status: "ACTIVE", loginTime: "08:58" }, // Sara Deeb
-  "S-20211205": { status: "ACTIVE", loginTime: "09:02" }, // Karim Nseir
-  "S-20212876": { status: "ACTIVE", loginTime: "09:01" }, // Dima Suleiman
-  "S-20210467": { status: "TERMINATED", loginTime: "08:55" }, // Bassel Rahal
-};
+/** Survives React Strict Mode remount so we don't abort SignalR negotiate. */
+let hubMountGeneration = 0;
 
 export default function Monitoring() {
   const { token } = theme.useToken();
   const sessions = useSessionStore((state) => state.sessions);
   const fetchSessions = useSessionStore((state) => state.fetchSessions);
+<<<<<<< HEAD
   const fetchProctorSessions = useSessionStore((state) => state.fetchProctorSessions);
   const students = useStudentStore((state) => state.students);
   const fetchStudents = useStudentStore((state) => state.fetchStudents);
+=======
+>>>>>>> exam_session
   const alerts = useAlertsStore((state) => state.alerts);
   const fetchAlerts = useAlertsStore((state) => state.fetchAlerts);
   const updateAlertStatus = useAlertsStore((state) => state.updateAlertStatus);
   const hasPermission = useAuthStore((state) => state.hasPermission);
+<<<<<<< HEAD
   const role = useAuthStore((state) => state.user?.role);
+=======
+  const accessToken = useAuthStore((state) => state.accessToken);
+
+  const connectionState = useMonitoringHubStore((s) => s.connectionState);
+  const connectedStudentSessionIds = useMonitoringHubStore(
+    (s) => s.connectedStudentSessionIds,
+  );
+  const activeWatch = useMonitoringHubStore((s) => s.activeWatch);
+  const remoteStream = useMonitoringHubStore((s) => s.remoteStream);
+  const connect = useMonitoringHubStore((s) => s.connect);
+  const disconnect = useMonitoringHubStore((s) => s.disconnect);
+  const joinExamSession = useMonitoringHubStore((s) => s.joinExamSession);
+  const startWatch = useMonitoringHubStore((s) => s.startWatch);
+  const endWatch = useMonitoringHubStore((s) => s.endWatch);
+
+  const rosterStudents = useMonitoringRosterStore((s) => s.studentsBySessionId);
+  const loadingSessionId = useMonitoringRosterStore((s) => s.loadingSessionId);
+  const fetchSessionStudents = useMonitoringRosterStore(
+    (s) => s.fetchSessionStudents,
+  );
+>>>>>>> exam_session
 
   const canAct = hasPermission("MonitorExamSession");
 
+  const activeSessions = sessions.filter(
+    (session) => String(session.status ?? "").toUpperCase() === "ACTIVE",
+  );
+  const [selectedSessionId, setSelectedSessionId] = useState(null);
+  const selectedSession =
+    activeSessions.find((s) => s.id === selectedSessionId) ??
+    activeSessions[0] ??
+    null;
+
   useEffect(() => {
+<<<<<<< HEAD
     if (role === "PROCTOR") {
       fetchProctorSessions();
     } else {
@@ -54,6 +85,88 @@ export default function Monitoring() {
   const activeSessions = sessions.filter((session) => session.status === "ACTIVE");
   const [selectedSessionId, setSelectedSessionId] = useState(activeSessions[0]?.id ?? null);
   const selectedSession = activeSessions.find((s) => s.id === selectedSessionId) ?? activeSessions[0] ?? null;
+=======
+    fetchSessions();
+    fetchAlerts();
+  }, [fetchSessions, fetchAlerts]);
+
+  // Hub lifecycle — defer disconnect past Strict Mode double-invoke.
+  useEffect(() => {
+    if (!accessToken) return undefined;
+
+    const gen = ++hubMountGeneration;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        await connect();
+      } catch {
+        if (!cancelled && gen === hubMountGeneration) {
+          message.warning(
+            "Could not connect to the monitoring hub. Sign out and back in as admin, then reopen Live Monitoring.",
+          );
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      window.setTimeout(() => {
+        if (gen === hubMountGeneration) {
+          void disconnect();
+        }
+      }, 0);
+    };
+  }, [accessToken, connect, disconnect]);
+
+  // REST roster — independent of hub (students must show even when WSS is down).
+  useEffect(() => {
+    if (!selectedSession?.id) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        await fetchSessionStudents(selectedSession.id);
+      } catch (e) {
+        if (!cancelled) {
+          message.error(
+            e?.message === "NOT_ASSIGNED"
+              ? "You are not assigned to this exam session."
+              : "Failed to load monitoring roster.",
+          );
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedSession?.id, fetchSessionStudents]);
+
+  // Join hub session group once connected.
+  useEffect(() => {
+    if (!selectedSession?.id || connectionState !== "connected") return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        await joinExamSession(selectedSession.id);
+      } catch (e) {
+        if (!cancelled) {
+          message.error(
+            e?.message === "NOT_ASSIGNED"
+              ? "You are not assigned to this exam session."
+              : "Failed to join the monitoring hub session.",
+          );
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedSession?.id, connectionState, joinExamSession]);
+>>>>>>> exam_session
 
   const sessionOptions = activeSessions.map((session) => ({
     value: session.id,
@@ -64,23 +177,57 @@ export default function Monitoring() {
     .filter((alert) => alert.sessionTitle === selectedSession?.sessionTitle)
     .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-  const monitoringStudents = Object.keys(MONITORING_STATUS)
-    .map((studentId) => {
-      const student = students.find((s) => s.id === studentId);
-      if (!student) return null;
-
-      const overlay = MONITORING_STATUS[studentId];
-      const studentAlerts = sessionAlerts.filter((alert) => alert.studentId === studentId);
+  const rosterSessionId = selectedSession?.id;
+  const monitoringStudents = useMemo(() => {
+    if (rosterSessionId == null) return [];
+    const rows = rosterStudents[String(rosterSessionId)] ?? [];
+    return rows.map((row) => {
+      const sid = Number(row.studentSessionId);
+      const studentAlerts = sessionAlerts.filter(
+        (alert) =>
+          alert.studentId === row.studentNumber ||
+          alert.student === row.studentName,
+      );
+      const latestType = row.latestAlertType;
+      const latestAlert =
+        studentAlerts[0] ??
+        (latestType && ALERT_TYPE_CONFIG[latestType]
+          ? { type: latestType }
+          : latestType
+            ? { type: latestType }
+            : null);
 
       return {
-        ...student,
-        status: overlay.status,
-        loginTime: overlay.loginTime,
-        alertCount: studentAlerts.length,
-        latestAlert: studentAlerts[0] ?? null,
+        studentSessionId: sid,
+        studentId: row.studentId,
+        name: row.studentName,
+        studentName: row.studentName,
+        id: row.studentNumber,
+        studentNumber: row.studentNumber,
+        status: row.status,
+        loginAt: row.loginAt,
+        alertCount: row.openAlertCount || studentAlerts.length,
+        latestAlert,
+        hubOnline: !!connectedStudentSessionIds[sid],
+        watchBusy:
+          activeWatch != null &&
+          Number(activeWatch.studentSessionId) !== sid &&
+          activeWatch.peerState !== "failed",
       };
-    })
-    .filter(Boolean);
+    });
+  }, [
+    rosterSessionId,
+    rosterStudents,
+    sessionAlerts,
+    connectedStudentSessionIds,
+    activeWatch,
+  ]);
+
+  const watchedStudent = monitoringStudents.find(
+    (s) =>
+      activeWatch &&
+      Number(s.studentSessionId) === Number(activeWatch.studentSessionId),
+  );
 
   const handleDismiss = (alert) => {
     updateAlertStatus(alert.id, "Resolved");
@@ -95,6 +242,22 @@ export default function Monitoring() {
     updateAlertStatus(alert.id, "Escalated");
     message.success(`Alert escalated for ${alert.student}.`);
   };
+
+  const handleWatch = (student) => {
+    if (!canAct) return;
+    if (
+      activeWatch &&
+      Number(activeWatch.studentSessionId) === Number(student.studentSessionId)
+    ) {
+      return;
+    }
+    void startWatch(student.studentSessionId);
+  };
+
+  const rosterLoading =
+    selectedSession &&
+    loadingSessionId === String(selectedSession.id) &&
+    !(rosterStudents[String(selectedSession.id)]?.length);
 
   return (
     <Flex vertical gap={20}>
@@ -118,7 +281,9 @@ export default function Monitoring() {
             <MyTitle level={3} style={{ margin: 0, color: token.colorText }}>
               Live Monitoring
             </MyTitle>
-            <MyText type="secondary">Real-time student activity during active sessions.</MyText>
+            <MyText type="secondary">
+              Real-time student activity during active sessions.
+            </MyText>
           </Flex>
         </Flex>
 
@@ -131,12 +296,7 @@ export default function Monitoring() {
             style={{ minWidth: 240 }}
             notFoundContent="No active sessions"
           />
-          <Flex align="center" gap={6}>
-            <Badge status="processing" color={token.colorSuccess} />
-            <MyText type="secondary" style={{ fontSize: 11, fontWeight: 500, fontFamily: "monospace" }}>
-              WSS live
-            </MyText>
-          </Flex>
+          <HubConnectionBadge connectionState={connectionState} />
         </Flex>
       </Flex>
 
@@ -145,7 +305,19 @@ export default function Monitoring() {
       ) : (
         <MyRow gutter={[20, 20]}>
           <MyCol xs={24} lg={16}>
-            <StudentStatusGrid students={monitoringStudents} />
+            {rosterLoading ? (
+              <Flex justify="center" style={{ padding: 48 }}>
+                <Spin />
+              </Flex>
+            ) : (
+              <StudentStatusGrid
+                students={monitoringStudents}
+                canWatch={canAct}
+                hubConnected={connectionState === "connected"}
+                activeWatchStudentSessionId={activeWatch?.studentSessionId}
+                onWatch={handleWatch}
+              />
+            )}
           </MyCol>
           <MyCol xs={24} lg={8}>
             <AlertFeed
@@ -158,6 +330,15 @@ export default function Monitoring() {
           </MyCol>
         </MyRow>
       )}
+
+      <WatchStreamModal
+        open={!!activeWatch}
+        studentName={watchedStudent?.name}
+        studentNumber={watchedStudent?.studentNumber}
+        peerState={activeWatch?.peerState ?? "connecting"}
+        remoteStream={remoteStream}
+        onEnd={() => void endWatch()}
+      />
     </Flex>
   );
 }
