@@ -12,12 +12,9 @@ import WatchStreamModal from "../../MyComponents/monitoring/WatchStreamModal";
 import useSessionStore from "../../store/useSessionStore";
 import useAlertsStore from "../../store/useAlertsStore";
 import useAuthStore from "../../store/useAuthStore";
-<<<<<<< HEAD
-=======
 import useMonitoringHubStore from "../../store/useMonitoringHubStore";
 import useMonitoringRosterStore from "../../store/useMonitoringRosterStore";
 import { ALERT_TYPE_CONFIG } from "../../utils/alertUtils";
->>>>>>> exam_session
 
 /** Survives React Strict Mode remount so we don't abort SignalR negotiate. */
 let hubMountGeneration = 0;
@@ -26,19 +23,10 @@ export default function Monitoring() {
   const { token } = theme.useToken();
   const sessions = useSessionStore((state) => state.sessions);
   const fetchSessions = useSessionStore((state) => state.fetchSessions);
-<<<<<<< HEAD
-  const fetchProctorSessions = useSessionStore((state) => state.fetchProctorSessions);
-  const students = useStudentStore((state) => state.students);
-  const fetchStudents = useStudentStore((state) => state.fetchStudents);
-=======
->>>>>>> exam_session
   const alerts = useAlertsStore((state) => state.alerts);
   const fetchAlerts = useAlertsStore((state) => state.fetchAlerts);
   const updateAlertStatus = useAlertsStore((state) => state.updateAlertStatus);
   const hasPermission = useAuthStore((state) => state.hasPermission);
-<<<<<<< HEAD
-  const role = useAuthStore((state) => state.user?.role);
-=======
   const accessToken = useAuthStore((state) => state.accessToken);
 
   const connectionState = useMonitoringHubStore((s) => s.connectionState);
@@ -58,7 +46,6 @@ export default function Monitoring() {
   const fetchSessionStudents = useMonitoringRosterStore(
     (s) => s.fetchSessionStudents,
   );
->>>>>>> exam_session
 
   const canAct = hasPermission("MonitorExamSession");
 
@@ -72,20 +59,6 @@ export default function Monitoring() {
     null;
 
   useEffect(() => {
-<<<<<<< HEAD
-    if (role === "PROCTOR") {
-      fetchProctorSessions();
-    } else {
-      fetchSessions();
-    }
-    fetchStudents();
-    fetchAlerts();
-  }, [role, fetchSessions, fetchProctorSessions, fetchStudents, fetchAlerts]);
-
-  const activeSessions = sessions.filter((session) => session.status === "ACTIVE");
-  const [selectedSessionId, setSelectedSessionId] = useState(activeSessions[0]?.id ?? null);
-  const selectedSession = activeSessions.find((s) => s.id === selectedSessionId) ?? activeSessions[0] ?? null;
-=======
     fetchSessions();
     fetchAlerts();
   }, [fetchSessions, fetchAlerts]);
@@ -166,7 +139,6 @@ export default function Monitoring() {
       cancelled = true;
     };
   }, [selectedSession?.id, connectionState, joinExamSession]);
->>>>>>> exam_session
 
   const sessionOptions = activeSessions.map((session) => ({
     value: session.id,
