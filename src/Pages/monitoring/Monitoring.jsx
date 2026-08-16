@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { theme, Flex, Select, Spin, message } from "antd";
+import { theme, Flex, Select, Spin, message, Modal, Input } from "antd";
 import { VideoCameraOutlined } from "@ant-design/icons";
 import MyTitle from "../../MyComponents/MyTitle/MyTitle";
 import MyText from "../../MyComponents/myText/MyText";
@@ -15,17 +15,53 @@ import useAuthStore from "../../store/useAuthStore";
 import useMonitoringHubStore from "../../store/useMonitoringHubStore";
 import useMonitoringRosterStore from "../../store/useMonitoringRosterStore";
 import { ALERT_TYPE_CONFIG } from "../../utils/alertUtils";
+import { ALERT_TYPE_MAP } from "../../utils/alertMappers";
+import { PRESENCE_REFRESH_INTERVAL_MS } from "../../utils/monitoringHealth";
 
 /** Survives React Strict Mode remount so we don't abort SignalR negotiate. */
 let hubMountGeneration = 0;
+
+function promptText({ title, placeholder, okText, danger = false }) {
+  return new Promise((resolve) => {
+    let value = "";
+    Modal.confirm({
+      title,
+      content: (
+        <Input.TextArea
+          rows={3}
+          placeholder={placeholder}
+          onChange={(e) => {
+            value = e.target.value;
+          }}
+          autoFocus
+        />
+      ),
+      okText,
+      okButtonProps: danger ? { danger: true } : undefined,
+      onOk: () => {
+        const trimmed = value.trim();
+        if (!trimmed) {
+          message.error("Please enter a non-empty value.");
+          return Promise.reject();
+        }
+        resolve(trimmed);
+      },
+      onCancel: () => resolve(null),
+    });
+  });
+}
 
 export default function Monitoring() {
   const { token } = theme.useToken();
   const sessions = useSessionStore((state) => state.sessions);
   const fetchSessions = useSessionStore((state) => state.fetchSessions);
   const alerts = useAlertsStore((state) => state.alerts);
-  const fetchAlerts = useAlertsStore((state) => state.fetchAlerts);
-  const updateAlertStatus = useAlertsStore((state) => state.updateAlertStatus);
+  const fetchAlertsForSession = useAlertsStore(
+    (state) => state.fetchAlertsForSession,
+  );
+  const dismissAlertApi = useAlertsStore((state) => state.dismissAlertApi);
+  const warnAlertApi = useAlertsStore((state) => state.warnAlertApi);
+  const escalateAlertApi = useAlertsStore((state) => state.escalateAlertApi);
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const accessToken = useAuthStore((state) => state.accessToken);
 
@@ -60,8 +96,7 @@ export default function Monitoring() {
 
   useEffect(() => {
     fetchSessions();
-    fetchAlerts();
-  }, [fetchSessions, fetchAlerts]);
+  }, [fetchSessions]);
 
   // Hub lifecycle — defer disconnect past Strict Mode double-invoke.
   useEffect(() => {
@@ -92,14 +127,17 @@ export default function Monitoring() {
     };
   }, [accessToken, connect, disconnect]);
 
-  // REST roster — independent of hub (students must show even when WSS is down).
+  // REST roster + session alert prefetch.
   useEffect(() => {
     if (!selectedSession?.id) return;
 
     let cancelled = false;
     (async () => {
       try {
-        await fetchSessionStudents(selectedSession.id);
+        await Promise.all([
+          fetchSessionStudents(selectedSession.id),
+          fetchAlertsForSession(selectedSession.id),
+        ]);
       } catch (e) {
         if (!cancelled) {
           message.error(
@@ -114,6 +152,19 @@ export default function Monitoring() {
     return () => {
       cancelled = true;
     };
+  }, [selectedSession?.id, fetchSessionStudents, fetchAlertsForSession]);
+
+  // Presence safety net: REST re-fetch so lastHeartbeatAtUtc cannot freeze if a
+  // hub StudentStatusChanged is missed (hub push remains the primary path).
+  useEffect(() => {
+    if (!selectedSession?.id) return undefined;
+
+    const sessionId = selectedSession.id;
+    const id = window.setInterval(() => {
+      void fetchSessionStudents(sessionId, { silent: true }).catch(() => {});
+    }, PRESENCE_REFRESH_INTERVAL_MS);
+
+    return () => window.clearInterval(id);
   }, [selectedSession?.id, fetchSessionStudents]);
 
   // Join hub session group once connected.
@@ -146,7 +197,11 @@ export default function Monitoring() {
   }));
 
   const sessionAlerts = alerts
-    .filter((alert) => alert.sessionTitle === selectedSession?.sessionTitle)
+    .filter(
+      (alert) =>
+        selectedSession?.id != null &&
+        Number(alert.sessionId) === Number(selectedSession.id),
+    )
     .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
   const rosterSessionId = selectedSession?.id;
@@ -157,17 +212,18 @@ export default function Monitoring() {
       const sid = Number(row.studentSessionId);
       const studentAlerts = sessionAlerts.filter(
         (alert) =>
-          alert.studentId === row.studentNumber ||
+          Number(alert.studentSessionId) === sid ||
+          alert.studentId === row.studentId ||
           alert.student === row.studentName,
       );
       const latestType = row.latestAlertType;
+      const mappedLatestType =
+        latestType &&
+        (ALERT_TYPE_MAP[latestType] ??
+          (ALERT_TYPE_CONFIG[latestType] ? latestType : null));
       const latestAlert =
         studentAlerts[0] ??
-        (latestType && ALERT_TYPE_CONFIG[latestType]
-          ? { type: latestType }
-          : latestType
-            ? { type: latestType }
-            : null);
+        (mappedLatestType ? { type: mappedLatestType } : null);
 
       return {
         studentSessionId: sid,
@@ -178,6 +234,8 @@ export default function Monitoring() {
         studentNumber: row.studentNumber,
         status: row.status,
         loginAt: row.loginAt,
+        pipelineStatus: row.pipelineStatus,
+        lastHeartbeatAtUtc: row.lastHeartbeatAtUtc,
         alertCount: row.openAlertCount || studentAlerts.length,
         latestAlert,
         hubOnline: !!connectedStudentSessionIds[sid],
@@ -201,18 +259,45 @@ export default function Monitoring() {
       Number(s.studentSessionId) === Number(activeWatch.studentSessionId),
   );
 
-  const handleDismiss = (alert) => {
-    updateAlertStatus(alert.id, "RESOLVED");
-    message.success(`Alert dismissed for ${alert.student}.`);
+  const handleDismiss = async (alert) => {
+    const success = await dismissAlertApi(alert.id);
+    if (success) {
+      message.success(`Alert dismissed for ${alert.student}.`);
+    }
   };
 
-  const handleWarn = (alert) => {
-    message.success(`Warning sent to ${alert.student}.`);
+  const handleWarn = async (alert) => {
+    const text = await promptText({
+      title: `Warn ${alert.student}`,
+      placeholder: "Warning message shown on the student exam screen",
+      okText: "Send warning",
+    });
+    if (!text) return;
+
+    const result = await warnAlertApi(alert.id, text);
+    if (result.success) {
+      message.success(result.message || `Warning sent to ${alert.student}.`);
+    } else {
+      message.error(result.error);
+    }
   };
 
-  const handleEscalate = (alert) => {
-    updateAlertStatus(alert.id, "ESCALATED");
-    message.success(`Alert escalated for ${alert.student}.`);
+  const handleEscalate = async (alert) => {
+    const reason = await promptText({
+      title: `Terminate ${alert.student}'s attempt?`,
+      placeholder: "Reason for termination (required)",
+      okText: "Escalate & terminate",
+      danger: true,
+    });
+    if (!reason) return;
+
+    const result = await escalateAlertApi(alert.id, reason);
+    if (result.success) {
+      message.success(result.message || `Session terminated for ${alert.student}.`);
+      void fetchSessionStudents(selectedSession.id).catch(() => {});
+    } else {
+      message.error(result.error);
+    }
   };
 
   const handleWatch = (student) => {

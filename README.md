@@ -11,9 +11,9 @@ npm run build
 npm run preview
 ```
 
-## Local API (Stream watch)
+## API (Stream watch)
 
-By default the Vite proxy targets `http://localhost:5041`. Run the ASP.NET API locally, then:
+By default the Vite proxy targets the hosted API (`https://manaraljarkas.visual-host.com`). Then:
 
 ```bash
 npm run dev
@@ -21,17 +21,19 @@ npm run dev
 
 For on-demand live camera watch (SignalR + WebRTC), see [docs/STREAM_WATCH.md](docs/STREAM_WATCH.md).
 
-To proxy a different host:
+For live alerts, warn/terminate, and heartbeat staleness, see [docs/MONITOR_LIVE.md](docs/MONITOR_LIVE.md).
+
+To proxy a local backend instead:
 
 ```bash
-VITE_PROXY_TARGET=https://manaraljarkas.visual-host.com npm run dev
+VITE_PROXY_TARGET=http://localhost:5041 npm run dev
 ```
 
 Optional direct API origin (skips proxy for REST; hub needs CORS):
 
 ```bash
 # .env
-VITE_API_BASE_URL=http://localhost:5041
+VITE_API_BASE_URL=https://manaraljarkas.visual-host.com
 ```
 
 ## Stack

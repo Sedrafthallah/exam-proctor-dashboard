@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { theme, Flex, Badge, Segmented, Select, Tooltip, message, Modal } from "antd";
+import { theme, Flex, Badge, Segmented, Select, Tooltip, message, Modal, Input } from "antd";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import {
@@ -127,30 +127,74 @@ export default function Alerts() {
     }
   };
 
-  const handleWarn = async (alert) => {
-    const result = await warnAlertApi(alert.id);
-    if (result.success) {
-      message.success(result.message);
-      refetchAlerts(page, pageSize);
-    } else {
-      message.error(result.error);
-    }
+  const handleWarn = (alert) => {
+    let value = "";
+    Modal.confirm({
+      title: `Warn ${alert.student}`,
+      content: (
+        <Input.TextArea
+          rows={3}
+          placeholder="Warning message shown on the student exam screen"
+          onChange={(e) => {
+            value = e.target.value;
+          }}
+          autoFocus
+        />
+      ),
+      okText: "Send warning",
+      onOk: async () => {
+        const trimmed = value.trim();
+        if (!trimmed) {
+          message.error("Warning message is required.");
+          return Promise.reject();
+        }
+        const result = await warnAlertApi(alert.id, trimmed);
+        if (result.success) {
+          message.success(result.message);
+          refetchAlerts(page, pageSize);
+        } else {
+          message.error(result.error);
+          return Promise.reject();
+        }
+      },
+    });
   };
 
   const handleEscalate = (alert) => {
+    let reason = "";
     Modal.confirm({
       title: "Escalate this alert?",
-      content: `This will immediately terminate ${alert.student}'s exam session. This cannot be undone.`,
+      content: (
+        <Flex vertical gap={8}>
+          <MyText type="secondary">
+            This will immediately terminate {alert.student}&apos;s exam session.
+            This cannot be undone.
+          </MyText>
+          <Input.TextArea
+            rows={3}
+            placeholder="Reason for termination (required)"
+            onChange={(e) => {
+              reason = e.target.value;
+            }}
+          />
+        </Flex>
+      ),
       okText: "Escalate",
       okButtonProps: { danger: true },
       onOk: async () => {
-        const result = await escalateAlertApi(alert.id);
+        const trimmed = reason.trim();
+        if (!trimmed) {
+          message.error("Escalate reason is required.");
+          return Promise.reject();
+        }
+        const result = await escalateAlertApi(alert.id, trimmed);
         if (result.success) {
           message.success(result.message);
           refetchAlerts(page, pageSize);
           fetchSessions();
         } else {
           message.error(result.error);
+          return Promise.reject();
         }
       },
     });
