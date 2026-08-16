@@ -68,11 +68,53 @@ export default function Users() {
     }
   };
 
+  const handleToggleProctorStatus = async (proctorId) => {
+    const proctor = proctors.find((p) => p.proctorId === proctorId);
+    if (!proctor) return;
+
+    const matchedAdmin = admins.find((a) => a.id === String(proctor.proctorId));
+    const disabled = matchedAdmin ? matchedAdmin.disabled : proctor.disabled ?? false;
+
+    if (disabled) {
+      if (await reactivateAdminApi(proctorId)) {
+        message.success(`${proctor.full_name}'s account was enabled.`);
+      }
+    } else {
+      if (await deactivateAdminApi(proctorId)) {
+        message.success(`${proctor.full_name}'s account was disabled.`);
+      }
+    }
+
+    fetchAdmins(page, pageSize);
+    fetchProctors(proctorsPage, proctorsPageSize);
+  };
+
+  const handleDeleteProctor = async (proctorId) => {
+    const proctor = proctors.find((p) => p.proctorId === proctorId);
+
+    const success = await deleteAdminApi(proctorId);
+
+    if (success) {
+      message.success(`${proctor?.full_name}'s account was deleted.`);
+    }
+
+    fetchAdmins(page, pageSize);
+    fetchProctors(proctorsPage, proctorsPageSize);
+  };
+
   // /api/admins/with-permissions still returns proctor accounts mixed in
   // (see fetchAdmins' role mapping) — exclude them by id against the real
   // /api/proctors population instead of relying on the role field.
   const proctorIds = new Set(proctors.map((p) => String(p.proctorId)));
   const adminAccounts = admins.filter((a) => !proctorIds.has(a.id));
+
+  const proctorAccounts = proctors.map((p) => {
+    const matchedAdmin = admins.find((a) => a.id === String(p.proctorId));
+    return {
+      ...p,
+      disabled: matchedAdmin ? matchedAdmin.disabled : p.disabled ?? false,
+    };
+  });
 
   return (
     <Flex vertical gap={20}>
@@ -127,8 +169,10 @@ export default function Users() {
       />
 
       <ProctorsList
-        proctors={proctors}
+        proctors={proctorAccounts}
         loading={loading}
+        onToggleStatus={handleToggleProctorStatus}
+        onDeleteProctor={handleDeleteProctor}
         pagination={{
           current: proctorsPage,
           pageSize: proctorsPageSize,

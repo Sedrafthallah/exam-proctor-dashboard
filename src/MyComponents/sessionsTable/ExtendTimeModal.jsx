@@ -15,8 +15,10 @@ export default function ExtendTimeModal({ open, session, onClose, onExtend }) {
   };
 
   const handleFinish = async (values) => {
-    await onExtend(session.id, values.extraMinutes);
-    form.resetFields();
+    const success = await onExtend(session.id, values.extraMinutes);
+    if (success) {
+      form.resetFields();
+    }
   };
 
   return (

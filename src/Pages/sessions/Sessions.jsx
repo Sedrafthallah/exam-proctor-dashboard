@@ -47,6 +47,7 @@ export default function Sessions() {
   const handleCreateSession = async (fields) => {
     const success = await createSessionApi(fields);
     if (success) setIsModalOpen(false);
+    return success;
   };
 
   return (

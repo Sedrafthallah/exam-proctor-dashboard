@@ -107,8 +107,8 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
     return false; // prevent antd's default auto-upload
   };
 
-  const handleFinish = (values) => {
-    onCreate({
+  const handleFinish = async (values) => {
+    const success = await onCreate({
       sessionTitle: values.sessionTitle,
       courseCode: values.courseCode,
       scheduledDate: values.scheduledStartUTC.format("YYYY-MM-DD"),
@@ -126,8 +126,10 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
       audioMonitoring: values.audioMonitoring,
     });
 
-    form.resetFields();
-    setStudentsFile(null);
+    if (success) {
+      form.resetFields();
+      setStudentsFile(null);
+    }
   };
 
   return (

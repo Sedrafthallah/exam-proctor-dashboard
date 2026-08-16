@@ -75,14 +75,14 @@ export default function EditSessionModal({
     onClose();
   };
 
-  const handleFinish = (values) => {
+  const handleFinish = async (values) => {
     // Only submit fields this status actually allows editing, even though
     // disabled inputs already hold their unchanged original values.
     const editableEntries = Object.entries(values).filter(([field]) =>
       canEdit(field),
     );
 
-    onSave(session.id, {
+    const success = await onSave(session.id, {
       ...Object.fromEntries(editableEntries),
       ...(editableEntries.some(([field]) => field === "scheduledStartUTC")
         ? { scheduledStartUTC: values.scheduledStartUTC.toISOString() }
@@ -92,7 +92,9 @@ export default function EditSessionModal({
         : {}),
     });
 
-    form.resetFields();
+    if (success) {
+      form.resetFields();
+    }
   };
 
   return (
