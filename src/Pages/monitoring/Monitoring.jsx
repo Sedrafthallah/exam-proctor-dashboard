@@ -389,6 +389,7 @@ export default function Monitoring() {
       )}
 
       <WatchStreamModal
+        key={activeWatch?.watchId ?? "idle"}
         open={!!activeWatch}
         studentName={watchedStudent?.name}
         studentNumber={watchedStudent?.studentNumber}
