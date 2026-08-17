@@ -45,4 +45,4 @@ See [`.env.example`](../.env.example):
 
 ## Out of scope
 
-Alert hub push (`AlertCreated`) remains on REST until the Monitor layer.
+Native kiosk unlock and FR-24 offline buffer. Monitor live alerts (`AlertCreated` / warn / escalate) are documented in [MONITOR_LIVE.md](./MONITOR_LIVE.md). Stream Watch coexists with Monitor by pausing OpenCV capture on the student while WebRTC holds the camera.

@@ -1,8 +1,10 @@
+import { useEffect, useState } from "react";
 import { theme, Flex, Tag, Avatar, Badge, Button, Tooltip } from "antd";
 import {
   ClockCircleOutlined,
   EyeOutlined,
   VideoCameraOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import MyCard from "../myCard/MyCard";
 import MyText from "../myText/MyText";
@@ -10,6 +12,10 @@ import MyRow from "../myRow/MyRow";
 import MyCol from "../myCol/MyCol";
 import { getInitials } from "../usersTable/adminsData";
 import { ALERT_TYPE_CONFIG } from "../../utils/alertUtils";
+import {
+  isMonitoringDegraded,
+  pipelineLabel,
+} from "../../utils/monitoringHealth";
 
 const STATUS_TAG = {
   ACTIVE: { color: "success", label: "ACTIVE" },
@@ -18,13 +24,16 @@ const STATUS_TAG = {
   PENDING_AUTH: { color: "warning", label: "PENDING AUTH" },
   NOTSTARTED: { color: "default", label: "NOT STARTED" },
   NOT_STARTED: { color: "default", label: "NOT STARTED" },
-  // API often returns PascalCase without underscores.
   NotStarted: { color: "default", label: "NOT STARTED" },
   InProgress: { color: "success", label: "IN PROGRESS" },
+  InExam: { color: "success", label: "IN EXAM" },
+  INEXAM: { color: "success", label: "IN EXAM" },
   SUBMITTED: { color: "default", label: "SUBMITTED" },
   Submitted: { color: "default", label: "SUBMITTED" },
   TERMINATED: { color: "error", label: "TERMINATED" },
   Terminated: { color: "error", label: "TERMINATED" },
+  EXPIRED: { color: "default", label: "EXPIRED" },
+  Expired: { color: "default", label: "EXPIRED" },
 };
 
 function statusTagFor(status) {
@@ -66,6 +75,12 @@ export default function StudentStatusGrid({
   onWatch,
 }) {
   const { token } = theme.useToken();
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNowMs(Date.now()), 5000);
+    return () => window.clearInterval(id);
+  }, []);
 
   if (!students?.length) {
     return (
@@ -89,6 +104,15 @@ export default function StudentStatusGrid({
           activeWatchStudentSessionId != null &&
           Number(activeWatchStudentSessionId) ===
             Number(student.studentSessionId);
+
+        const degraded =
+          student.hubOnline &&
+          isMonitoringDegraded({
+            pipelineStatus: student.pipelineStatus,
+            lastHeartbeatAtUtc: student.lastHeartbeatAtUtc,
+            attemptStatus: student.status,
+            now: nowMs,
+          });
 
         return (
           <MyCol
@@ -149,6 +173,8 @@ export default function StudentStatusGrid({
                 justify="space-between"
                 align="center"
                 style={{ marginTop: 12 }}
+                wrap="wrap"
+                gap={8}
               >
                 <Tag
                   color={statusTag.color}
@@ -170,6 +196,26 @@ export default function StudentStatusGrid({
                   </MyText>
                 </Flex>
               </Flex>
+
+              {degraded && (
+                <Tooltip
+                  title={`Pipeline: ${pipelineLabel(student.pipelineStatus)}. Hub is up but monitoring heartbeat is stale or unhealthy.`}
+                >
+                  <Tag
+                    icon={<WarningOutlined />}
+                    color="warning"
+                    style={{
+                      marginTop: 10,
+                      marginInlineEnd: 0,
+                      borderRadius: 5,
+                      fontSize: 11,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Monitoring degraded
+                  </Tag>
+                </Tooltip>
+              )}
 
               {latestAlertConfig && (
                 <Flex
@@ -200,7 +246,9 @@ export default function StudentStatusGrid({
                   <Button
                     type={watchingThis ? "primary" : "default"}
                     size="small"
-                    icon={watchingThis ? <EyeOutlined /> : <VideoCameraOutlined />}
+                    icon={
+                      watchingThis ? <EyeOutlined /> : <VideoCameraOutlined />
+                    }
                     disabled={!!disabledReason && !watchingThis}
                     onClick={() => onWatch?.(student)}
                   >

@@ -9,6 +9,9 @@ import {
 } from "../api/signalrClient";
 import { getIceServers } from "../api/iceServersApi";
 import { rejectMessage } from "../utils/streamWatchCopy";
+import { mapAlert } from "../utils/alertMappers";
+import useAlertsStore from "./useAlertsStore";
+import useMonitoringRosterStore from "./useMonitoringRosterStore";
 
 /** Module-scoped PC — not held in Zustand to avoid re-render storms. */
 let peerConnection = null;
@@ -17,6 +20,17 @@ let pendingOffer = null;
 let lifecycleBound = false;
 /** Ignores stale connect() failures from React Strict Mode double-invoke. */
 let connectEpoch = 0;
+
+const TERMINAL_STATUSES = new Set([
+  "submitted",
+  "terminated",
+  "expired",
+]);
+
+function isTerminalStatus(status) {
+  if (status == null) return false;
+  return TERMINAL_STATUSES.has(String(status).toLowerCase());
+}
 
 async function closePeerConnection({ clearPending = true } = {}) {
   if (clearPending) {
@@ -79,6 +93,59 @@ const useMonitoringHubStore = create((set, get) => ({
         const watch = get().activeWatch;
         if (watch && Number(watch.studentSessionId) === id) {
           void get().endWatch({ reason: "student_disconnected" });
+        }
+      },
+      AlertCreated: (payload) => {
+        try {
+          const mapped = mapAlert(payload ?? {});
+          if (mapped.id) {
+            useAlertsStore.getState().upsertAlert(mapped);
+          }
+        } catch (e) {
+          console.warn("AlertCreated handler failed", e);
+        }
+      },
+      AlertUpdated: (payload) => {
+        useAlertsStore.getState().applyAlertUpdated({
+          alertId: payload?.alertId ?? payload?.AlertId,
+          newStatus: payload?.newStatus ?? payload?.NewStatus,
+          actionTaken: payload?.actionTaken ?? payload?.ActionTaken,
+        });
+      },
+      StudentStatusChanged: (payload) => {
+        const studentSessionId = Number(
+          payload?.studentSessionId ?? payload?.StudentSessionId,
+        );
+        if (!Number.isFinite(studentSessionId)) return;
+
+        const newStatus =
+          payload?.newStatus ?? payload?.NewStatus ?? undefined;
+        const patch = {
+          status: newStatus,
+          loginAt: payload?.loginAtUtc ?? payload?.LoginAtUtc ?? undefined,
+          pipelineStatus:
+            payload?.pipelineStatus ?? payload?.PipelineStatus ?? undefined,
+          lastHeartbeatAtUtc:
+            payload?.lastHeartbeatAtUtc ??
+            payload?.LastHeartbeatAtUtc ??
+            undefined,
+        };
+        Object.keys(patch).forEach((k) => {
+          if (patch[k] === undefined) delete patch[k];
+        });
+
+        useMonitoringRosterStore
+          .getState()
+          .patchStudent(studentSessionId, patch);
+
+        if (isTerminalStatus(newStatus)) {
+          const examSessionId = get().joinedExamSessionId;
+          if (examSessionId != null) {
+            void useMonitoringRosterStore
+              .getState()
+              .fetchSessionStudents(examSessionId)
+              .catch(() => {});
+          }
         }
       },
       StreamOffer: (payload) => {

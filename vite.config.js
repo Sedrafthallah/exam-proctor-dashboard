@@ -8,9 +8,10 @@ export default defineConfig(({ mode }) => {
   // only client code (import.meta.env) gets that for free.
   const env = loadEnv(mode, globalThis.process.cwd(), "");
 
-  // Default to local API for Stream-layer smoke (hub + ICE). Override with
-  // VITE_PROXY_TARGET if you need the hosted backend instead.
-  const proxyTarget = env.VITE_PROXY_TARGET ?? "http://localhost:5041";
+  // Default to the hosted API so anyone without a local backend running
+  // still gets working login/data out of the box. Override with
+  // VITE_PROXY_TARGET (e.g. via .env) for local backend development.
+  const proxyTarget = env.VITE_PROXY_TARGET ?? "https://manaraljarkas.visual-host.com";
 
   return {
     plugins: [react()],

@@ -31,9 +31,11 @@ export async function fetchSessionStudents(sessionId) {
     studentId: Number(row.studentId),
     studentName: row.studentName ?? "Unknown",
     studentNumber: row.studentNumber ?? "",
-    status: String(row.status ?? "Unknown").toUpperCase(),
+    status: String(row.status ?? "Unknown"),
     loginAt: row.loginAt ?? null,
     openAlertCount: Number(row.openAlertCount ?? 0),
     latestAlertType: row.latestAlertType ?? null,
+    pipelineStatus: row.pipelineStatus ?? null,
+    lastHeartbeatAtUtc: row.lastHeartbeatAtUtc ?? null,
   }));
 }

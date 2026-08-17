@@ -2,44 +2,23 @@ import { create } from "zustand";
 import { message } from "antd";
 import { apiFetch } from "../api/apiClient";
 import useAuthStore from "./useAuthStore";
+import { mapAlert, mapHubAlertStatus } from "../utils/alertMappers";
 
-const ALERT_TYPE_MAP = {
-  GazeDeviation:    "GAZE_DEVIATION",
-  FaceAbsence:      "FACE_ABSENCE",
-  MultipleFaces:    "MULTIPLE_FACES",
-  AppSwitch:        "APP_SWITCH",
-  AudioThreshold:   "AUDIO_THRESHOLD",
-  ConnectivityLost: "CONNECTIVITY_LOST",
-};
-
-const mapAlert = (a) => ({
-  id: String(a.id),
-  type: ALERT_TYPE_MAP[a.alertType] ?? a.alertType.toUpperCase(),
-  typeCode: a.alertType, // raw PascalCase code, for matching against GET /api/alerts/types
-  description: a.alertDescription ?? "",
-  status: a.status,
-  severity: a.severity,
-  student: a.studentName || "Unknown",
-  studentNumber: a.studentNumber ?? null,
-  studentId: a.studentId ?? null,
-  session: a.sessionName || "—",
-  sessionId: a.sessionId ?? null,
-  timestamp: a.triggeredAt,
-  actionTaken: a.actionTaken ?? null,
-  actionNote: a.actionNote ?? null,
-  actionAt: a.actionAt ?? null,
-});
+function authHeaders(extra = {}) {
+  const accessToken =
+    useAuthStore.getState().accessToken ?? sessionStorage.getItem("accessToken");
+  return {
+    Authorization: accessToken ? `Bearer ${accessToken}` : "",
+    ...extra,
+  };
+}
 
 const fetchAlertsWithParams = async (params = "", page = 1, pageSize = 7) => {
   try {
-    const accessToken =
-      useAuthStore.getState().accessToken ??
-      sessionStorage.getItem("accessToken");
-
     const separator = params ? "&" : "?";
     const res = await apiFetch(
       `/api/alerts${params}${separator}Page=${page}&PageSize=${pageSize}`,
-      { headers: { Authorization: `Bearer ${accessToken}` } },
+      { headers: authHeaders() },
     );
 
     const json = await res.json();
@@ -49,7 +28,7 @@ const fetchAlertsWithParams = async (params = "", page = 1, pageSize = 7) => {
     }
 
     return {
-      alerts: json.data.items.map(mapAlert),
+      alerts: (json.data.items ?? []).map(mapAlert),
       total: json.data.totalCount,
       page: json.data.page,
       pageSize: json.data.pageSize,
@@ -62,21 +41,18 @@ const fetchAlertsWithParams = async (params = "", page = 1, pageSize = 7) => {
 
 const callAlertAction = async (id, action, body) => {
   try {
-    const accessToken =
-      useAuthStore.getState().accessToken ?? sessionStorage.getItem("accessToken");
-
     const res = await apiFetch(`/api/alerts/${id}/${action}`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        ...(body ? { "Content-Type": "application/json" } : {}),
-      },
-      ...(body ? { body: JSON.stringify(body) } : {}),
+      headers: authHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify(body),
     });
 
     const json = await res.json();
     if (!res.ok || json.statusCode !== 200) {
-      return { success: false, error: json.message || `Failed to ${action} alert.` };
+      return {
+        success: false,
+        error: json.message || `Failed to ${action} alert.`,
+      };
     }
 
     return { success: true, message: json.message };
@@ -86,58 +62,87 @@ const callAlertAction = async (id, action, body) => {
   }
 };
 
-// When backend is ready: swap this for a WebSocket subscription that pushes
-// new alerts in and PATCHes status changes through to the server.
-const useAlertsStore = create((set) => ({
+const useAlertsStore = create((set, get) => ({
   alerts: [],
   loading: false,
   page: 1,
   pageSize: 7,
   total: 0,
-  summary: { total: 0, critical: 0, warnings: 0, resolved: 0, lastUpdated: null },
+  summary: {
+    total: 0,
+    critical: 0,
+    warnings: 0,
+    resolved: 0,
+    lastUpdated: null,
+  },
   alertTypes: [],
 
   fetchAlerts: async (page = 1, pageSize = 7) => {
     set({ loading: true });
-    const { alerts, total, page: p, pageSize: ps } = await fetchAlertsWithParams("", page, pageSize);
+    const { alerts, total, page: p, pageSize: ps } =
+      await fetchAlertsWithParams("", page, pageSize);
     set({ alerts, total, page: p, pageSize: ps, loading: false });
   },
 
   fetchOpenAlerts: async (page = 1, pageSize = 7) => {
     set({ loading: true });
-    const { alerts, total, page: p, pageSize: ps } = await fetchAlertsWithParams("?status=Open", page, pageSize);
+    const { alerts, total, page: p, pageSize: ps } =
+      await fetchAlertsWithParams("?status=Open", page, pageSize);
     set({ alerts, total, page: p, pageSize: ps, loading: false });
   },
 
   fetchResolvedAlerts: async (page = 1, pageSize = 7) => {
     set({ loading: true });
-    const { alerts, total, page: p, pageSize: ps } = await fetchAlertsWithParams("?status=Resolved", page, pageSize);
+    const { alerts, total, page: p, pageSize: ps } =
+      await fetchAlertsWithParams("?status=Resolved", page, pageSize);
     set({ alerts, total, page: p, pageSize: ps, loading: false });
   },
 
   fetchEscalatedAlerts: async (page = 1, pageSize = 7) => {
     set({ loading: true });
-    const { alerts, total, page: p, pageSize: ps } = await fetchAlertsWithParams("?status=Escalated", page, pageSize);
+    const { alerts, total, page: p, pageSize: ps } =
+      await fetchAlertsWithParams("?status=Escalated", page, pageSize);
     set({ alerts, total, page: p, pageSize: ps, loading: false });
   },
 
   fetchAlertsByType: async (type, page = 1, pageSize = 7) => {
     set({ loading: true });
-    const { alerts, total, page: p, pageSize: ps } = await fetchAlertsWithParams(
-      `?alertType=${encodeURIComponent(type)}`,
-      page,
+    const { alerts, total, page: p, pageSize: ps } =
+      await fetchAlertsWithParams(
+        `?alertType=${encodeURIComponent(type)}`,
+        page,
+        pageSize,
+      );
+    set({ alerts, total, page: p, pageSize: ps, loading: false });
+  },
+
+  /** Prefetch alerts for Live Monitoring session feed (hub merges afterward). */
+  fetchAlertsForSession: async (sessionId, { pageSize = 100 } = {}) => {
+    if (sessionId == null) return [];
+    set({ loading: true });
+    const { alerts, total, page, pageSize: ps } = await fetchAlertsWithParams(
+      `?sessionId=${encodeURIComponent(sessionId)}`,
+      1,
       pageSize,
     );
-    set({ alerts, total, page: p, pageSize: ps, loading: false });
+    set((state) => {
+      const byId = new Map(state.alerts.map((a) => [a.id, a]));
+      for (const a of alerts) byId.set(a.id, a);
+      return {
+        alerts: Array.from(byId.values()),
+        total: Math.max(state.total, total),
+        page,
+        pageSize: ps,
+        loading: false,
+      };
+    });
+    return alerts;
   },
 
   fetchAlertsSummary: async () => {
     try {
-      const accessToken =
-        useAuthStore.getState().accessToken ?? sessionStorage.getItem("accessToken");
-
       const res = await apiFetch("/api/alerts/Cards", {
-        headers: { Authorization: `Bearer ${accessToken}` },
+        headers: authHeaders(),
       });
 
       const json = await res.json();
@@ -159,11 +164,8 @@ const useAlertsStore = create((set) => ({
 
   fetchAlertTypes: async () => {
     try {
-      const accessToken =
-        useAuthStore.getState().accessToken ?? sessionStorage.getItem("accessToken");
-
       const res = await apiFetch("/api/alerts/types", {
-        headers: { Authorization: `Bearer ${accessToken}` },
+        headers: authHeaders(),
       });
 
       const json = await res.json();
@@ -175,19 +177,51 @@ const useAlertsStore = create((set) => ({
     }
   },
 
+  /** Insert or replace by id (hub AlertCreated + REST merge). */
+  upsertAlert: (mapped) => {
+    if (!mapped?.id) return;
+    set((state) => {
+      const idx = state.alerts.findIndex((a) => a.id === mapped.id);
+      if (idx === -1) {
+        return { alerts: [mapped, ...state.alerts], total: state.total + 1 };
+      }
+      const next = state.alerts.slice();
+      next[idx] = { ...next[idx], ...mapped };
+      return { alerts: next };
+    });
+  },
+
+  /** Apply hub AlertUpdated payload. */
+  applyAlertUpdated: ({ alertId, newStatus, actionTaken }) => {
+    const id = String(alertId ?? "");
+    if (!id) return;
+    const status = mapHubAlertStatus(newStatus);
+    set((state) => ({
+      alerts: state.alerts.map((alert) =>
+        alert.id === id
+          ? {
+              ...alert,
+              status,
+              statusCode: newStatus,
+              actionTaken: actionTaken ?? alert.actionTaken,
+            }
+          : alert,
+      ),
+    }));
+  },
+
   updateAlertStatus: (id, status) =>
     set((state) => ({
-      alerts: state.alerts.map((alert) => (alert.id === id ? { ...alert, status } : alert)),
+      alerts: state.alerts.map((alert) =>
+        alert.id === id ? { ...alert, status } : alert,
+      ),
     })),
 
   dismissAlertApi: async (id) => {
     try {
-      const accessToken =
-        useAuthStore.getState().accessToken ?? sessionStorage.getItem("accessToken");
-
       const res = await apiFetch(`/api/alerts/${id}/dismiss`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${accessToken}` },
+        headers: authHeaders(),
       });
 
       const json = await res.json();
@@ -196,6 +230,7 @@ const useAlertsStore = create((set) => ({
         return false;
       }
 
+      get().updateAlertStatus(String(id), "RESOLVED");
       return true;
     } catch (err) {
       console.error("dismissAlertApi error:", err);
@@ -204,8 +239,30 @@ const useAlertsStore = create((set) => ({
     }
   },
 
-  warnAlertApi: async (id, warnMessage) => callAlertAction(id, "warn", { message: warnMessage }),
-  escalateAlertApi: async (id, reason) => callAlertAction(id, "escalate", { Reason: reason }),
+  warnAlertApi: async (id, messageText) => {
+    const msg = String(messageText ?? "").trim();
+    if (!msg) {
+      return { success: false, error: "Warning message is required." };
+    }
+    const result = await callAlertAction(id, "warn", { message: msg });
+    if (result.success) {
+      get().updateAlertStatus(String(id), "RESOLVED");
+    }
+    return result;
+  },
+
+  escalateAlertApi: async (id, reason) => {
+    const text = String(reason ?? "").trim();
+    if (!text) {
+      return { success: false, error: "Escalate reason is required." };
+    }
+    const result = await callAlertAction(id, "escalate", { reason: text });
+    if (result.success) {
+      get().updateAlertStatus(String(id), "ESCALATED");
+    }
+    return result;
+  },
 }));
 
 export default useAlertsStore;
+export { mapAlert };
