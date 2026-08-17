@@ -123,7 +123,7 @@ export default function AlertsTable({
           );
         }
 
-        if (record.status !== "Open") {
+        if (record.status !== "OPEN") {
           return (
             <MyText type="secondary" style={{ fontSize: 12.5 }}>
               —

@@ -152,7 +152,7 @@ function SuperAdminDashboard() {
       };
     });
 
-  const recentAlerts = alerts.filter((a) => a.status === "Open").slice(0, 5);
+  const recentAlerts = alerts.filter((a) => a.status === "OPEN").slice(0, 5);
 
   return (
     <>

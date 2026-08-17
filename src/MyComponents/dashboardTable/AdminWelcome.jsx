@@ -674,7 +674,7 @@ export default function AdminWelcome() {
     background: token.colorBgElevated,
   };
 
-  const openAlerts = alerts.filter((a) => a.status === "Open");
+  const openAlerts = alerts.filter((a) => a.status === "OPEN");
   const activeSessions = sessions.filter((s) => s.status === "ACTIVE");
   const hasAnyPermission = permissions.length > 0;
 
@@ -794,7 +794,7 @@ export default function AdminWelcome() {
     has("ViewAlerts") && {
       key: "escalated",
       title: "Escalated",
-      value: dashboardSummary?.escalatedAlerts ?? alerts.filter((a) => a.status === "Escalated").length,
+      value: dashboardSummary?.escalatedAlerts ?? alerts.filter((a) => a.status === "ESCALATED").length,
       sub: "violations",
       icon: <WarningOutlined />,
       color: "#fa541c",
