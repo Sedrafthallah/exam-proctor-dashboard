@@ -25,6 +25,11 @@ import QuestionBankField from "./QuestionBankField";
 
 const FACE_ALERT_OPTIONS = ["Low", "Medium", "High"];
 const API_DATETIME_FORMAT = "YYYY-MM-DDTHH:mm:ss";
+// Guards against the scheduled time slipping into the past between when it's
+// picked and when the form is actually submitted — filling out the rest of
+// the form (proctor lookup, question bank, file upload) can easily take
+// several minutes, so the buffer needs real headroom, not just seconds.
+const MIN_LEAD_MINUTES = 15;
 
 export default function NewSessionModal({ open, onClose, onCreate }) {
   const [form] = MyForm.useForm();
@@ -197,10 +202,12 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
                 },
                 {
                   validator: (_, value) =>
-                    !value || value.isAfter(dayjs())
+                    !value || value.isAfter(dayjs().add(MIN_LEAD_MINUTES, "minute"))
                       ? Promise.resolve()
                       : Promise.reject(
-                          new Error("Start time must be in the future"),
+                          new Error(
+                            `Start time must be at least ${MIN_LEAD_MINUTES} minutes from now`,
+                          ),
                         ),
                 },
               ]}
@@ -210,17 +217,24 @@ export default function NewSessionModal({ open, onClose, onCreate }) {
                 format="YYYY-MM-DD HH:mm"
                 style={{ width: "100%" }}
                 disabledDate={(current) =>
-                  current && current.isBefore(dayjs(), "day")
+                  current &&
+                  current.isBefore(
+                    dayjs().add(MIN_LEAD_MINUTES, "minute"),
+                    "day",
+                  )
                 }
                 disabledTime={(current) => {
-                  if (!current || !current.isSame(dayjs(), "day")) return {};
-                  const now = dayjs();
+                  const cutoff = dayjs().add(MIN_LEAD_MINUTES, "minute");
+                  if (!current || !current.isSame(cutoff, "day")) return {};
                   return {
                     disabledHours: () =>
-                      Array.from({ length: now.hour() }, (_, i) => i),
+                      Array.from({ length: cutoff.hour() }, (_, i) => i),
                     disabledMinutes: (selectedHour) =>
-                      selectedHour === now.hour()
-                        ? Array.from({ length: now.minute() + 1 }, (_, i) => i)
+                      selectedHour === cutoff.hour()
+                        ? Array.from(
+                            { length: cutoff.minute() + 1 },
+                            (_, i) => i,
+                          )
                         : [],
                   };
                 }}

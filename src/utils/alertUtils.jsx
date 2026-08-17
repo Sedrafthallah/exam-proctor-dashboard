@@ -94,7 +94,7 @@ export const DEFAULT_ALERT_TYPE_CONFIG = {
 };
 
 export const ALERT_STATUS_CONFIG = {
-  Open: { status: "processing", color: "blue", label: "Open" },
-  Resolved: { status: "success", color: "green", label: "Resolved" },
-  Escalated: { status: "error", color: "red", label: "Escalated" },
+  OPEN: { status: "processing", color: "blue", label: "Open" },
+  RESOLVED: { status: "success", color: "green", label: "Resolved" },
+  ESCALATED: { status: "error", color: "red", label: "Escalated" },
 };
