@@ -321,7 +321,9 @@ export default function Alerts() {
           onChange: refetchAlerts,
           showSizeChanger: true,
         }}
-        canAct={canAct}
+        canDismiss={canAct}
+        canWarn={canAct}
+        canEscalate={canAct}
         onDismiss={handleDismiss}
         onWarn={handleWarn}
         onEscalate={handleEscalate}
