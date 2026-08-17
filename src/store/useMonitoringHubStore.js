@@ -331,11 +331,25 @@ const useMonitoringHubStore = create((set, get) => ({
       peerConnection = pc;
 
       pc.addTransceiver("video", { direction: "recvonly" });
+      pc.addTransceiver("audio", { direction: "recvonly" });
 
       pc.ontrack = (event) => {
-        const stream =
-          event.streams?.[0] ?? new MediaStream([event.track]);
-        set({ remoteStream: stream });
+        const existing = get().remoteStream;
+        const merged = new MediaStream();
+        const seen = new Set();
+        for (const track of existing?.getTracks() ?? []) {
+          merged.addTrack(track);
+          seen.add(track.id);
+        }
+        const incoming =
+          event.streams?.[0]?.getTracks() ?? [event.track];
+        for (const track of incoming) {
+          if (!seen.has(track.id)) {
+            merged.addTrack(track);
+            seen.add(track.id);
+          }
+        }
+        set({ remoteStream: merged });
       };
 
       pc.onicecandidate = (event) => {
