@@ -225,7 +225,14 @@ const useAuthStore = create((set, get) => ({
       if (!res.ok || json.statusCode !== 200) return;
 
       set({
-        proctors: json.data.items,
+        proctors: json.data.items.map((p) => ({
+          ...p,
+          // NOTE: /api/proctors uses snake_case `is_active`, unlike
+          // /api/admins/with-permissions' camelCase `isActive` — confirmed
+          // via real response payloads, not assumed. Do not "fix" this to
+          // camelCase without re-checking the live response first.
+          disabled: p.is_active === false,
+        })),
         proctorsTotal: json.data.totalCount,
         proctorsPage: json.data.page,
         proctorsPageSize: json.data.pageSize,
