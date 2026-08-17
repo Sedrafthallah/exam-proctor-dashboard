@@ -5,6 +5,10 @@ export const ALERT_TYPE_MAP = {
   MultipleFaces: "MULTIPLE_FACES",
   AppSwitch: "APP_SWITCH",
   AudioThreshold: "AUDIO_THRESHOLD",
+  ShortcutAttempt: "SHORTCUT_ATTEMPT",
+  KioskFailure: "KIOSK_FAILURE",
+  KioskEmergencyExit: "KIOSK_EMERGENCY_EXIT",
+  KioskRelocked: "KIOSK_RELOCKED",
   ConnectivityLost: "CONNECTIVITY_LOST",
 };
 

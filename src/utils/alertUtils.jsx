@@ -5,6 +5,10 @@ import {
   SwapOutlined,
   SoundOutlined,
   DisconnectOutlined,
+  StopOutlined,
+  WarningOutlined,
+  LogoutOutlined,
+  LoginOutlined,
   QuestionCircleOutlined,
 } from "@ant-design/icons";
 
@@ -43,6 +47,34 @@ export const ALERT_TYPE_CONFIG = {
     color: "#3b82f6",
     icon: <SoundOutlined />,
     severity: "WARNING",
+  },
+  SHORTCUT_ATTEMPT: {
+    label: "Shortcut Attempt",
+    description: "Blocked keyboard shortcut that can break kiosk lockdown",
+    color: "#f97316",
+    icon: <StopOutlined />,
+    severity: "WARNING",
+  },
+  KIOSK_FAILURE: {
+    label: "Kiosk Failure",
+    description: "Exam client failed to enter or maintain kiosk mode",
+    color: "#ef4444",
+    icon: <WarningOutlined />,
+    severity: "CRITICAL",
+  },
+  KIOSK_EMERGENCY_EXIT: {
+    label: "Kiosk Emergency Exit",
+    description: "Student left kiosk mode using the emergency Escape key",
+    color: "#ef4444",
+    icon: <LogoutOutlined />,
+    severity: "CRITICAL",
+  },
+  KIOSK_RELOCKED: {
+    label: "Kiosk Restored",
+    description: "Student re-entered kiosk mode after an emergency exit",
+    color: "#22c55e",
+    icon: <LoginOutlined />,
+    severity: "INFO",
   },
   CONNECTIVITY_LOST: {
     label: "Connectivity Lost",
