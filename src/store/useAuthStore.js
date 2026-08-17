@@ -214,9 +214,12 @@ const useAuthStore = create((set, get) => ({
       const accessToken =
         get().accessToken ?? sessionStorage.getItem("accessToken");
 
-      const res = await apiFetch(`/api/proctors?page=${page}&pageSize=${pageSize}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      const res = await apiFetch(
+        `/api/proctors?page=${page}&pageSize=${pageSize}`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        },
+      );
 
       const json = await res.json();
       if (!res.ok || json.statusCode !== 200) return;
@@ -330,7 +333,8 @@ const useAuthStore = create((set, get) => ({
                 ...u,
                 name,
                 email: email.trim(),
-                permissions: u.role === "SUPER_ADMIN" ? u.permissions : permissions,
+                permissions:
+                  u.role === "SUPER_ADMIN" ? u.permissions : permissions,
               }
             : u,
         ),

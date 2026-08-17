@@ -73,7 +73,9 @@ export default function Users() {
     if (!proctor) return;
 
     const matchedAdmin = admins.find((a) => a.id === String(proctor.proctorId));
-    const disabled = matchedAdmin ? matchedAdmin.disabled : proctor.disabled ?? false;
+    const disabled = matchedAdmin
+      ? matchedAdmin.disabled
+      : (proctor.disabled ?? false);
 
     if (disabled) {
       if (await reactivateAdminApi(proctorId)) {
@@ -112,7 +114,7 @@ export default function Users() {
     const matchedAdmin = admins.find((a) => a.id === String(p.proctorId));
     return {
       ...p,
-      disabled: matchedAdmin ? matchedAdmin.disabled : p.disabled ?? false,
+      disabled: matchedAdmin ? matchedAdmin.disabled : (p.disabled ?? false),
     };
   });
 
